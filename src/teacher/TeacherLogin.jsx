@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, TextField, Typography, Link } from '@mui/material';
 
-const TeacherLogin = () => {
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -93,4 +93,4 @@ const TeacherLogin = () => {
   );
 };
 
-export default TeacherLogin;
+export default LoginPage;
