@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Button, TextField, Typography, Link } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import bookImage from '../assets/book.png';
 
-const LoginPage = () => {
-  const [email, setEmail] = useState('');
+const TeacherLogin = () => {
+  const [idNumber, setIdNumber] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate(); // For navigation
 
   const handleLogin = () => {
-    console.log('Logging in with:', email, password);
+    console.log('Logging in as Teacher with:', idNumber, password);
   };
 
   return (
@@ -15,10 +18,22 @@ const LoginPage = () => {
       height: '100vh', 
       display: 'flex', 
       justifyContent: 'center', 
-      alignItems: 'center'
+      alignItems: 'center',
+      position: 'relative'  
     }}>
+      {/* Book Image */}
+      <img 
+        src={bookImage} 
+        alt="Books" 
+        style={{
+          position: 'absolute', 
+          bottom: '0px', 
+          right: '0px', 
+          width: '480px'
+        }}
+      />
+
       <div style={{ 
-        backgroundColor: '', 
         padding: '20px', 
         width: '40%', 
         borderRadius: '8px', 
@@ -27,70 +42,56 @@ const LoginPage = () => {
         alignItems: 'center'
       }}>
         <Typography variant="h4" gutterBottom>
-        Practice and Learn with Scribbie!
+          Welcome Back, Teacher!
         </Typography>
 
         <TextField
-          label="Email:"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: '60%', 
-            marginBottom: '0.5px'
-          }}
-          margin="normal"
+          label="ID"
+          type="text"
+          value={idNumber}
+          onChange={(e) => setIdNumber(e.target.value)}
+          style={{ width: '60%', marginBottom: '10px' }}
           variant="outlined"
-          InputProps={{
-            style: {
-              backgroundColor: '#FFDE9A',
-              border: '1px solid #451513',
-              borderRadius: '4px',
-              fontSize: '14px',
-              height: '50px',
-              padding: '0 12px',
-            },
-          }}
         />
         
         <TextField
-          label="Password:"
+          label="Password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: '60%', 
-            marginBottom: '0.5px'
-          }}
-          margin="normal"
+          style={{ width: '60%', marginBottom: '10px' }}
           variant="outlined"
-          InputProps={{
-            style: {
-              backgroundColor: '#FFDE9A',
-              border: '1px solid #451513',
-              borderRadius: '4px',
-              fontSize: '14px',
-              height: '50px',
-            },
-          }}
         />
 
         <Button 
           onClick={handleLogin}
           style={{ backgroundColor: '#451513', color: 'white', marginTop: '20px' }}
-          halfWidth
         >
-          Login
+          Log In
         </Button>
 
         <Typography style={{ marginTop: '10px' }}>
-            <Link href="#" style={{ color: '#451513' }}>
-             No Account yet? <strong>Register Here</strong>
-             </Link>
+          <Link href="#" style={{ color: '#451513' }}>
+            No Account yet? <strong>Register Here</strong>
+          </Link>
         </Typography>
+
+        {/* Student Login Button (Routes Back to Student Login) */}
+        <Button 
+          onClick={() => navigate('/student-login')}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            backgroundColor: '#451513',
+            color: 'white'
+          }}
+        >
+          Student Login
+        </Button>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default TeacherLogin;
