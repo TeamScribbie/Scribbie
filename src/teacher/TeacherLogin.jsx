@@ -65,13 +65,18 @@ const TeacherLogin = () => {
 
         <Button 
           onClick={handleLogin}
-          style={{ backgroundColor: '#451513', color: 'white', marginTop: '20px' }}
+          style={{ 
+          backgroundColor: '#451513', 
+          color: 'white', 
+          marginTop: '20px', 
+          width: '30%' 
+          }}
         >
           Log In
         </Button>
 
         <Typography style={{ marginTop: '10px' }}>
-          <Link href="#" style={{ color: '#451513' }}>
+          <Link href="/teacher-register" style={{ color: '#451513' }}>
             No Account yet? <strong>Register Here</strong>
           </Link>
         </Typography>
