@@ -6,11 +6,7 @@ import bookImage from '../assets/book.png';
 const TeacherLogin = () => {
   const [idNumber, setIdNumber] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // For navigation
-
-  const handleLogin = () => {
-    console.log('Logging in as Teacher with:', idNumber, password);
-  };
+  const navigate = useNavigate();
 
   return (
     <div style={{ 
@@ -21,7 +17,6 @@ const TeacherLogin = () => {
       alignItems: 'center',
       position: 'relative'  
     }}>
-      {/* Book Image */}
       <img 
         src={bookImage} 
         alt="Books" 
@@ -29,7 +24,7 @@ const TeacherLogin = () => {
           position: 'absolute', 
           bottom: '0px', 
           right: '0px', 
-          width: '480px'
+          width: '350px'
         }}
       />
 
@@ -42,7 +37,7 @@ const TeacherLogin = () => {
         alignItems: 'center'
       }}>
         <Typography variant="h4" gutterBottom>
-          Welcome Back, Teacher!
+          Welcome back, Teacher!
         </Typography>
 
         <TextField
@@ -50,7 +45,7 @@ const TeacherLogin = () => {
           type="text"
           value={idNumber}
           onChange={(e) => setIdNumber(e.target.value)}
-          style={{ width: '60%', marginBottom: '10px' }}
+          style={{ width: '60%', marginBottom: '10px', backgroundColor: '#FFDE9A' }}
           variant="outlined"
         />
         
@@ -59,12 +54,12 @@ const TeacherLogin = () => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '60%', marginBottom: '10px' }}
+          style={{ width: '60%', marginBottom: '10px', backgroundColor: '#FFDE9A' }}
           variant="outlined"
         />
-
-        <Button 
-          onClick={handleLogin}
+        
+        <Button
+          onClick={() => navigate('/teacher-homepage')}
           style={{ 
           backgroundColor: '#451513', 
           color: 'white', 
@@ -72,16 +67,15 @@ const TeacherLogin = () => {
           width: '30%' 
           }}
         >
-          Log In
+          Login
         </Button>
 
         <Typography style={{ marginTop: '10px' }}>
           <Link href="/teacher-register" style={{ color: '#451513' }}>
-            No Account yet? <strong>Register Here</strong>
+             No Account yet? <strong>Register Here</strong>
           </Link>
         </Typography>
 
-        {/* Student Login Button (Routes Back to Student Login) */}
         <Button 
           onClick={() => navigate('/student-login')}
           style={{
@@ -92,7 +86,7 @@ const TeacherLogin = () => {
             color: 'white'
           }}
         >
-          Student Login
+          Access as Student
         </Button>
       </div>
     </div>
