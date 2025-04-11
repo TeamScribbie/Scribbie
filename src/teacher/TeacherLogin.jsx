@@ -65,7 +65,12 @@ const TeacherLogin = () => {
 
         <Button 
           onClick={handleLogin}
-          style={{ backgroundColor: '#451513', color: 'white', marginTop: '20px' }}
+          style={{ 
+          backgroundColor: '#451513', 
+          color: 'white', 
+          marginTop: '20px', 
+          width: '30%' 
+          }}
         >
           Log In
         </Button>
