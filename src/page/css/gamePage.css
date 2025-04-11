@@ -1,0 +1,246 @@
+/* src/page/GamePage.css */
+
+:root {
+    --duo-green: #58a700;
+    --duo-blue: #1cb0f6;
+    --duo-red: #ff4b4b;
+    --duo-gray-light: #e5e5e5;
+    --duo-gray-medium: #afafaf;
+    --duo-gray-dark: #777777;
+    --duo-text-color: #4b4b4b;
+    --duo-white: #ffffff;
+    --duo-background: #f7f7f7; /* Light background for the page */
+    --duo-border-radius: 12px;
+}
+
+.game-page-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--duo-white);
+    border: 1px solid var(--duo-gray-light);
+    border-radius: var(--duo-border-radius);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: var(--duo-text-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 400px; /* Ensure container has some height */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative; /* Needed for absolute positioning of feedback */
+}
+
+.game-page-container.loading,
+.game-page-container.error {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 1.2em;
+    color: var(--duo-gray-dark);
+}
+
+.game-page-container.error button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: var(--duo-blue);
+    color: var(--duo-white);
+    border: none;
+    border-radius: var(--duo-border-radius);
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+.game-page-container.error button:hover {
+     background-color: #1899d6; /* Darker blue */
+}
+
+
+/* Progress Bar */
+.progress-bar-container {
+    width: 100%;
+    height: 15px;
+    background-color: var(--duo-gray-light);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--duo-green);
+    transition: width 0.3s ease-in-out;
+    border-radius: 10px;
+}
+
+/* Question Area */
+.question-container {
+    flex-grow: 1; /* Takes up available space */
+}
+
+.question-prompt {
+    font-size: 1.6em;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Answer Options */
+.answer-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
+    gap: 15px;
+    margin-bottom: 20px; /* Space before feedback area */
+}
+
+.answer-button {
+    padding: 15px;
+    background-color: var(--duo-white);
+    border: 2px solid var(--duo-gray-light);
+    border-radius: var(--duo-border-radius);
+    font-size: 1.1em;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--duo-text-color);
+    font-weight: 500;
+}
+
+.answer-button:hover:not(.disabled):not(.selected):not(.correct):not(.incorrect) {
+    border-color: var(--duo-gray-medium);
+    background-color: #f0f0f0;
+}
+
+.answer-button.selected {
+    background-color: var(--duo-blue);
+    border-color: var(--duo-blue);
+    color: var(--duo-white);
+}
+
+.answer-button.correct {
+    background-color: var(--duo-green);
+    border-color: var(--duo-green);
+    color: var(--duo-white);
+    cursor: default;
+}
+
+.answer-button.incorrect {
+    background-color: var(--duo-red);
+    border-color: var(--duo-red);
+    color: var(--duo-white);
+    cursor: default;
+}
+
+.answer-button.disabled {
+    background-color: var(--duo-white);
+    border-color: var(--duo-gray-light);
+    color: var(--duo-gray-medium);
+    opacity: 0.7;
+    cursor: default;
+}
+
+
+/* Feedback & Action Button Area */
+.feedback-container {
+    border-top: 2px solid var(--duo-gray-light);
+    padding: 20px 0 0 0; /* Padding top only */
+    margin-top: auto; /* Pushes to the bottom */
+    min-height: 100px; /* Ensure space for button and message */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    background-color: var(--duo-white); /* Match container bg */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    box-sizing: border-box;
+}
+
+.feedback-container.visible {
+     opacity: 1;
+     visibility: visible;
+}
+
+.feedback-message {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 15px; /* Space between message and button */
+    padding: 10px;
+    border-radius: var(--duo-border-radius);
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.feedback-message.correct-feedback {
+    color: var(--duo-green);
+    background-color: #e8f8d7; /* Light green background */
+}
+
+.feedback-message.incorrect-feedback {
+    color: var(--duo-red);
+     background-color: #ffebee; /* Light red background */
+}
+
+.action-button {
+    padding: 15px 30px;
+    border: none;
+    border-radius: var(--duo-border-radius);
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    width: 80%; /* Make button wider */
+    max-width: 300px; /* But not too wide */
+    text-transform: uppercase;
+}
+
+.action-button.check-button {
+    background-color: var(--duo-green);
+    color: var(--duo-white);
+}
+.action-button.check-button:hover:not(.disabled) {
+    background-color: #4a8c00; /* Darker green */
+}
+
+.action-button.continue-button {
+    background-color: var(--duo-blue);
+    color: var(--duo-white);
+}
+.action-button.continue-button:hover {
+     background-color: #1899d6; /* Darker blue */
+}
+
+
+.action-button.disabled {
+    background-color: var(--duo-gray-light);
+    color: var(--duo-gray-medium);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Finished Screen */
+.finished-screen {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.finished-screen h2 {
+    color: var(--duo-green);
+    font-size: 2em;
+    margin-bottom: 15px;
+}
+
+.final-score {
+    font-size: 1.4em;
+    margin-bottom: 30px;
+    color: var(--duo-text-color);
+}
+
+.restart-button {
+    background-color: var(--duo-blue);
+    color: var(--duo-white);
+}
+.restart-button:hover {
+    background-color: #1899d6; /* Darker blue */
+}
