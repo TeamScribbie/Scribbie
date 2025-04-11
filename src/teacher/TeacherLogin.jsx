@@ -71,7 +71,7 @@ const TeacherLogin = () => {
         </Button>
 
         <Typography style={{ marginTop: '10px' }}>
-          <Link href="#" style={{ color: '#451513' }}>
+          <Link href="/teacher-register" style={{ color: '#451513' }}>
             No Account yet? <strong>Register Here</strong>
           </Link>
         </Typography>
