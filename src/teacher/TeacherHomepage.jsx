@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircle from "@mui/icons-material/AccountCircle";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 
 const TeacherHomepage = () => {
@@ -24,6 +25,7 @@ const TeacherHomepage = () => {
   const [classCode, setClassCode] = useState("");
   const [enrollmentLimit, setEnrollmentLimit] = useState("");
   const [classes, setClasses] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
@@ -53,43 +55,73 @@ const TeacherHomepage = () => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.sidebar}>
-        <Typography variant="h6" style={styles.sidebarTitle}>
-          Menu
-        </Typography>
-        <div
-          style={{
-            ...styles.sidebarItem,
-            backgroundColor: "#FFD966",
-            borderRadius: "100px",
-          }}
-          onClick={() => navigate("/teacher-homepage")}
-        >
-          My Classes
-        </div>
-
-        <div style={styles.classList}>
-          {classes.map((cls, index) => (
-            <div key={index} style={styles.subItem}>
-              {cls}
+      {/* Sidebar */}
+      <div
+        style={{
+          ...styles.sidebar,
+          width: sidebarOpen ? "200px" : "0",
+          padding: sidebarOpen ? "20px" : "0",
+          overflowX: "hidden",
+          transition: "all 0.3s ease",
+        }}
+      >
+        {sidebarOpen && (
+          <>
+            <Typography variant="h6" style={styles.sidebarTitle}>
+              Menu
+            </Typography>
+            <div
+              style={{
+                ...styles.sidebarItem,
+                backgroundColor: "#FFD966",
+                borderRadius: "100px",
+              }}
+              onClick={() => navigate("/teacher-homepage")}
+            >
+              My Classes
             </div>
-          ))}
-        </div>
 
-        <div
-          style={{ ...styles.sidebarItem, marginTop: "50px" }}
-          onClick={() => navigate("/teacher-challenges")}
-        >
-          Challenges
-        </div>
+            <div style={styles.classList}>
+              {classes.map((cls, index) => (
+                <div key={index} style={styles.subItem}>
+                  {cls}
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{ ...styles.sidebarItem, marginTop: "50px" }}
+              onClick={() => navigate("/teacher-challenges")}
+            >
+              Challenges
+            </div>
+          </>
+        )}
       </div>
 
-      <div style={styles.content}>
+      {/* Main Content */}
+      <div
+        style={{
+          ...styles.content,
+          marginLeft: sidebarOpen ? "200px" : "0",
+          transition: "margin 0.3s ease",
+        }}
+      >
+        {/* Navbar */}
         <div style={styles.navbar}>
+          <div style={styles.navLeft}>
+            <IconButton
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              sx={{ color: "white" }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </div>
+
           <div style={styles.navRight}>
             <IconButton color="inherit">
               <Badge badgeContent={3} color="error">
-                <NotificationsIcon sx={{ bgcolor: "#FFD966"}} />
+                <NotificationsIcon sx={{ bgcolor: "#FFD966" }} />
               </Badge>
             </IconButton>
 
@@ -112,7 +144,9 @@ const TeacherHomepage = () => {
                 horizontal: "right",
               }}
             >
-              <MenuItem onClick={() => navigate("/teacher-profile")}>My Account</MenuItem>
+              <MenuItem onClick={() => navigate("/teacher-profile")}>
+                My Account
+              </MenuItem>
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </div>
@@ -128,7 +162,7 @@ const TeacherHomepage = () => {
               <div
                 key={index}
                 style={styles.classCard}
-                onClick={() => navigate("/teacher-classroomcard")}
+                onClick={() => navigate("/classroomcard")}
               >
                 <Typography variant="subtitle1">{name}</Typography>
               </div>
@@ -144,9 +178,10 @@ const TeacherHomepage = () => {
         </div>
       </div>
 
+      {/* Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Add New Class</DialogTitle>
-        <DialogContent>
+      <DialogTitle sx={{ backgroundColor: "#FFE8A3" }}>Create a class</DialogTitle>
+      <DialogContent sx={{ backgroundColor: "#FFE8A3" }}>
           <TextField
             autoFocus
             margin="dense"
@@ -171,11 +206,15 @@ const TeacherHomepage = () => {
             onChange={(e) => setEnrollmentLimit(e.target.value)}
           />
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ backgroundColor: "#FFE8A3" }}>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={handleAddClass} variant="contained">
-            Add
-          </Button>
+          <Button 
+           onClick={handleAddClass} 
+           variant="contained" 
+            sx={{ backgroundColor: "#451513", "&:hover": { backgroundColor: "#2f0f0e" } }}
+        >
+           Create
+        </Button>
         </DialogActions>
       </Dialog>
     </div>
@@ -189,9 +228,7 @@ const styles = {
     fontFamily: "Arial, sans-serif",
   },
   sidebar: {
-    width: "200px",
     backgroundColor: "#FFE8A3",
-    padding: "20px",
     display: "flex",
     flexDirection: "column",
     color: "#451513",
@@ -222,7 +259,6 @@ const styles = {
   },
   content: {
     flexGrow: 1,
-    marginLeft: "240px",
     display: "flex",
     flexDirection: "column",
   },
@@ -230,7 +266,7 @@ const styles = {
     height: "60px",
     backgroundColor: "#451513",
     display: "flex",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "center",
     padding: "0 20px",
     borderBottom: "2px solid #FFE8A3",
@@ -240,6 +276,10 @@ const styles = {
     right: 0,
     zIndex: 2,
   },
+  navLeft: {
+    display: "flex",
+    alignItems: "center",
+  },
   navRight: {
     display: "flex",
     alignItems: "center",
@@ -247,7 +287,7 @@ const styles = {
   },
   main: {
     flexGrow: 1,
-    padding: "30px",
+    padding: "70px",
     backgroundColor: "#FFFBE0",
     marginTop: "60px",
   },
@@ -272,7 +312,7 @@ const styles = {
     fontWeight: "bold",
     fontSize: "16px",
     cursor: "pointer",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
     transition: "0.3s ease-in-out",
   },
   addCard: {
