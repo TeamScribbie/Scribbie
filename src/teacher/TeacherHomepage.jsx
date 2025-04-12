@@ -23,7 +23,7 @@ const TeacherHomepage = () => {
   const [className, setClassName] = useState("");
   const [classCode, setClassCode] = useState("");
   const [enrollmentLimit, setEnrollmentLimit] = useState("");
-  const [classes, setClasses] = useState(["Classroom 2"]);
+  const [classes, setClasses] = useState([]);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
@@ -125,7 +125,11 @@ const TeacherHomepage = () => {
 
           <div style={styles.cardContainer}>
             {classes.map((name, index) => (
-              <div key={index} style={styles.classCard}>
+              <div
+                key={index}
+                style={styles.classCard}
+                onClick={() => navigate("/teacher-classroomcard")}
+              >
                 <Typography variant="subtitle1">{name}</Typography>
               </div>
             ))}
@@ -140,10 +144,9 @@ const TeacherHomepage = () => {
         </div>
       </div>
 
-      {/* Dialog for adding a new class */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Add New Class</DialogTitle>
-        <DialogContent >
+        <DialogContent>
           <TextField
             autoFocus
             margin="dense"
@@ -192,9 +195,9 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     color: "#451513",
-    position: "fixed", 
-    top: "60px", 
-    bottom: "0", 
+    position: "fixed",
+    top: "60px",
+    bottom: "0",
     zIndex: 1,
   },
   sidebarTitle: {
