@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, TextField, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImg from '../assets/book.png';
+// import bookImg from '../assets/book.png';
 
 const StudentLogin = () => {
   const [idNumber, setIdNumber] = useState('');
@@ -92,7 +92,7 @@ const StudentLogin = () => {
           </Typography>
         </div>
 
-        <img src={bookImg} alt="Book" style={{ height: '300px', marginLeft: '40px' }} />
+        {/* <img src={bookImg} alt="Book" style={{ height: '300px', marginLeft: '40px' }} /> */}
       </div>
     </div>
   );

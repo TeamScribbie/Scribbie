@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, TextField, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../assets/book.png';
+// import bookImage from '../assets/book.png';
 
 const StudentRegistration = () => {
   const navigate = useNavigate();
@@ -35,12 +35,12 @@ const StudentRegistration = () => {
         textAlign: 'center',
         width: '40%',
       }}>
-        <img src={bookImage} alt="Books" style={{ 
+        {/* <img src={bookImage} alt="Books" style={{ 
           position: 'absolute', 
           bottom: '0px', 
           right: '0px', 
           width: '480px' 
-        }} />
+        }} /> */}
         
         <Typography variant="h4" style={{ fontWeight: 'bold', marginBottom: '20px' }}>
           SCRIBBIE
