@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, TextField, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../assets/book.png';
+import bookImage from '../../assets/book.png';
 
 const TeacherLogin = () => {
   const [idNumber, setIdNumber] = useState('');

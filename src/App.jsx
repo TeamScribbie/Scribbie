@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import TeacherLogin from './page/TeacherLogin';
-import TeacherRegistration from './page/TeacherRegistration';
-import TeacherHomepage from './page/TeacherHomepage';
+import TeacherLogin from './page/teacher/TeacherLogin';
+import TeacherRegistration from './page/teacher/TeacherRegistration';
+import TeacherHomepage from './page/teacher/TeacherHomepage';
 
 const App = () => {
   return (
