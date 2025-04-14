@@ -3,8 +3,6 @@ import StudentHomepage from "./page/student/StudentHomepage";
 import StudentLogin from "./page/student/StudentLogin";
 import StudentRegistration from "./page/student/StudentRegistration";
 import { Routes, Route, Navigate } from 'react-router-dom';
-import TeacherChallenges from './teacher/TeacherChallenges';
-import ClassroomCard from './teacher/Classroomcard';
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
@@ -21,8 +19,6 @@ const App = () => {
       <Route path="/teacher-login" element={<TeacherLogin />} />
       <Route path="/teacher-register" element={<TeacherRegistration />} />
       <Route path="/teacher-homepage" element={<TeacherHomepage />} />
-      <Route path="/teacher-challenges" element={<TeacherChallenges />} />
-      <Route path="/classroomcard" element={<ClassroomCard />} />
     </Routes>
   );
 };
