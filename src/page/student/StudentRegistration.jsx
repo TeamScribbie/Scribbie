@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import { Button, TextField, Typography } from '@mui/material';
+import { Button, TextField, Typography, Link } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-// import bookImage from '../assets/book.png';
+import bookImage from '../../assets/book.png';
 
 const StudentRegistration = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    lastName: '',
-    firstName: '',
     studentId: '',
+    firstName: '',
+    lastName: '',
     password: '',
+    verifyPassword: '',
   });
 
   const handleChange = (e) => {
@@ -23,85 +24,98 @@ const StudentRegistration = () => {
   };
 
   return (
-    <div style={{ 
-      backgroundColor: '#FFFBE0', 
-      height: '100vh', 
-      display: 'flex', 
-      justifyContent: 'center', 
+    <div style={{
+      backgroundColor: '#FFFBE0',
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
     }}>
-      <div style={{ 
-        textAlign: 'center',
+      <img
+        src={bookImage}
+        alt="Books"
+        style={{
+          position: 'absolute',
+          bottom: '0px',
+          right: '0px',
+          width: '350px',
+        }}
+      />
+
+      <div style={{
+        backgroundColor: '#fff',
+        borderRadius: '8px',
+        overflow: 'hidden',
         width: '40%',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
       }}>
-        {/* <img src={bookImage} alt="Books" style={{ 
-          position: 'absolute', 
-          bottom: '0px', 
-          right: '0px', 
-          width: '480px' 
-        }} /> */}
-        
-        <Typography variant="h4" style={{ fontWeight: 'bold', marginBottom: '20px' }}>
-          SCRIBBIE
-        </Typography>
-
-        <TextField
-          name="lastName"
-          label="Last Name"
-          value={formData.lastName}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          style={{ backgroundColor: '#FFDE9A' }}
-        />
-
-        <TextField
-          name="firstName"
-          label="First Name"
-          value={formData.firstName}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          style={{ backgroundColor: '#FFDE9A' }}
-        />
-
-        <TextField
-          name="studentId"
-          label="Student ID"
-          value={formData.studentId}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          style={{ backgroundColor: '#FFDE9A' }}
-        />
-
-        <TextField
-          name="password"
-          label="Password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          variant="outlined"
-          style={{ backgroundColor: '#FFDE9A' }}
-        />
-
-        <Button 
-          onClick={handleRegister} 
-          style={{ 
-            backgroundColor: '#F5B041', 
-            color: 'white', 
-            marginTop: '20px', 
-            width: '100%' 
-          }}
-        >
+        {/* Header */}
+        <div style={{
+          backgroundColor: '#451513',
+          color: 'white',
+          textAlign: 'center',
+          padding: '15px 0',
+          fontSize: '24px',
+          fontWeight: 'bold',
+        }}>
           Register
-        </Button>
+        </div>
+
+        <div style={{
+          padding: '30px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}>
+          <Typography variant="h5" gutterBottom>
+            Welcome to Scribbie, Student!
+          </Typography>
+
+          {/* Form Fields */}
+          {['studentId', 'firstName', 'lastName', 'password', 'verifyPassword'].map((field) => (
+            <TextField
+              key={field}
+              name={field}
+              label={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
+              size="small"
+              value={formData[field]}
+              onChange={handleChange}
+              fullWidth
+              margin="dense"
+              variant="outlined"
+              InputProps={{
+                style: {
+                  backgroundColor: '#FFDE9A',
+                  border: '1px solid #451513',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  height: '50px',
+                  padding: '0 12px',
+                },
+              }}
+              style={{ width: '80%', marginBottom: '10px' }}
+            />
+          ))}
+
+          <Button
+            onClick={handleRegister}
+            style={{
+              backgroundColor: '#451513',
+              color: 'white',
+              marginTop: '20px',
+              width: '40%',
+            }}
+          >
+            Register
+          </Button>
+
+          <Typography style={{ marginTop: '15px' }}>
+            <Link href="/student-login" style={{ color: '#451513' }}>
+              Already have an account? <strong>Login here</strong>
+            </Link>
+          </Typography>
+        </div>
       </div>
     </div>
   );
