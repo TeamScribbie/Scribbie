@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from "./components/layout/navbar";
 import StudentHomepage from "./page/student/StudentHomepage";
@@ -8,6 +7,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
+
 
 const App = () => {
   return (

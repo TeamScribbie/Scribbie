@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../../components/layout/navbar";
 
 const StudentHomepage = () => {
   const navigate = useNavigate();
