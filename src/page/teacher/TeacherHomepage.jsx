@@ -10,7 +10,9 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/layout/navbar";
-import styles from "../../components/styles/TeacherHomepageStyles";
+import Sidebar from "../../components/layout/sidebar"; 
+import styles from "../../components/styles/TeacherHomepageStyles"; 
+import sidebarStyles from "../../components/styles/SidebarStyles"; 
 
 const TeacherHomepage = () => {
   const navigate = useNavigate();
@@ -19,8 +21,7 @@ const TeacherHomepage = () => {
   const [classCode, setClassCode] = useState("");
   const [enrollmentLimit, setEnrollmentLimit] = useState("");
   const [classes, setClasses] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const [sidebarOpen, setSidebarOpen] = useState(true); 
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleAddClass = () => {
@@ -35,59 +36,23 @@ const TeacherHomepage = () => {
 
   return (
     <div style={styles.container}>
-      <div
-        style={{
-          ...styles.sidebar,
-          width: sidebarOpen ? "200px" : "0",
-          padding: sidebarOpen ? "20px" : "0",
-          overflowX: "hidden",
-          transition: "all 0.3s ease",
-        }}
-      >
-        {sidebarOpen && (
-          <>
-            <Typography variant="h6" style={styles.sidebarTitle}>
-              Menu
-            </Typography>
-            <div
-              style={{
-                ...styles.sidebarItem,
-                backgroundColor: "#FFD966",
-                borderRadius: "100px",
-              }}
-              onClick={() => navigate("/teacher-homepage")}
-            >
-              My Classes
-            </div>
-
-            <div style={styles.classList}>
-              {classes.map((cls, index) => (
-                <div key={index} style={styles.subItem}>
-                  {cls}
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{ ...styles.sidebarItem, marginTop: "50px" }}
-              onClick={() => navigate("/teacher-challenges")}
-            >
-              Challenges
-            </div>
-          </>
-        )}
-      </div>
+      {/* Render Sidebar and pass props */}
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        classes={classes} 
+        sidebarStyles={sidebarStyles} 
+      />
 
       <div
         style={{
           ...styles.content,
-          marginLeft: sidebarOpen ? "200px" : "0",
+          marginLeft: sidebarOpen ? "200px" : "0", 
           transition: "margin 0.3s ease",
         }}
       >
         <Navbar
           sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
+          setSidebarOpen={setSidebarOpen} 
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl}
         />
@@ -118,8 +83,11 @@ const TeacherHomepage = () => {
         </div>
       </div>
 
+      {/* Dialog for creating a class */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle sx={{ backgroundColor: "#FFE8A3" }}>Create a class</DialogTitle>
+        <DialogTitle sx={{ backgroundColor: "#FFE8A3" }}>
+          Create a class
+        </DialogTitle>
         <DialogContent sx={{ backgroundColor: "#FFE8A3" }}>
           <TextField
             autoFocus
