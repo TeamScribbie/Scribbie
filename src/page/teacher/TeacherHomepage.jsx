@@ -10,9 +10,8 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/layout/navbar";
-import Sidebar from "../../components/layout/sidebar"; 
-import styles from "../../components/styles/TeacherHomepageStyles"; 
-import sidebarStyles from "../../components/styles/SidebarStyles"; 
+import Sidebar from "../../components/layout/sidebar";
+import styles from "../../components/styles/TeacherHomepageStyles";
 
 const TeacherHomepage = () => {
   const navigate = useNavigate();
@@ -20,8 +19,8 @@ const TeacherHomepage = () => {
   const [className, setClassName] = useState("");
   const [classCode, setClassCode] = useState("");
   const [enrollmentLimit, setEnrollmentLimit] = useState("");
-  const [classes, setClasses] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(true); 
+  const [classes, setClasses] = useState([]); // ✅ No default classrooms
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleAddClass = () => {
@@ -36,23 +35,18 @@ const TeacherHomepage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Render Sidebar and pass props */}
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        classes={classes} 
-        sidebarStyles={sidebarStyles} 
-      />
+      <Sidebar sidebarOpen={sidebarOpen} classes={classes} />
 
       <div
         style={{
           ...styles.content,
-          marginLeft: sidebarOpen ? "200px" : "0", 
+          marginLeft: sidebarOpen ? "200px" : "0",
           transition: "margin 0.3s ease",
         }}
       >
         <Navbar
           sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
           anchorEl={anchorEl}
           setAnchorEl={setAnchorEl}
         />
@@ -67,7 +61,7 @@ const TeacherHomepage = () => {
               <div
                 key={index}
                 style={styles.classCard}
-                onClick={() => navigate("/classroomcard")}
+                onClick={() => navigate(`/classroom/${index + 1}`)}
               >
                 <Typography variant="subtitle1">{name}</Typography>
               </div>
@@ -83,7 +77,6 @@ const TeacherHomepage = () => {
         </div>
       </div>
 
-      {/* Dialog for creating a class */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle sx={{ backgroundColor: "#FFE8A3" }}>
           Create a class
