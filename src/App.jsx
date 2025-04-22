@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from "./components/layout/navbar";
+import Sidebar from "./components/layout/sidebar";
 import StudentHomepage from "./page/student/StudentHomepage";
 import StudentLogin from "./page/student/StudentLogin";
 import StudentRegistration from "./page/student/StudentRegistration";
@@ -13,6 +14,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/nav" element={<Navbar />} />
+      <Route path="/sidebar" element={<Sidebar />} />
       <Route path="/student-homepage" element={<StudentHomepage />} />
       <Route path="/student-homepage" element={<StudentHomepage />} />
       <Route path="/student-login" element={<StudentLogin />} />
