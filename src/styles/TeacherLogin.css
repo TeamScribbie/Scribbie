@@ -1,0 +1,67 @@
+/* src/styles/TeacherLogin.css */
+
+/* Re-use or adapt styles from StudentLogin.css as needed */
+/* For brevity, we'll assume many classes like .login-card, .login-header, etc. exist */
+/* and have similar properties. Define any specific overrides or new styles here. */
+
+.teacher-login-container {
+    background-color: #FFFBE0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  /* Using general class names defined in StudentLogin.css where applicable */
+  /* .login-card {} */
+  /* .login-header {} */
+  /* .login-content {} */
+  
+  .login-title-teacher { /* Slightly different title */
+    text-align: center;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Reuse toggle styles */
+  /* .user-toggle-container {} */
+  /* .user-toggle-button {} */
+  /* .user-toggle-button-active {} */
+  
+  /* Reuse form styles */
+  /* .login-form-container {} */
+  /* .login-input-field {} */
+  /* .login-button {} */
+  
+  .register-link-container-teacher { /* Specific container class */
+    margin-top: 15px;
+  }
+  
+  /* Reuse link styles */
+  /* .register-link {} */
+  /* .register-link strong {} */
+  
+  /* Reuse image styles */
+  .book-image-teacher {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 300px;
+    height: auto;
+    display: none;
+  }
+  
+  @media (min-width: 768px) {
+    .book-image-teacher {
+      display: block;
+    }
+     /* .login-card { width: 40%; } */ /* Reuse if desired */
+  }
+  
+  @media (min-width: 1024px) {
+    .book-image-teacher {
+      width: 300px; /* Keep original size for teacher login */
+    }
+  }

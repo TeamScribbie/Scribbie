@@ -1,11 +1,15 @@
+// src/page/student/StudentRegistration.jsx
 import React, { useState } from 'react';
-import { Button, TextField, Typography, Link } from '@mui/material';
+import { Typography, Link } from '@mui/material'; // Keep Link for the bottom link
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../../assets/book.png';
+import bookImage from '../../assets/book.png'; // Ensure path is correct
+import RegistrationForm from '../../components/auth/RegistrationForm'; // Import the new form
+import '../../styles/StudentRegistration.css'; // Import the new CSS
 
 const StudentRegistration = () => {
   const navigate = useNavigate();
 
+  // Keep the state structure as it was
   const [formData, setFormData] = useState({
     studentId: '',
     firstName: '',
@@ -14,109 +18,52 @@ const StudentRegistration = () => {
     verifyPassword: '',
   });
 
+  // Keep the single handler - it works because input 'name' matches state keys
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = () => {
+  // Handle form submission
+  const handleRegister = (event) => {
+    event.preventDefault(); // Prevent default form submission
+    // Add validation logic here if needed (e.g., check if passwords match)
     console.log('Registering student:', formData);
-    navigate("/student-login");
+    // --- API Call would go here ---
+    // Navigate after "attempt"
+    navigate('/student-login');
   };
 
   return (
-    <div style={{
-      backgroundColor: '#FFFBE0',
-      height: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'relative',
-    }}>
-      <img
-        src={bookImage}
-        alt="Books"
-        style={{
-          position: 'absolute',
-          bottom: '0px',
-          right: '0px',
-          width: '350px',
-        }}
-      />
-
-      <div style={{
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        width: '40%',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-      }}>
-        {/* Header */}
-        <div style={{
-          backgroundColor: '#451513',
-          color: 'white',
-          textAlign: 'center',
-          padding: '15px 0',
-          fontSize: '24px',
-          fontWeight: 'bold',
-        }}>
+    <div className="student-registration-container">
+      <div className="registration-card">
+        <div className="registration-header">
           Register
         </div>
 
-        <div style={{
-          padding: '30px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}>
-          <Typography variant="h5" gutterBottom>
+        <div className="registration-content">
+          <Typography variant="h5" className="registration-title">
             Welcome to Scribbie, Student!
           </Typography>
 
-          {/* Form Fields */}
-          {['studentId', 'firstName', 'lastName', 'password', 'verifyPassword'].map((field) => (
-            <TextField
-              key={field}
-              name={field}
-              label={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
-              size="small"
-              value={formData[field]}
-              onChange={handleChange}
-              fullWidth
-              margin="dense"
-              variant="outlined"
-              InputProps={{
-                style: {
-                  backgroundColor: '#FFDE9A',
-                  border: '1px solid #451513',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  height: '50px',
-                  padding: '0 12px',
-                },
-              }}
-              style={{ width: '80%', marginBottom: '10px' }}
-            />
-          ))}
+          {/* Use the RegistrationForm component */}
+          <RegistrationForm
+            formData={formData}
+            onChange={handleChange}
+            onSubmit={handleRegister}
+          />
 
-          <Button
-            onClick={handleRegister}
-            style={{
-              backgroundColor: '#451513',
-              color: 'white',
-              marginTop: '20px',
-              width: '40%',
-            }}
-          >
-            Register
-          </Button>
-
-          <Typography style={{ marginTop: '15px' }}>
-            <Link href="/student-login" style={{ color: '#451513' }}>
+          <Typography className="login-link-container">
+            <Link href="/student-login" className="login-link">
               Already have an account? <strong>Login here</strong>
             </Link>
           </Typography>
         </div>
       </div>
+      <img
+        src={bookImage}
+        alt="Books"
+        className="book-image-registration"
+      />
     </div>
   );
 };
