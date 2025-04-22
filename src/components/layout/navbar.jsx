@@ -1,11 +1,15 @@
-import React, { useState } from "react";
-import { IconButton, Avatar, Badge, Menu, MenuItem } from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import MenuIcon from "@mui/icons-material/Menu";
-import { useNavigate } from "react-router-dom";
+// src/components/layout/navbar.jsx
+import React, { useState } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
+import { IconButton, Avatar, Badge, Menu, MenuItem, Chip, Typography } from '@mui/material'; // Import Chip
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import MenuIcon from '@mui/icons-material/Menu';
+import { useNavigate } from 'react-router-dom';
+import '../../styles/Navbar.css'; // Import the CSS file
 
-const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
+// Accept userType prop ('Teacher', 'Student', or null/undefined)
+const Navbar = ({ sidebarOpen, setSidebarOpen, userType }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const openMenu = Boolean(anchorEl);
@@ -20,26 +24,50 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const handleLogout = () => {
     handleCloseMenu();
-    navigate("/teacher-login");
+    // Navigate based on user type or to a generic landing page
+    if (userType === 'Teacher') {
+      navigate('/teacher-login');
+    } else {
+      navigate('/student-login'); // Default or student login
+    }
   };
 
+  const handleAccount = () => {
+    handleCloseMenu();
+     // Navigate based on user type
+     if (userType === 'Teacher') {
+      navigate('/teacher-profile'); // Example teacher profile route
+    } else {
+      navigate('/student-profile'); // Example student profile route
+    }
+  }
+
   return (
-    <div style={styles.navbar}>
-      <div style={styles.navLeft}>
-        <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} sx={{ color: "white" }}>
-          <MenuIcon />
-        </IconButton>
+    // Use class name for main container
+    <div className="navbar-container">
+      <div className="navbar-left">
+        {/* Allow sidebar toggle */}
+        {setSidebarOpen && ( // Only show if function is provided
+            <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} className="navbar-icon-button">
+              <MenuIcon />
+            </IconButton>
+        )}
       </div>
 
-      <div style={styles.navRight}>
-        <IconButton color="inherit">
-          <Badge badgeContent={3} color="error">
-            <NotificationsIcon sx={{ bgcolor: "#FFD966" }} />
+      <div className="navbar-right">
+        {/* Conditionally render the User Type Indicator */}
+        {userType && (
+          <Chip label={userType.toUpperCase()} size="small" className="user-type-indicator" />
+        )}
+
+        <IconButton color="inherit" className="navbar-icon-button">
+          <Badge badgeContent={3} color="error"> {/* Example badge content */}
+            <NotificationsIcon /> {/* Bell Icon */}
           </Badge>
         </IconButton>
 
-        <IconButton onClick={handleProfileClick}>
-          <Avatar sx={{ bgcolor: "#FFD966", width: 32, height: 32 }}>
+        <IconButton onClick={handleProfileClick} className="navbar-avatar-button">
+          <Avatar className="navbar-avatar">
             <AccountCircle />
           </Avatar>
         </IconButton>
@@ -49,15 +77,15 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           open={openMenu}
           onClose={handleCloseMenu}
           anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "right",
+            vertical: 'bottom',
+            horizontal: 'right',
           }}
           transformOrigin={{
-            vertical: "top",
-            horizontal: "right",
+            vertical: 'top',
+            horizontal: 'right',
           }}
         >
-          <MenuItem onClick={() => navigate("/teacher-profile")}>My Account</MenuItem>
+          <MenuItem onClick={handleAccount}>My Account</MenuItem>
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
         </Menu>
       </div>
@@ -65,30 +93,11 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   );
 };
 
-const styles = {
-  navbar: {
-    height: "60px",
-    backgroundColor: "#451513",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "0 20px",
-    borderBottom: "2px solid #FFE8A3",
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 2,
-  },
-  navLeft: {
-    display: "flex",
-    alignItems: "center",
-  },
-  navRight: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-  },
+// Define prop types
+Navbar.propTypes = {
+  sidebarOpen: PropTypes.bool, // Make optional if not always used
+  setSidebarOpen: PropTypes.func, // Make optional
+  userType: PropTypes.oneOf(['Teacher', 'Student']), // Make optional or required based on usage
 };
 
 export default Navbar;

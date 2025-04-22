@@ -1,0 +1,55 @@
+/* src/styles/Navbar.css */
+
+.navbar-container {
+    height: 60px;
+    background-color: #451513;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 2px solid #FFE8A3;
+    position: fixed; /* Keep fixed positioning */
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001; /* Ensure Navbar is above sidebar */
+    box-sizing: border-box;
+  }
+  
+  .navbar-left {
+    display: flex;
+    align-items: center;
+  }
+  
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  /* Style for the User Type Indicator Chip */
+  .user-type-indicator {
+    /* Example styling - adjust as needed */
+    background-color: #FFD966 !important; /* Match avatar/icon background */
+    color: #451513 !important; /* Dark text */
+    font-weight: bold !important;
+    height: 28px !important; /* Adjust size */
+    border-radius: 16px !important; /* Make it pill-shaped */
+    margin-right: 8px !important; /* Add some spacing */
+  }
+  
+  /* Ensure icons have a consistent color if needed */
+  .navbar-icon-button {
+    color: white !important; /* Example: make icons white */
+  }
+  
+  .navbar-avatar-button {
+    padding: 0 !important; /* Remove default padding if needed */
+  }
+  
+  .navbar-avatar {
+    background-color: #FFD966 !important;
+    width: 32px !important;
+    height: 32px !important;
+    color: #451513 !important; /* Icon color inside avatar */
+  }

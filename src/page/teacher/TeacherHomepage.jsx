@@ -1,90 +1,41 @@
-import React, { useState } from "react";
-import {
-  Button,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import Navbar from "../../components/layout/navbar";
-import styles from "../../components/styles/TeacherHomepageStyles";
+// src/page/teacher/TeacherHomepage.jsx
+import React, { useState } from 'react';
+import { Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
+// Corrected import paths:
+import Navbar from '../../components/layout/navbar';
+import TeacherSidebar from '../../components/layout/TeacherSidebar';
+import ClassroomCard from '../../components/cards/ClassroomCard'; // Or classroom/ClassroomCard
+import AddClassCard from '../../components/cards/AddClassCard';   // Or classroom/AddClassCard
+import AddClassDialog from '../../components/dialogs/AddClassDialog';// Or classroom/AddClassDialog
+
+import '../../styles/TeacherHomepage.css'; // Import the new CSS
 
 const TeacherHomepage = () => {
   const navigate = useNavigate();
-  const [openDialog, setOpenDialog] = useState(false);
-  const [className, setClassName] = useState("");
-  const [classCode, setClassCode] = useState("");
-  const [enrollmentLimit, setEnrollmentLimit] = useState("");
   const [classes, setClasses] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const [isAddClassDialogOpen, setIsAddClassDialogOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const handleAddClass = () => {
-    if (className.trim() && classCode.trim() && enrollmentLimit.trim()) {
-      setClasses([...classes, className]);
-      setClassName("");
-      setClassCode("");
-      setEnrollmentLimit("");
-      setOpenDialog(false);
-    }
+  const handleAddClassToList = (newClassData) => {
+    console.log('Adding class:', newClassData);
+    setClasses([...classes, { name: newClassData.name }]);
+  };
+
+  const handleClassCardClick = (className) => {
+    console.log(`Navigate to classroom: ${className}`);
+    // navigate(`/teacher/classroom/${className}`);
   };
 
   return (
-    <div style={styles.container}>
-      <div
-        style={{
-          ...styles.sidebar,
-          width: sidebarOpen ? "200px" : "0",
-          padding: sidebarOpen ? "20px" : "0",
-          overflowX: "hidden",
-          transition: "all 0.3s ease",
-        }}
-      >
-        {sidebarOpen && (
-          <>
-            <Typography variant="h6" style={styles.sidebarTitle}>
-              Menu
-            </Typography>
-            <div
-              style={{
-                ...styles.sidebarItem,
-                backgroundColor: "#FFD966",
-                borderRadius: "100px",
-              }}
-              onClick={() => navigate("/teacher-homepage")}
-            >
-              My Classes
-            </div>
-
-            <div style={styles.classList}>
-              {classes.map((cls, index) => (
-                <div key={index} style={styles.subItem}>
-                  {cls}
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{ ...styles.sidebarItem, marginTop: "50px" }}
-              onClick={() => navigate("/teacher-challenges")}
-            >
-              Challenges
-            </div>
-          </>
-        )}
+    <div className="teacher-homepage-container">
+      <div className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
+        <TeacherSidebar isOpen={sidebarOpen} activeItem="Classes"/>
       </div>
 
-      <div
-        style={{
-          ...styles.content,
-          marginLeft: sidebarOpen ? "200px" : "0",
-          transition: "margin 0.3s ease",
-        }}
-      >
+      <div className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
         <Navbar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
@@ -92,73 +43,29 @@ const TeacherHomepage = () => {
           setAnchorEl={setAnchorEl}
         />
 
-        <div style={styles.main}>
-          <Typography variant="h5" style={styles.heading}>
+        <div className="teacher-main-content">
+          <Typography variant="h5" className="main-content-heading">
             Active Classes
           </Typography>
 
-          <div style={styles.cardContainer}>
-            {classes.map((name, index) => (
-              <div
+          <div className="card-container">
+            {classes.map((cls, index) => (
+              <ClassroomCard
                 key={index}
-                style={styles.classCard}
-                onClick={() => navigate("/classroomcard")}
-              >
-                <Typography variant="subtitle1">{name}</Typography>
-              </div>
+                name={cls.name}
+                onClick={() => handleClassCardClick(cls.name)}
+              />
             ))}
-
-            <div
-              style={{ ...styles.classCard, ...styles.addCard }}
-              onClick={() => setOpenDialog(true)}
-            >
-              + Add Class
-            </div>
+            <AddClassCard onClick={() => setIsAddClassDialogOpen(true)} />
           </div>
         </div>
       </div>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle sx={{ backgroundColor: "#FFE8A3" }}>Create a class</DialogTitle>
-        <DialogContent sx={{ backgroundColor: "#FFE8A3" }}>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Class Name"
-            fullWidth
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label="Class Code"
-            fullWidth
-            value={classCode}
-            onChange={(e) => setClassCode(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label="Enrollment Limit"
-            fullWidth
-            type="number"
-            value={enrollmentLimit}
-            onChange={(e) => setEnrollmentLimit(e.target.value)}
-          />
-        </DialogContent>
-        <DialogActions sx={{ backgroundColor: "#FFE8A3" }}>
-          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleAddClass}
-            variant="contained"
-            sx={{
-              backgroundColor: "#451513",
-              "&:hover": { backgroundColor: "#2f0f0e" },
-            }}
-          >
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <AddClassDialog
+        open={isAddClassDialogOpen}
+        onClose={() => setIsAddClassDialogOpen(false)}
+        onAddClass={handleAddClassToList}
+      />
     </div>
   );
 };
