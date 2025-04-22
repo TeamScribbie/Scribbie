@@ -1,13 +1,14 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/layout/navbar";
 import Sidebar from "./components/layout/sidebar";
 import StudentHomepage from "./page/student/StudentHomepage";
 import StudentLogin from "./page/student/StudentLogin";
 import StudentRegistration from "./page/student/StudentRegistration";
-import { Routes, Route, Navigate } from 'react-router-dom';
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
+import ClassroomCard from './page/teacher/ClassroomCard';
 
 
 const App = () => {
@@ -24,6 +25,7 @@ const App = () => {
       <Route path="/teacher-login" element={<TeacherLogin />} />
       <Route path="/teacher-register" element={<TeacherRegistration />} />
       <Route path="/teacher-homepage" element={<TeacherHomepage />} />
+      <Route path="/classroom/:id" element={<ClassroomCard />} />
     </Routes>
   );
 };
