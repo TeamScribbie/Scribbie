@@ -1,0 +1,152 @@
+/* src/styles/StudentLogin.css */
+
+.student-login-container {
+    background-color: #FFFBE0;
+    min-height: 100vh; /* Use min-height to ensure it covers viewport */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative; /* Needed for absolute positioning of the image */
+    padding: 20px; /* Add some padding for smaller screens */
+    box-sizing: border-box;
+  }
+  
+  .login-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%; /* Make it responsive */
+    max-width: 500px; /* Max width for larger screens */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .login-header {
+    background-color: #451513;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .login-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .login-title {
+    text-align: center;
+    margin-bottom: 1rem !important; /* Using !important to override MUI default if needed */
+  }
+  
+  .user-toggle-container {
+    background-color: #fff;
+    border-radius: 999px;
+    border: 2px solid #451513;
+    overflow: hidden;
+    margin: 15px 0;
+    display: flex;
+  }
+  
+  .user-toggle-button {
+    padding: 8px 16px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    background-color: transparent;
+    color: #451513;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+  
+  .user-toggle-button-active {
+    background-color: #451513;
+    color: #fff;
+  }
+  
+  .login-form-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* Add gap between form elements */
+  }
+  
+  .login-input-field .MuiOutlinedInput-root {
+    background-color: #FFDE9A;
+    border: 1px solid #451513;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 50px; /* Adjust height as needed */
+  }
+  
+  /* Override default MUI input padding if needed */
+  .login-input-field .MuiOutlinedInput-input {
+    padding: 0 12px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Remove default MUI fieldset border */
+  .login-input-field .MuiOutlinedInput-notchedOutline {
+    border: none;
+  }
+  
+  .login-button {
+    background-color: #451513 !important; /* Use !important to ensure override */
+    color: white !important;
+    margin-top: 20px !important;
+    width: 40%;
+  }
+  
+  .login-button:hover {
+    background-color: #5d211f !important; /* Slightly lighter shade for hover */
+  }
+  
+  .register-link-container {
+    margin-top: 15px;
+  }
+  
+  .register-link {
+    color: #451513 !important;
+    text-decoration: none !important;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+  }
+  
+  .register-link strong {
+    font-weight: bold;
+  }
+  
+  .book-image {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 300px;
+    height: auto; /* Maintain aspect ratio */
+    display: none; /* Hide by default */
+  }
+  
+  /* Show image only on larger screens */
+  @media (min-width: 768px) {
+    .book-image {
+      display: block;
+    }
+    .login-card {
+      width: 40%; /* Revert to original width on larger screens if desired */
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .book-image {
+      width: 350px;
+    }
+  }
