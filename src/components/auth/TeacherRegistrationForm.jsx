@@ -3,39 +3,42 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, TextField } from '@mui/material';
 
-// Helper function to format field names for labels (can be moved to a utils file)
 const formatLabel = (fieldName) => {
-  return fieldName
+  // ... (keep existing helper function) ...
+    return fieldName
     .replace(/([A-Z])/g, ' $1') // Add space before capital letters
     .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
 };
 
-const TeacherRegistrationForm = ({ formData, onChange, onSubmit }) => {
-  // Fields specific to Teacher Registration based on the original code
-  const fields = ['email', 'firstName', 'lastName', 'teacherId', 'password', 'verifyPassword'];
+const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */ }) => {
+  // Add 'businessCode' to the fields array
+  const fields = ['email', 'firstName', 'lastName', 'teacherId', 'password', 'verifyPassword', 'businessCode'];
 
   return (
+    // Add disabling logic if needed based on isLoading prop
     <form className="teacher-registration-form-container" onSubmit={onSubmit}>
       {fields.map((field) => (
         <TextField
           key={field}
-          name={field} // Name matches the key in formData
+          name={field}
           label={formatLabel(field)}
-          type={field.includes('password') ? 'password' : (field === 'email' ? 'email' : 'text')} // Set type for password/email
+          type={field.includes('password') ? 'password' : (field === 'email' ? 'email' : 'text')}
           size="small"
           value={formData[field]}
-          onChange={onChange} // Use the single handler from parent
+          onChange={onChange}
           fullWidth
           margin="dense"
           variant="outlined"
-          className="registration-input-field" // Reuse class name
+          className="registration-input-field"
           InputLabelProps={{ shrink: true }}
+          // disabled={isLoading} // Disable field if loading
         />
       ))}
       <Button
         type="submit"
         variant="contained"
-        className="registration-button" // Reuse class name
+        className="registration-button"
+        // disabled={isLoading} // Disable button if loading
       >
         Register
       </Button>
@@ -43,8 +46,8 @@ const TeacherRegistrationForm = ({ formData, onChange, onSubmit }) => {
   );
 };
 
+// Update propTypes to include businessCode
 TeacherRegistrationForm.propTypes = {
-  // Define prop types based on the fields used
   formData: PropTypes.shape({
     email: PropTypes.string.isRequired,
     firstName: PropTypes.string.isRequired,
@@ -52,10 +55,11 @@ TeacherRegistrationForm.propTypes = {
     teacherId: PropTypes.string.isRequired,
     password: PropTypes.string.isRequired,
     verifyPassword: PropTypes.string.isRequired,
-    // businessCode: PropTypes.string, // Add if you re-introduce this field later
+    businessCode: PropTypes.string.isRequired, // Add businessCode
   }).isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  // isLoading: PropTypes.bool, // Add if passing isLoading prop
 };
 
 export default TeacherRegistrationForm;

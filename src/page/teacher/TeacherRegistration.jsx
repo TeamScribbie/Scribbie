@@ -1,17 +1,17 @@
 // src/page/teacher/TeacherRegistration.jsx
 import React, { useState } from 'react';
-import { Typography, Link } from '@mui/material';
+// Import Alert and CircularProgress
+import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../../assets/book.png'; // Ensure path is correct
-// Import the new Teacher specific form
+import bookImage from '../../assets/book.png';
 import TeacherRegistrationForm from '../../components/auth/TeacherRegistrationForm';
-// Import the new CSS
 import '../../styles/TeacherRegistration.css';
+
+// Import the new API function
+import { registerTeacher } from '../../services/authService';
 
 const TeacherRegistration = () => {
   const navigate = useNavigate();
-
-  // State based on the fields in the original component
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -19,49 +19,103 @@ const TeacherRegistration = () => {
     teacherId: '',
     password: '',
     verifyPassword: '',
-    // businessCode: '', // Keep if needed later
+    businessCode: '', // Add businessCode to state
   });
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [error, setError] = useState(null); // Error state
 
-  // Reusable change handler
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(null); // Clear error on input change
   };
 
-  // Handle form submission
-  const handleRegister = (event) => {
+  const handleRegister = async (event) => {
     event.preventDefault();
-    // Add validation here (e.g., passwords match)
-    console.log('Registering teacher:', formData);
-    // --- API Call would go here ---
-    navigate('/teacher-login'); // Navigate after "attempt"
+    setError(null);
+    setIsLoading(true);
+
+    // Frontend Validation
+    if (formData.password !== formData.verifyPassword) {
+      setError('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
+    // Add other checks (lengths, required fields) based on API spec if desired
+     if (!formData.businessCode.trim()) {
+      setError('Business Code is required.');
+      setIsLoading(false);
+      return;
+    }
+    // ... add other validation rules ...
+
+    // Prepare data for API (combine names, ensure all fields exist)
+    const apiData = {
+        teacherId: formData.teacherId,
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        email: formData.email,
+        password: formData.password,
+        businessCode: formData.businessCode,
+    }
+
+    // API Call
+    try {
+      console.log('Attempting teacher registration with:', apiData);
+      const result = await registerTeacher(apiData); // Pass the prepared data object
+      console.log('Teacher Registration Successful:', result);
+
+      // Redirect to login page after success
+       setTimeout(() => {
+        navigate('/teacher-login');
+      }, 1500);
+
+    } catch (err) {
+      console.error('Teacher Registration Failed:', err);
+      setError(err.message || 'Registration failed. Please try again.');
+       setIsLoading(false);
+    }
+     // No finally block needed here, handled by error or timeout
   };
 
   return (
-    // Use specific container class or adapt general one
     <div className="teacher-registration-container">
-      {/* Reuse general card style */}
       <div className="registration-card">
-        {/* Reuse general header style */}
         <div className="registration-header">
           Register
         </div>
 
-        {/* Reuse general content style */}
         <div className="registration-content">
           <Typography variant="h5" className="registration-title-teacher">
             Welcome to Scribbie, Teacher!
           </Typography>
 
-          {/* Use the TeacherRegistrationForm component */}
+          {/* Display status messages */}
+          {error && (
+             <Alert severity="error" sx={{ width: '80%', mt: 1, mb: 1 }}>
+               {error}
+             </Alert>
+           )}
+
+          {/* Pass state and handler to the updated form */}
           <TeacherRegistrationForm
             formData={formData}
             onChange={handleChange}
             onSubmit={handleRegister}
+            // isLoading={isLoading} // Pass if form handles disabling
           />
 
-          {/* Reuse link styles */}
+           {/* Show loading indicator */}
+           {isLoading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+           )}
+
           <Typography className="login-link-container">
-            <Link href="/teacher-login" className="login-link">
+            <Link
+                href="/teacher-login"
+                className="login-link"
+                 style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+            >
               Already have an account? <strong>Login here</strong>
             </Link>
           </Typography>
@@ -70,7 +124,7 @@ const TeacherRegistration = () => {
       <img
         src={bookImage}
         alt="Books"
-        className="book-image-teacher-reg" 
+        className="book-image-teacher-reg"
       />
     </div>
   );
