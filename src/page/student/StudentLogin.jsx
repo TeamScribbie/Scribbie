@@ -7,6 +7,7 @@ import bookImage from '../../assets/book.png';
 import UserTypeToggle from '../../components/auth/UserTypeToggle';
 import LoginForm from '../../components/auth/LoginForm';
 import '../../styles/StudentLogin.css';
+import { useAuth } from '../../context/AuthContext';
 
 // Import the API function
 import { loginStudent } from '../../services/authService';
@@ -17,6 +18,7 @@ const StudentLogin = () => {
   const [isLoading, setIsLoading] = useState(false); // State for loading indicator
   const [error, setError] = useState(null); // State for error message
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleTabSwitch = (tab) => {
     if (tab === 'Teacher') {
@@ -36,7 +38,8 @@ const StudentLogin = () => {
       const userData = await loginStudent(idNumber, password);
 
       console.log('Student Login Successful:', userData);
-
+      login(userData, 'Student'); // Pass user data and type
+      navigate('/student-homepage');
       // --- TODO: Store User Data/Token ---
       // In a real app, you would typically store the received user data
       // (like user ID, name, role, and authentication token if provided)

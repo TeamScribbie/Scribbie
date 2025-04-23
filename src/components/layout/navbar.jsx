@@ -1,17 +1,19 @@
 // src/components/layout/navbar.jsx
 import React, { useState } from 'react';
-import PropTypes from 'prop-types'; // Import PropTypes
-import { IconButton, Avatar, Badge, Menu, MenuItem, Chip, Typography } from '@mui/material'; // Import Chip
+import PropTypes from 'prop-types';
+import { IconButton, Avatar, Badge, Menu, MenuItem, Chip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/Navbar.css'; // Import the CSS file
+import '../../styles/Navbar.css';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
 
-// Accept userType prop ('Teacher', 'Student', or null/undefined)
-const Navbar = ({ sidebarOpen, setSidebarOpen, userType }) => {
+// Remove userType prop, get from context instead
+const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
+  const { authState, logout } = useAuth(); // Get state and logout from context
   const openMenu = Boolean(anchorEl);
 
   const handleProfileClick = (event) => {
@@ -22,32 +24,28 @@ const Navbar = ({ sidebarOpen, setSidebarOpen, userType }) => {
     setAnchorEl(null);
   };
 
+  // Use context logout function
   const handleLogout = () => {
     handleCloseMenu();
-    // Navigate based on user type or to a generic landing page
-    if (userType === 'Teacher') {
-      navigate('/teacher-login');
-    } else {
-      navigate('/student-login'); // Default or student login
-    }
+    logout(); // Call context logout
+    // Navigate to a public page after logout
+    navigate('/student-login'); // Or a landing page '/'
   };
 
+  // Navigate based on context userType
   const handleAccount = () => {
     handleCloseMenu();
-     // Navigate based on user type
-     if (userType === 'Teacher') {
-      navigate('/teacher-profile'); // Example teacher profile route
-    } else {
-      navigate('/student-profile'); // Example student profile route
+     if (authState.userType === 'Teacher') {
+      navigate('/teacher-profile');
+    } else if (authState.userType === 'Student'){
+      navigate('/student-profile');
     }
   }
 
   return (
-    // Use class name for main container
     <div className="navbar-container">
       <div className="navbar-left">
-        {/* Allow sidebar toggle */}
-        {setSidebarOpen && ( // Only show if function is provided
+        {setSidebarOpen && (
             <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} className="navbar-icon-button">
               <MenuIcon />
             </IconButton>
@@ -55,49 +53,53 @@ const Navbar = ({ sidebarOpen, setSidebarOpen, userType }) => {
       </div>
 
       <div className="navbar-right">
-        {/* Conditionally render the User Type Indicator */}
-        {userType && (
-          <Chip label={userType.toUpperCase()} size="small" className="user-type-indicator" />
+        {/* Use userType from authState */}
+        {authState.isAuthenticated && authState.userType && (
+          <Chip label={authState.userType.toUpperCase()} size="small" className="user-type-indicator" />
         )}
 
-        <IconButton color="inherit" className="navbar-icon-button">
-          <Badge badgeContent={3} color="error"> {/* Example badge content */}
-            <NotificationsIcon /> {/* Bell Icon */}
-          </Badge>
-        </IconButton>
+        {/* Only show notifications/profile if authenticated */}
+        {authState.isAuthenticated && (
+          <>
+            <IconButton color="inherit" className="navbar-icon-button">
+              <Badge badgeContent={3} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
 
-        <IconButton onClick={handleProfileClick} className="navbar-avatar-button">
-          <Avatar className="navbar-avatar">
-            <AccountCircle />
-          </Avatar>
-        </IconButton>
+            <IconButton onClick={handleProfileClick} className="navbar-avatar-button">
+              {/* Display initials or name if available */}
+              <Avatar className="navbar-avatar">
+                 {authState.user?.name ? authState.user.name.charAt(0).toUpperCase() : <AccountCircle />}
+              </Avatar>
+            </IconButton>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={openMenu}
-          onClose={handleCloseMenu}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
-        >
-          <MenuItem onClick={handleAccount}>My Account</MenuItem>
-          <MenuItem onClick={handleLogout}>Logout</MenuItem>
-        </Menu>
+            <Menu
+              anchorEl={anchorEl}
+              open={openMenu}
+              onClose={handleCloseMenu}
+              // ... (menu props)
+            >
+              <MenuItem onClick={handleAccount}>My Account</MenuItem>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
+          </>
+        )}
+         {/* Optionally show Login/Register buttons if not authenticated */}
+         {!authState.isAuthenticated && (
+             <>
+                {/* Add Login/Register buttons or links here if desired */}
+             </>
+         )}
       </div>
     </div>
   );
 };
 
-// Define prop types
+// Update PropTypes - userType is no longer passed directly
 Navbar.propTypes = {
-  sidebarOpen: PropTypes.bool, // Make optional if not always used
-  setSidebarOpen: PropTypes.func, // Make optional
-  userType: PropTypes.oneOf(['Teacher', 'Student']), // Make optional or required based on usage
+  sidebarOpen: PropTypes.bool,
+  setSidebarOpen: PropTypes.func,
 };
 
 export default Navbar;

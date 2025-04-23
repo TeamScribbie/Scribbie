@@ -7,6 +7,8 @@ import bookImage from '../../assets/book.png';
 import UserTypeToggle from '../../components/auth/UserTypeToggle';
 import LoginForm from '../../components/auth/LoginForm';
 import '../../styles/TeacherLogin.css';
+import { useAuth } from '../../context/AuthContext';
+
 
 // Import the specific API function
 import { loginTeacher } from '../../services/authService';
@@ -17,6 +19,7 @@ const TeacherLogin = () => {
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleTabSwitch = (tab) => {
     if (tab === 'Student') {
@@ -31,17 +34,12 @@ const TeacherLogin = () => {
     setError(null);
 
     try {
-      console.log('Attempting teacher login with:', idNumber);
-      // Call the teacher login API function
-      const userData = await loginTeacher(idNumber, password); // Use idNumber as identifier
-
+      const userData = await loginTeacher(idNumber, password);
       console.log('Teacher Login Successful:', userData);
 
-      // --- TODO: Store User Data/Token ---
-      // Store teacher data/token similar to student login.
-      // Example: authContext.login(userData);
+      // Call context login function instead of TODO
+      login(userData, 'Teacher'); // Pass user data and type
 
-      // Navigate to teacher homepage on success
       navigate('/teacher-homepage');
 
     } catch (err) {
