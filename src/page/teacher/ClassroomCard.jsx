@@ -1,8 +1,10 @@
+// ClassroomCard.jsx (Updated to open centered RankingModal on full Challenge 1 click)
 import React, { useState } from "react";
 import { Typography, Tabs, Tab, Box } from "@mui/material";
 import { useParams } from "react-router-dom";
 import Navbar from "../../components/layout/navbar";
 import Sidebar from "../../components/layout/sidebar";
+import RankingModal from "../../components/modals/RankingModal";
 
 const studentData = [
   { id: 1, name: "Jane Doe", lessons: 1, grade: "100%" },
@@ -15,7 +17,7 @@ const ClassroomCard = ({ classroomName }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [activeView, setActiveView] = useState("activities");
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [rankingOpen, setRankingOpen] = useState(false);
   const { id } = useParams();
   const classroom = classroomName || `Classroom ${id}`;
 
@@ -34,11 +36,10 @@ const ClassroomCard = ({ classroomName }) => {
         <Navbar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          anchorEl={anchorEl}
-          setAnchorEl={setAnchorEl}
+          anchorEl={null}
+          setAnchorEl={() => {}}
         />
         <div style={{ padding: "80px 100px" }}>
-          {/* Top Nav: Activities / Class Record */}
           <Box sx={{ display: "flex", justifyContent: "center", mb: 4, borderBottom: "1px solid #ccc" }}>
             <Box
               onClick={() => toggleView("activities")}
@@ -67,12 +68,10 @@ const ClassroomCard = ({ classroomName }) => {
             </Box>
           </Box>
 
-          {/* Classroom Title */}
           <Typography variant="h5" style={{ fontWeight: "bold", color: "#451513", marginBottom: "20px" }}>
             {classroom}
           </Typography>
 
-          {/* Activities View */}
           {activeView === "activities" && (
             <Box
               sx={{
@@ -100,7 +99,7 @@ const ClassroomCard = ({ classroomName }) => {
                     backgroundColor: "#5C2E12",
                     borderRadius: "0px",
                     width: "100%",
-                    color: "#fffff", 
+                    color: "#fffff",
                   },
                 }}
               >
@@ -115,49 +114,48 @@ const ClassroomCard = ({ classroomName }) => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  cursor: "pointer",
                 }}
+                onClick={() => setRankingOpen(true)}
               >
-                <>
-                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mr: 3 }}>
-                    <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
-                      Challenge 1
-                    </Typography>
-                    <Box
-                      sx={{
-                        backgroundColor: "#451513",
-                        color: "#fff",
-                        borderRadius: "50%",
-                        width: "70px",
-                        height: "70px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        fontWeight: "bold",
-                        fontSize: "18px",
-                      }}
-                    >
-                      {activeTab === 0 ? "80%" : "100%"}
-                    </Box>
-                  </Box>
-
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mr: 3 }}>
+                  <Typography variant="body2" sx={{ fontWeight: "bold", mb: 1 }}>
+                    Challenge 1
+                  </Typography>
                   <Box
                     sx={{
-                      flexGrow: 1,
-                      backgroundColor: "#fff4cc",
-                      borderRadius: "15px",
-                      padding: "15px 20px",
+                      backgroundColor: "#451513",
+                      color: "#fff",
+                      borderRadius: "50%",
+                      width: "70px",
+                      height: "70px",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      fontWeight: "bold",
+                      fontSize: "18px",
                     }}
                   >
-                    <Box sx={{ backgroundColor: "#fff", height: "10px", width: "60%", borderRadius: "5px", mb: 1 }} />
-                    <Box sx={{ backgroundColor: "#fff", height: "10px", width: "50%", borderRadius: "5px", mb: 1 }} />
-                    <Box sx={{ backgroundColor: "#fff", height: "10px", width: "40%", borderRadius: "5px" }} />
+                    {activeTab === 0 ? "80%" : "100%"}
                   </Box>
-                </>
+                </Box>
+
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    backgroundColor: "#fff4cc",
+                    borderRadius: "15px",
+                    padding: "15px 20px",
+                  }}
+                >
+                  <Box sx={{ backgroundColor: "#fff", height: "10px", width: "60%", borderRadius: "5px", mb: 1 }} />
+                  <Box sx={{ backgroundColor: "#fff", height: "10px", width: "50%", borderRadius: "5px", mb: 1 }} />
+                  <Box sx={{ backgroundColor: "#fff", height: "10px", width: "40%", borderRadius: "5px" }} />
+                </Box>
               </Box>
             </Box>
           )}
 
-          {/* Class Record View */}
           {activeView === "classRecord" && (
             <Box
               sx={{
@@ -168,7 +166,6 @@ const ClassroomCard = ({ classroomName }) => {
                 padding: "20px 30px",
               }}
             >
-              {/* Table Header */}
               <Box
                 sx={{
                   display: "grid",
@@ -182,8 +179,6 @@ const ClassroomCard = ({ classroomName }) => {
                 <Typography>Lesson Completed</Typography>
                 <Typography>Grading</Typography>
               </Box>
-
-              {/* Table Rows */}
               {studentData.map((student) => (
                 <Box
                   key={student.id}
@@ -205,6 +200,7 @@ const ClassroomCard = ({ classroomName }) => {
             </Box>
           )}
         </div>
+        <RankingModal open={rankingOpen} onClose={() => setRankingOpen(false)} />
       </div>
     </div>
   );
