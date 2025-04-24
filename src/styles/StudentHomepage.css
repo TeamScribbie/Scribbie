@@ -1,0 +1,122 @@
+/* src/styles/StudentHomepage.css */
+
+.student-homepage-container {
+    display: flex;
+    min-height: 100vh;
+    font-family: Arial, sans-serif; /* Match teacher */
+    background-color: #FFFBE0; /* Base background for the whole page */
+  }
+  
+  /* Sidebar Styles (Adapted from Teacher) */
+  .student-sidebar {
+    background-color: #FFD966; /* Match original student sidebar */
+    display: flex;
+    flex-direction: column;
+    color: #451513; /* Match teacher */
+    padding: 20px;
+    box-sizing: border-box;
+    position: fixed; /* Keep fixed positioning relative to viewport */
+    top: 60px; /* Account for Navbar height */
+    bottom: 0;
+    z-index: 1;
+    /* Add width transition if sidebarOpen state is used */
+    /* transition: width 0.3s ease, padding 0.3s ease; */
+    width: 200px; /* Default width - adjust as needed */
+    border-right: 1px solid #FFE8A3; /* Optional border */
+  }
+  
+  /* Styles for sidebar items */
+  .student-sidebar-item {
+    margin-bottom: 20px;
+    cursor: pointer;
+    font-weight: bold; /* Match original */
+    font-size: 1rem; /* Match original h6 roughly */
+    padding: 10px 0; /* Adjust padding */
+    transition: color 0.2s ease;
+  }
+  
+  .student-sidebar-item:hover {
+    color: #000; /* Example hover color */
+  }
+  
+  /* Main Content Area (Adapted from Teacher) */
+  .student-content-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-left: 200px; /* Default margin when sidebar is open (adjust if sidebar width changes) */
+    /* Add transition if sidebarOpen state is used */
+    /* transition: margin-left 0.3s ease; */
+  }
+  
+  .student-main-content {
+    flex-grow: 1;
+    padding: 40px; /* Match teacher */
+    /* background-color: #FFFBE0; */ /* Already set on container */
+    margin-top: 60px; /* Account for fixed Navbar */
+  }
+  
+  .student-main-content-heading {
+    font-weight: bold; /* Match original */
+    margin-bottom: 20px;
+    color: #333; /* Match teacher */
+    font-size: 1.5rem; /* Match original h5 */
+  }
+  
+  /* Card Container (Reuse from Teacher) */
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  /* Classroom Card (Reuse from Teacher) */
+  /* .classroom-card { ... } */
+  
+  /* Join Class Card (Similar to AddClassCard) */
+  .join-class-card {
+    width: 140px; /* Match other cards */
+    height: 100px;
+    background-color: #FFDE9A; /* Match original join card */
+    border-radius: 8px; /* Match original */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold; /* Match teacher */
+    font-size: 1rem; /* Match teacher */
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Match teacher */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Match teacher */
+    color: #451513; /* Match teacher */
+    border: 2px dashed #FFD966; /* Match teacher add card */
+  }
+  
+  .join-class-card:hover {
+     transform: translateY(-3px); /* Match teacher */
+     box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Match teacher */
+     border-color: #451513; /* Match teacher */
+  }
+  
+  /* Dialog Styles (Adapt from Teacher) */
+  .join-dialog-title {
+    background-color: #FFE8A3 !important;
+    color: #451513 !important;
+  }
+  
+  .join-dialog-content {
+     background-color: #FFE8A3 !important;
+     padding-top: 20px !important;
+  }
+  
+  .join-dialog-actions {
+     background-color: #FFE8A3 !important;
+  }
+  
+  .join-dialog-button {
+    background-color: #451513 !important;
+    color: white !important;
+  }
+  
+  .join-dialog-button:hover {
+    background-color: #2f0f0e !important;
+  }

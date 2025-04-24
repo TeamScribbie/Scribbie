@@ -1,0 +1,152 @@
+/* src/styles/LessonPage.css */
+
+/* Define Lesson Colors */
+/* highlight-start */
+:root {
+  --lesson-color-1: #FFD966; /* Yellow */
+  --lesson-color-2: #81C784; /* Green */
+  --lesson-color-3: #FFA726; /* Orange */
+  --lesson-color-4: #64B5F6; /* Blue */
+  --lesson-color-5: #BA68C8; /* Purple */
+
+  /* Define border colors (can be derived or specific) */
+  --lesson-border-1: #FFA726; /* Darker Yellow/Orange */
+  --lesson-border-2: #4CAF50; /* Darker Green */
+  --lesson-border-3: #F57C00; /* Darker Orange */
+  --lesson-border-4: #1976D2; /* Darker Blue */
+  --lesson-border-5: #8E24AA; /* Darker Purple */
+}
+/* highlight-end */
+
+.lesson-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #FFFBE0;
+}
+
+.lesson-page-content {
+  margin-top: 60px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.lesson-page-title {
+  margin-bottom: 30px !important;
+  text-align: center;
+  color: #451513;
+}
+
+.lesson-path {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.lesson-box {
+  background-color: #FFE8A3;
+  color: #451513;
+  padding: 10px 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  text-align: center;
+  width: 80%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #FFD966;
+}
+
+.lesson-box h2 {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.activity-node-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+  width: 100%;
+  position: relative;
+}
+
+/* --- Activity Node Styling --- */
+.activity-node {
+  /* position: absolute; <-- REMOVED */
+  color: #451513;
+  border-radius: 50%;
+  width: 75px;
+  height: 75px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8em;
+  cursor: pointer;
+  margin: 15px 0;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+  padding: 0;
+
+  /* highlight-start */
+  /* Apply lesson-specific colors using CSS variables */
+  /* Default values added as fallbacks */
+  background-color: var(--node-bg-color, var(--lesson-color-1));
+  border: 4px solid var(--node-border-color, var(--lesson-border-1));
+  /* highlight-end */
+}
+
+.activity-node:hover:not(:disabled):not(.finished) {
+  transform: scale(1.08);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  /* Optional: Slightly lighten the dynamic color on hover? */
+  /* filter: brightness(1.1); */
+}
+
+
+.activity-node.finished {
+  /* Finished style overrides the lesson color */
+  background-color: #81C784; /* Green for finished */
+  border-color: #4CAF50;
+  cursor: default;
+  color: white;
+}
+
+.activity-node.finished:hover {
+   transform: none;
+   background-color: #81C784;
+   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* General disabled state */
+.activity-node:disabled {
+   cursor: default;
+   opacity: 0.7;
+}
+.activity-node:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+
+.activity-node-icon {
+  display: block;
+}
+
+/* --- Connecting Lines --- */
+.activity-node-group .activity-node:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 15px;
+  background-color: #FFD966; /* Line color */
+  z-index: -1;
+}

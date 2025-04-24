@@ -1,0 +1,116 @@
+/* src/styles/StudentRegistration.css */
+
+.student-registration-container {
+    background-color: #FFFBE0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .registration-card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%; /* Responsive */
+    max-width: 550px; /* Slightly wider for more fields */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .registration-header {
+    background-color: #451513;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .registration-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .registration-title {
+    text-align: center;
+    margin-bottom: 1rem !important;
+  }
+  
+  .registration-form-container {
+    width: 80%; /* Match original form width relative to card */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* Spacing between fields */
+    margin-top: 10px; /* Add some space above the form */
+  }
+  
+  .registration-input-field .MuiOutlinedInput-root {
+    background-color: #FFDE9A;
+    border: 1px solid #451513;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 50px; /* Standard height */
+  }
+  
+  .registration-input-field .MuiOutlinedInput-input {
+    padding: 0 12px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+  
+  .registration-input-field .MuiOutlinedInput-notchedOutline {
+    border: none; /* Remove MUI border */
+  }
+  
+  .registration-button {
+    background-color: #451513 !important;
+    color: white !important;
+    margin-top: 20px !important;
+    width: 40%; /* Match original button width */
+  }
+  
+  .registration-button:hover {
+    background-color: #5d211f !important;
+  }
+  
+  .login-link-container {
+    margin-top: 15px;
+  }
+  
+  .login-link {
+    color: #451513 !important;
+    text-decoration: none !important; /* Ensure link style override */
+  }
+  
+  .login-link strong {
+    font-weight: bold;
+  }
+  
+  /* Re-use book image style from StudentLogin.css if desired, */
+  /* or create specific ones if needed */
+  .book-image-registration {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 300px; /* Start smaller */
+    height: auto;
+    display: none; /* Hide by default */
+  }
+  
+  @media (min-width: 768px) {
+    .book-image-registration {
+      display: block;
+      width: 350px; /* Match original */
+    }
+    .registration-card {
+       width: 40%; /* Match original on larger screens */
+    }
+  }
