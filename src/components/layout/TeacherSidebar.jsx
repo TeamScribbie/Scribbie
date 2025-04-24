@@ -53,24 +53,37 @@ const Sidebar = ({ sidebarOpen, classes, activeItem }) => {
           {/* Classroom subitems under My Classes */}
           {activeItem === "My Classes" && (
             <div style={SidebarStyles.classList}>
-              <div
-                style={{
-                  ...SidebarStyles.subItem,
-                  cursor: "pointer",
-                }}
-                onClick={() => navigate("/classroom/1")}
-              >
-                Classroom 1
-              </div>
-              <div
-                style={{
-                  ...SidebarStyles.subItem,
-                  cursor: "pointer",
-                }}
-                onClick={() => navigate("/classroom/2")}
-              >
-                Classroom 2
-              </div>
+              {["Classroom 1", "Classroom 2"].map((cls, index) => (
+                <div
+                  key={index}
+                  style={{
+                    ...SidebarStyles.subItem,
+                    cursor: "pointer",
+                    transition: "box-shadow 0.2s ease, transform 0.1s ease",
+                  }}
+                  onClick={() => navigate(`/classroom/${index + 1}`)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 3px 10px rgba(0, 0, 0, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "inset 0 3px 6px rgba(0,0,0,0.2)";
+                    e.currentTarget.style.transform = "scale(0.97)";
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 3px 10px rgba(0, 0, 0, 0.1)";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                >
+                  {cls}
+                </div>
+              ))}
             </div>
           )}
 
@@ -108,8 +121,27 @@ const Sidebar = ({ sidebarOpen, classes, activeItem }) => {
                   style={{
                     ...SidebarStyles.subItem,
                     cursor: "pointer",
+                    transition: "box-shadow 0.2s ease, transform 0.1s ease",
                   }}
                   onClick={() => navigate(`/challenges/${index + 1}`)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 3px 10px rgba(0, 0, 0, 0.1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "inset 0 3px 6px rgba(0,0,0,0.2)";
+                    e.currentTarget.style.transform = "scale(0.97)";
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.boxShadow =
+                      "0 3px 10px rgba(0, 0, 0, 0.1)";
+                    e.currentTarget.style.transform = "scale(1)";
+                  }}
                 >
                   {cls}
                 </div>
