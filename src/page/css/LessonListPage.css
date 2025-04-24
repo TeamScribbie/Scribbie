@@ -1,0 +1,49 @@
+.lesson-list-container {
+    padding: 30px;
+    background-color: #FFFBE0;
+  }
+  
+  .lesson-title {
+    color: #451513;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .lesson-card {
+    background-color: #FFD966;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .lesson-label {
+    font-size: 20px;
+    font-weight: bold;
+    color: #451513;
+    margin-bottom: 10px;
+  }
+  
+  .lesson-progress {
+    width: 100%;
+    background-color: #eee;
+    height: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  
+  .lesson-progress-bar {
+    height: 100%;
+    background-color: #451513;
+    border-radius: 5px;
+  }
+  
+  .lesson-btn {
+    background-color: #451513;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
