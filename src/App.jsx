@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/layout/navbar";
-import Sidebar from "./components/layout/sidebar";
+import Sidebar from "./components/layout/TeacherSidebar";
 import StudentHomepage from "./page/student/StudentHomepage";
 import StudentLogin from "./page/student/StudentLogin";
 import StudentRegistration from "./page/student/StudentRegistration";
@@ -16,7 +16,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/nav" element={<Navbar />} />
-      <Route path="/sidebar" element={<Sidebar />} />
+      <Route path="/t-sidebar" element={<Sidebar />} />
       <Route path="/student-homepage" element={<StudentHomepage />} />
       <Route path="/student-homepage" element={<StudentHomepage />} />
       <Route path="/student-login" element={<StudentLogin />} />
