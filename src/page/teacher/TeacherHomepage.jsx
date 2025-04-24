@@ -19,7 +19,7 @@ const TeacherHomepage = () => {
   const [className, setClassName] = useState("");
   const [classCode, setClassCode] = useState("");
   const [enrollmentLimit, setEnrollmentLimit] = useState("");
-  const [classes, setClasses] = useState([]); // ✅ No default classrooms
+  const [classes, setClasses] = useState(["Classroom 1", "Classroom 2"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -35,7 +35,11 @@ const TeacherHomepage = () => {
 
   return (
     <div style={styles.container}>
-      <Sidebar sidebarOpen={sidebarOpen} classes={classes} />
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        classes={classes}
+        activeItem="My Classes"
+      />
 
       <div
         style={{
