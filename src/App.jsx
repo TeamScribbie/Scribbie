@@ -8,6 +8,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
+import LessonPage from './page/student/LessonPage';
 
 // 1. Import AuthProvider
 import { AuthProvider } from './context/AuthContext';
@@ -35,7 +36,10 @@ const App = () => {
         {/* Default route redirects */}
         {/* Consider redirecting based on auth status later */}
         <Route path="/" element={<Navigate to="/student-login" replace />} />
-
+        <Route
+            path="/student/classroom/:classroomId/lessons"
+            element={<LessonPage />}
+        />
         {/* Add other routes as needed */}
 
       </Routes>

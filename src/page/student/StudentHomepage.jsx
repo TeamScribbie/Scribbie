@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Typography, CircularProgress, Alert } from '@mui/material'; // Import feedback components
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
-
 // Import necessary components
 import Navbar from '../../components/layout/navbar'; //
 import StudentSidebar from '../../components/layout/StudentSidebar'; //
@@ -51,6 +50,8 @@ const StudentHomepage = () => {
       }
   };
 
+  
+
   // Fetch classrooms when auth state is ready
   useEffect(() => {
       if (authState.isAuthenticated) {
@@ -94,14 +95,15 @@ const StudentHomepage = () => {
 
   // Handle clicking on a classroom card (only if not pending)
   const handleClassCardClick = (classroomData) => {
-      // Assuming classroomData structure is { classroom: { classroomId, ... }, status: '...' }
-      if (classroomData.status !== 'PENDING') {
-          console.log(`Navigate to student view for class: ${classroomData.classroom.classroomName} (ID: ${classroomData.classroom.classroomId})`);
-          // navigate(`/student/class/${classroomData.classroom.classroomId}`); // Example route
-      } else {
-          console.log("Cannot navigate to pending classroom.");
-      }
-  };
+    // classroomData structure is likely { classroomId, classroomName, status, ... }
+    if (classroomData.status !== 'PENDING') {
+        console.log(`Navigating to lessons for class: ${classroomData.classroomName} (ID: ${classroomData.classroomId})`);
+        // Use navigate to go to the new route, passing the classroomId
+        navigate(`/student/classroom/${classroomData.classroomId}/lessons`);
+    } else {
+        console.log("Cannot navigate to pending classroom.");
+    }
+};
 
   return (
     <div className="student-homepage-container">
@@ -129,13 +131,12 @@ const StudentHomepage = () => {
                 {/* Map over joined classes data */}
                 {joinedClasses.map((enrollment) => (
                     <ClassroomCard
-                    // Access properties DIRECTLY from enrollment object
-                    key={enrollment.classroomId} // Use enrollment.classroomId
-                    classroomId={enrollment.classroomId} // Use enrollment.classroomId
-                    name={enrollment.classroomName ?? 'Unnamed Class'} // Use enrollment.classroomName, add fallback
+                    key={enrollment.classroomId}
+                    classroomId={enrollment.classroomId}
+                    name={enrollment.classroomName ?? 'Unnamed Class'}
                     status={enrollment.status}
-                    // Pass the flat enrollment object to the click handler
-                    onClick={() => handleClassCardClick(enrollment)}
+                    // Pass the whole enrollment object or just the necessary parts
+                    onClick={() => handleClassCardClick(enrollment)} // Ensure this calls the updated handler
                 />
                 ))}
 
