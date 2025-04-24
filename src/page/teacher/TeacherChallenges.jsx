@@ -21,16 +21,13 @@ const TeacherChallenges = () => {
   const [className, setClassName] = useState("");
   const [classCode, setClassCode] = useState("");
   const [enrollmentLimit, setEnrollmentLimit] = useState("");
-  const [classes, setClasses] = useState([
-    { name: "Challenge 1", id: 1 },
-    { name: "Challenge 2", id: 2 },
-  ]);
+  const [classes, setClasses] = useState(["Challenge 1", "Challenge 2"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
 
   const handleAddClass = () => {
     if (className.trim() && classCode.trim() && enrollmentLimit.trim()) {
-      setClasses([...classes, { name: className, id: classes.length + 1 }]);
+      setClasses([...classes, className]);
       setClassName("");
       setClassCode("");
       setEnrollmentLimit("");
@@ -42,7 +39,7 @@ const TeacherChallenges = () => {
     <div style={styles.container}>
       <Sidebar
         sidebarOpen={sidebarOpen}
-        classes={["Challenge 1", "Challenge 2"]}
+        classes={classes}
         activeItem="Challenges"
       />
 
@@ -74,18 +71,18 @@ const TeacherChallenges = () => {
 
             <div style={styles.cardContainer}>
               {classes
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .sort((a, b) => a.localeCompare(b))
                 .map((cls, index) => (
                   <div
                     key={index}
                     style={styles.classCard}
-                    onClick={() => navigate(`/challenges/${cls.id}`)}
+                    onClick={() => navigate(`/challenges/${index + 1}`)}
                   >
                     <EmojiEventsIcon
                       sx={{ color: "#451513", fontSize: 32, mb: 1 }}
                     />
-                    <Tooltip title={`Go to ${cls.name}`}>
-                      <Typography variant="subtitle1">{cls.name}</Typography>
+                    <Tooltip title={`Go to ${cls}`}>
+                      <Typography variant="subtitle1">{cls}</Typography>
                     </Tooltip>
                   </div>
                 ))}
