@@ -10,6 +10,7 @@ import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
 import ClassroomCard from './page/teacher/ClassroomCard';
 import RankingModal from './components/modals/RankingModal';
+import TeacherChallenges from './page/teacher/TeacherChallenges';
 
 
 const App = () => {
@@ -26,6 +27,7 @@ const App = () => {
       <Route path="/teacher-login" element={<TeacherLogin />} />
       <Route path="/teacher-register" element={<TeacherRegistration />} />
       <Route path="/teacher-homepage" element={<TeacherHomepage />} />
+      <Route path="/teacher-challenges" element={<TeacherChallenges />} />
       <Route path="/classroom/:id" element={<ClassroomCard />} />
       <Route path="/ranking" element={<RankingModal />} />
     </Routes>
