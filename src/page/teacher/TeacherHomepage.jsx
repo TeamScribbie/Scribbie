@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/layout/navbar";
-import Sidebar from "../../components/layout/sidebar";
+import Sidebar from "../../components/layout/TeacherSidebar";
 import styles from "../../components/styles/TeacherHomepageStyles";
 
 const TeacherHomepage = () => {
