@@ -1,4 +1,3 @@
-// ClassroomCard.jsx (Updated to open centered RankingModal on full Challenge 1 click)
 import React, { useState } from "react";
 import { Typography, Tabs, Tab, Box } from "@mui/material";
 import { useParams } from "react-router-dom";
@@ -31,7 +30,12 @@ const ClassroomCard = ({ classroomName }) => {
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "Arial, sans-serif" }}>
-      <Sidebar sidebarOpen={sidebarOpen} classes={["Classroom 1", "Classroom 2"]} />
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        classes={["Classroom 1", "Classroom 2"]}
+        activeItem="My Classes"
+      />
+
       <div style={{ flexGrow: 1, marginLeft: sidebarOpen ? "200px" : "0", transition: "margin 0.3s ease" }}>
         <Navbar
           sidebarOpen={sidebarOpen}
@@ -39,7 +43,9 @@ const ClassroomCard = ({ classroomName }) => {
           anchorEl={null}
           setAnchorEl={() => {}}
         />
+
         <div style={{ padding: "80px 100px" }}>
+          {/* Tabs Switch */}
           <Box sx={{ display: "flex", justifyContent: "center", mb: 4, borderBottom: "1px solid #ccc" }}>
             <Box
               onClick={() => toggleView("activities")}
@@ -68,10 +74,12 @@ const ClassroomCard = ({ classroomName }) => {
             </Box>
           </Box>
 
+          {/* Classroom Title */}
           <Typography variant="h5" style={{ fontWeight: "bold", color: "#451513", marginBottom: "20px" }}>
             {classroom}
           </Typography>
 
+          {/* Activities View */}
           {activeView === "activities" && (
             <Box
               sx={{
@@ -97,9 +105,7 @@ const ClassroomCard = ({ classroomName }) => {
                   },
                   "& .Mui-selected": {
                     backgroundColor: "#5C2E12",
-                    borderRadius: "0px",
-                    width: "100%",
-                    color: "#fffff",
+                    color: "#ffffff",
                   },
                 }}
               >
@@ -109,7 +115,7 @@ const ClassroomCard = ({ classroomName }) => {
 
               <Box
                 sx={{
-                  backgroundColor: activeTab === 0 ? "#FFD966" : "#FFD966",
+                  backgroundColor: "#FFD966",
                   padding: "25px",
                   display: "flex",
                   alignItems: "center",
@@ -156,6 +162,7 @@ const ClassroomCard = ({ classroomName }) => {
             </Box>
           )}
 
+          {/* Class Record View */}
           {activeView === "classRecord" && (
             <Box
               sx={{
@@ -200,6 +207,7 @@ const ClassroomCard = ({ classroomName }) => {
             </Box>
           )}
         </div>
+
         <RankingModal open={rankingOpen} onClose={() => setRankingOpen(false)} />
       </div>
     </div>
