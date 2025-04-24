@@ -1,24 +1,19 @@
-// src/components/TeacherRequestsTable.jsx
+// src/components/layout/TeacherRequestsTable.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    IconButton,
-    Typography
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Typography, Box
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
-// Renamed component to TeacherRequestsTable
-const TeacherRequestsTable = ({ requests, onAccept, onReject }) => {
+const TeacherRequestsTable = ({ requests, onAccept, onReject, processingRequestId }) => {
+
+  // Removed console log for received props
+
   if (!requests || requests.length === 0) {
-    return <Typography>No pending requests.</Typography>;
+    return <Typography sx={{ mt: 2 }}>No pending requests.</Typography>;
   }
 
   return (
@@ -26,63 +21,77 @@ const TeacherRequestsTable = ({ requests, onAccept, onReject }) => {
       <Table sx={{ minWidth: 650 }} aria-label="pending requests table">
         <TableHead sx={{ backgroundColor: '#FFE8A3' }}>
           <TableRow>
+            {/* Column Headers */}
+            <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Classroom Name</TableCell>
             <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Student ID</TableCell>
             <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Name</TableCell>
-            <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Grade</TableCell>
-            <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Requested Class</TableCell>
-            <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Date</TableCell>
+            {/* highlight-removed */ }
+            <TableCell sx={{ fontWeight: 'bold', color: '#451513' }}>Date Requested</TableCell>
             <TableCell align="center" sx={{ fontWeight: 'bold', color: '#451513' }}>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {requests.map((req) => (
-            <TableRow
-              key={req.id}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">{req.studentId}</TableCell>
-              <TableCell>{req.name}</TableCell>
-              <TableCell>{req.grade}</TableCell>
-              <TableCell>{req.classroomName}</TableCell>
-              <TableCell>{req.date}</TableCell>
-              <TableCell align="center">
-                <IconButton
-                    color="success"
-                    aria-label="accept request"
-                    onClick={() => onAccept(req.id)}
-                >
-                  <CheckCircleIcon />
-                </IconButton>
-                <IconButton
-                    color="error"
-                    aria-label="reject request"
-                    onClick={() => onReject(req.id)}
-                    sx={{ ml: 1 }}
-                >
-                  <CancelIcon />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
+          {requests.map((req) => {
+            // Removed console log for mapping item
+
+            const uniqueProcessingId = `${req.classroomId}-${req.studentId}`;
+            const isBeingProcessed = processingRequestId === uniqueProcessingId;
+
+            return (
+              <TableRow key={uniqueProcessingId} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                 {/* Data Cells */}
+                 <TableCell>{req.classroomName ?? 'N/A'}</TableCell>
+                 <TableCell component="th" scope="row">{req.studentId}</TableCell>
+                 <TableCell>{req.studentName}</TableCell>
+                 {/* highlight-removed */ }
+                 <TableCell>{req.enrollmentDate ? new Date(req.enrollmentDate).toLocaleDateString() : 'N/A'}</TableCell>
+                 <TableCell align="center">
+                  {isBeingProcessed ? (
+                      <HourglassEmptyIcon color="action" />
+                  ) : (
+                      <Box>
+                          <IconButton
+                              color="success"
+                              aria-label="accept request"
+                              onClick={() => onAccept(req.classroomId, req.studentId)}
+                              disabled={isBeingProcessed || !req.classroomId}
+                          >
+                              <CheckCircleIcon />
+                          </IconButton>
+                          <IconButton
+                              color="error"
+                              aria-label="reject request"
+                              onClick={() => onReject(req.classroomId, req.studentId)}
+                              disabled={isBeingProcessed || !req.classroomId}
+                              sx={{ ml: 1 }}
+                          >
+                              <CancelIcon />
+                          </IconButton>
+                      </Box>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>
   );
 };
 
-// Updated PropTypes to match component name
+// Update PropTypes
 TeacherRequestsTable.propTypes = {
   requests: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
     studentId: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    grade: PropTypes.string.isRequired,
-    classroomName: PropTypes.string.isRequired,
-    date: PropTypes.string.isRequired,
+    studentName: PropTypes.string,
+    // highlight-removed */
+    enrollmentDate: PropTypes.string, // Or Date object? Check API response
+    classroomId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    classroomName: PropTypes.string,
   })).isRequired,
   onAccept: PropTypes.func.isRequired,
   onReject: PropTypes.func.isRequired,
+  processingRequestId: PropTypes.string,
 };
 
-// Updated default export
 export default TeacherRequestsTable;

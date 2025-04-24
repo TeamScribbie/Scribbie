@@ -82,3 +82,110 @@ export const createClassroom = async (classroomData, token) => {
 
   return await response.json(); // Return the created classroom details
 };
+
+export const getStudentClassrooms = async (studentId, token) => {
+  if (!studentId || !token) {
+    throw new Error('Student ID and auth token are required.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/classrooms/student/${studentId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+    console.error('Get Student Classrooms API Error:', errorData);
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log("Raw getStudentClassrooms response:", data);
+  // **IMPORTANT**: Adjust based on actual API response structure.
+  // The Swagger spec returns 'object'. Assuming it wraps the array, e.g., { "enrollments": [...] } or similar.
+  // Or it might return the ClassroomStudent array directly if the spec is loose.
+  // Let's assume it returns an array directly for now, adjust if needed.
+  return Array.isArray(data) ? data : [];
+};
+
+
+export const joinClassroom = async (classroomCode, token) => {
+  if (!classroomCode || !token) {
+    throw new Error('Classroom code and auth token are required.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/classrooms/join`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    // Body matches JoinClassroomRequest schema
+    body: JSON.stringify({ classroomCode }),
+  });
+
+   if (!response.ok) {
+    // Handle specific errors like "already enrolled", "class full", "invalid code" if the backend provides them
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+    console.error('Join Classroom API Error:', errorData);
+    throw new Error(errorData.message || `Failed to join classroom. Status: ${response.status}`);
+  }
+
+  // Return success response (might be empty or contain enrollment details)
+  return await response.json();
+};
+
+export const getPendingRequests = async (classroomId, token) => {
+  if (!classroomId || !token) {
+    throw new Error('Classroom ID and auth token are required.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/pending`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+    console.error(`Get Pending Requests API Error (Class ${classroomId}):`, errorData);
+    // Return empty array on error for this specific class to allow others to load? Or throw?
+    // Throwing might be better to indicate overall failure.
+    throw new Error(errorData.message || `HTTP error fetching pending requests! Status: ${response.status}`);
+  }
+  const data = await response.json();
+  console.log(`Raw getPendingRequests response (Class ${classroomId}):`, data);
+  // Assuming backend returns the array directly as per controller mapping
+  return Array.isArray(data) ? data : [];
+};
+
+export const updateEnrollmentStatus = async (classroomId, studentId, status, token) => {
+  if (!classroomId || !studentId || !status || !token) {
+   throw new Error('Classroom ID, Student ID, status, and auth token are required.');
+ }
+  if (status !== 'APPROVED' && status !== 'REJECTED') {
+      throw new Error('Invalid status provided. Must be APPROVED or REJECTED.');
+  }
+
+ const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/students/${studentId}/status`, {
+   method: 'PUT',
+   headers: {
+     'Authorization': `Bearer ${token}`,
+     'Content-Type': 'application/json',
+   },
+   // Body matches UpdateEnrollmentStatusRequest schema
+   body: JSON.stringify({ status }), // Send { "status": "APPROVED" } or { "status": "REJECTED" }
+ });
+
+ if (!response.ok) {
+   const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+   console.error(`Update Enrollment Status API Error (Class ${classroomId}, Student ${studentId}):`, errorData);
+   throw new Error(errorData.message || `Failed to update status. Status: ${response.status}`);
+ }
+ return await response.json(); // Return success message response
+};
