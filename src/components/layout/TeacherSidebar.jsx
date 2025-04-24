@@ -3,7 +3,7 @@ import { Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SidebarStyles from "../styles/SidebarStyles";
 
-const Sidebar = ({ sidebarOpen, classes }) => {
+const Sidebar = ({ sidebarOpen, classes, activeItem }) => {
   const navigate = useNavigate();
 
   return (
@@ -30,56 +30,92 @@ const Sidebar = ({ sidebarOpen, classes }) => {
           <div
             style={{
               ...SidebarStyles.sidebarItem,
-              backgroundColor: "#FFD966",
+              backgroundColor:
+                activeItem === "My Classes" ? "#FFD966" : "transparent",
               borderRadius: "15px",
               width: "100%",
               paddingLeft: "20px",
               cursor: "pointer",
             }}
             onClick={() => navigate("/teacher-homepage")}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f5c842")}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#FFD966")}
+            onMouseOver={(e) => {
+              if (activeItem !== "My Classes")
+                e.currentTarget.style.backgroundColor = "#f5c842";
+            }}
+            onMouseOut={(e) => {
+              if (activeItem !== "My Classes")
+                e.currentTarget.style.backgroundColor = "transparent";
+            }}
           >
             My Classes
           </div>
 
-          {/* Classroom Links */}
-          <div style={SidebarStyles.classList}>
-            {classes.map((cls, index) => (
+          {/* Classroom subitems under My Classes */}
+          {activeItem === "My Classes" && (
+            <div style={SidebarStyles.classList}>
               <div
-                key={index}
                 style={{
                   ...SidebarStyles.subItem,
                   cursor: "pointer",
-                  transition: "0.2s ease",
                 }}
-                onClick={() => navigate(`/classroom/${index + 1}`)}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
-                  e.currentTarget.style.backgroundColor = "#FFF4CC";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.boxShadow = "none";
-                  e.currentTarget.style.backgroundColor = "transparent";
-                }}
+                onClick={() => navigate("/classroom/1")}
               >
-                {cls}
+                Classroom 1
               </div>
-            ))}
-          </div>
+              <div
+                style={{
+                  ...SidebarStyles.subItem,
+                  cursor: "pointer",
+                }}
+                onClick={() => navigate("/classroom/2")}
+              >
+                Classroom 2
+              </div>
+            </div>
+          )}
 
-          {/* Challenges Link */}
+          {/* Challenges */}
           <div
             style={{
               ...SidebarStyles.sidebarItem,
-              backgroundColor: "transparent",
-              marginTop: "50px",
+              backgroundColor:
+                activeItem === "Challenges" ? "#FFD966" : "transparent",
+              marginTop: "20px",
+              borderRadius: "15px",
+              width: "100%",
+              paddingLeft: "20px",
               cursor: "pointer",
             }}
             onClick={() => navigate("/teacher-challenges")}
+            onMouseOver={(e) => {
+              if (activeItem !== "Challenges")
+                e.currentTarget.style.backgroundColor = "#f5c842";
+            }}
+            onMouseOut={(e) => {
+              if (activeItem !== "Challenges")
+                e.currentTarget.style.backgroundColor = "transparent";
+            }}
           >
             Challenges
           </div>
+
+          {/* Challenge subitems */}
+          {activeItem === "Challenges" && (
+            <div style={SidebarStyles.classList}>
+              {classes.map((cls, index) => (
+                <div
+                  key={index}
+                  style={{
+                    ...SidebarStyles.subItem,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => navigate(`/challenges/${index + 1}`)}
+                >
+                  {cls}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>
