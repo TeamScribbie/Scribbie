@@ -11,24 +11,34 @@ import {
 } from '@mui/material';
 
 const AddClassDialog = ({ open, onClose, onAddClass }) => {
-  const [className, setClassName] = useState('');
-  const [classCode, setClassCode] = useState('');
-  const [enrollmentLimit, setEnrollmentLimit] = useState('');
+  const [classroomName, setClassroomName] = useState(''); // Renamed for clarity
+  const [classroomCode, setClassroomCode] = useState(''); // Renamed for clarity
+  // Removed enrollmentLimit as it's not in the CreateClassroomRequest schema
+  // const [enrollmentLimit, setEnrollmentLimit] = useState('');
 
   useEffect(() => {
+    // Reset fields when dialog opens/closes
     if (!open) {
-      setClassName('');
-      setClassCode('');
-      setEnrollmentLimit('');
+      setClassroomName('');
+      setClassroomCode('');
+      // setEnrollmentLimit('');
     }
   }, [open]);
 
   const handleCreateClick = () => {
-    if (className.trim() && classCode.trim() && enrollmentLimit.trim()) {
-      onAddClass({ name: className, code: classCode, limit: enrollmentLimit });
-      onClose();
+    // Validate based on CreateClassroomRequest schema (e.g., non-empty)
+    if (classroomName.trim() && classroomCode.trim()) {
+      // Pass the data in the structure expected by createClassroom service
+      onAddClass({
+          classroomName: classroomName.trim(),
+          classroomCode: classroomCode.trim()
+      });
+      // Optionally keep the dialog open until the API call succeeds/fails in the parent
+      // onClose(); // Consider moving onClose to the parent's success handler
     } else {
-      console.log('Please fill all fields');
+      // Add better user feedback here (e.g., helperText on TextField)
+      console.log('Please fill all required fields');
+      alert('Please enter both a Class Name and a Class Code.');
     }
   };
 
@@ -39,30 +49,24 @@ const AddClassDialog = ({ open, onClose, onAddClass }) => {
         <TextField
           autoFocus
           margin="dense"
-          label="Class Name"
+          label="Class Name" // Use the correct label
           fullWidth
-          value={className}
-          onChange={(e) => setClassName(e.target.value)}
+          value={classroomName}
+          onChange={(e) => setClassroomName(e.target.value)}
           variant="outlined"
+          // Add required prop and error handling if needed
         />
         <TextField
           margin="dense"
-          label="Class Code"
+          label="Class Code" // Use the correct label
           fullWidth
-          value={classCode}
-          onChange={(e) => setClassCode(e.target.value)}
+          value={classroomCode}
+          onChange={(e) => setClassroomCode(e.target.value)}
           variant="outlined"
+          // Add required prop and error handling if needed
         />
-        <TextField
-          margin="dense"
-          label="Enrollment Limit"
-          fullWidth
-          type="number"
-          value={enrollmentLimit}
-          onChange={(e) => setEnrollmentLimit(e.target.value)}
-          variant="outlined"
-          InputProps={{ inputProps: { min: 1 } }}
-        />
+        {/* Removed Enrollment Limit field */}
+        {/* <TextField ... /> */}
       </DialogContent>
       <DialogActions className="dialog-actions">
         <Button onClick={onClose}>Cancel</Button>
@@ -70,6 +74,7 @@ const AddClassDialog = ({ open, onClose, onAddClass }) => {
           onClick={handleCreateClick}
           variant="contained"
           className="dialog-create-button"
+          // Disable button during API call if loading state is passed down
         >
           Create
         </Button>
@@ -81,7 +86,7 @@ const AddClassDialog = ({ open, onClose, onAddClass }) => {
 AddClassDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  onAddClass: PropTypes.func.isRequired,
+  onAddClass: PropTypes.func.isRequired, // Expects a function that takes { classroomName, classroomCode }
 };
 
 export default AddClassDialog;
