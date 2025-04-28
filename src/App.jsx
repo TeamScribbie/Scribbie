@@ -8,6 +8,9 @@ import StudentRegistration from "./page/student/StudentRegistration";
 import StudentProfile from "./page/student/StudentProfile";
 import LessonListPage from "./page/student/LessonListPage";
 import LessonPage from "./page/student/LessonPage";
+import ChallengeListPage from "./page/student/ChallengeListPage";
+import ChallengePage from "./page/student/ChallengePage";
+import LeaderboardBox from "./page/student/LeaderboardBox";
 
 // 👨‍🏫 Teacher pages
 import TeacherLogin from './page/teacher/TeacherLogin';
@@ -25,6 +28,9 @@ const App = () => {
       <Route path="/student-profile" element={<StudentProfile />} />
       <Route path="/student-lesson" element={<LessonListPage />} />
       <Route path="/lesson/:id" element={<LessonPage />} />
+      <Route path="/challenge/:id" element={<ChallengePage />} />
+      <Route path="/student-challenge" element={<ChallengeListPage />} />
+      <Route path="/student-leaderboard" element={<LeaderboardBox />} />
 
       {/* Teacher Side */}
       <Route path="/teacher-login" element={<TeacherLogin />} />

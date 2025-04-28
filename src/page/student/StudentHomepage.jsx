@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
-import logo from "../../assets/scribbie-logo.png"; // Update path if needed
+import logo from "../../assets/scribbie-logo.png";
 
 const StudentHomepage = () => {
   const navigate = useNavigate();
