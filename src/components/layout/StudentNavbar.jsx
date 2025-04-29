@@ -5,13 +5,13 @@ import logo from "../../assets/scribbie-logo.png";
 const StudentNavbar = () => {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, );
 
   const styles = {
     header: {
@@ -66,7 +66,7 @@ const StudentNavbar = () => {
       position: "absolute",
       top: "60px",
       right: "20px",
-      backgroundColor: "white",
+      backgroundColor: "black",
       border: "1px solid #ccc",
       borderRadius: "10px",
       padding: "10px",
