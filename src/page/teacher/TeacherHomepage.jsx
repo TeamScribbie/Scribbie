@@ -9,7 +9,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../../components/layout/navbar";
+import Navbar from "../../components/layout/TeacherNavbar";
 import Sidebar from "../../components/layout/TeacherSidebar";
 import styles from "../../components/styles/TeacherHomepageStyles";
 
