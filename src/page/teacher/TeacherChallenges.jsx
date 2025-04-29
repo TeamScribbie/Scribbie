@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../../components/layout/navbar";
+import Navbar from "../../components/layout/TeacherNavbar";
 import Sidebar from "../../components/layout/TeacherSidebar";
 import styles from "../../components/styles/TeacherHomepageStyles";
 
@@ -33,7 +33,7 @@ const TeacherChallenges = () => {
   const [endDateTime, setEndDateTime] = useState(dayjs());
   const [attachment, setAttachment] = useState("");
   const [classes, setClasses] = useState(["Challenge 1", "Challenge 2"]);
-  const [classrooms, setClassrooms] = useState(["Classroom 1", "Classroom 2"]);
+  const [classrooms, ] = useState(["Classroom 1", "Classroom 2"]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
 
