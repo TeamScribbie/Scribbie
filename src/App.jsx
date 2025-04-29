@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/layout/navbar";
+import Navbar from "./components/layout/TeacherNavbar";
 import Sidebar from "./components/layout/TeacherSidebar";
+import StudentNavbar from "./components/layout/StudentNavbar";
+import StudentSidebar from "./components/layout/StudentSidebar";
 
 // 🧑‍🎓 Student pages
 import StudentHomepage from "./page/student/StudentHomepage";
@@ -13,6 +15,7 @@ import LessonPage from "./page/student/LessonPage";
 import ChallengeListPage from "./page/student/ChallengeListPage";
 import ChallengePage from "./page/student/ChallengePage";
 import LeaderboardBox from "./page/student/LeaderboardBox";
+import StudentClass from "./page/student/StudentClass";
 
 // 👨‍🏫 Teacher pages
 import TeacherLogin from './page/teacher/TeacherLogin';
@@ -26,10 +29,10 @@ import TeacherChallenges from './page/teacher/TeacherChallenges';
 const App = () => {
   return (
     <Routes>
-      <Route path="/nav" element={<Navbar />} />
+      <Route path="/t-nav" element={<Navbar />} />
       <Route path="/t-sidebar" element={<Sidebar />} />
-      <Route path="/student-homepage" element={<StudentHomepage />} />
-      <Route path="/student-homepage" element={<StudentHomepage />} />
+      <Route path="/s-nav" element={<StudentNavbar />} />
+      <Route path="/s-sidebar" element={<StudentSidebar />} />
 
       {/* Student Side */}
       <Route path="/" element={<Navigate to="/student-login" replace />} />
@@ -42,6 +45,7 @@ const App = () => {
       <Route path="/challenge/:id" element={<ChallengePage />} />
       <Route path="/student-challenge" element={<ChallengeListPage />} />
       <Route path="/student-leaderboard" element={<LeaderboardBox />} />
+      <Route path="/student-class/:className" element={<StudentClass />} />
 
       {/* Teacher Side */}
       <Route path="/teacher-login" element={<TeacherLogin />} />
