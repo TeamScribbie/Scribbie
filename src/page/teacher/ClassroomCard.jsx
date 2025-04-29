@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Typography, Tabs, Tab, Box } from "@mui/material";
 import { useParams } from "react-router-dom";
-import Navbar from "../../components/layout/navbar";
+import Navbar from "../../components/layout/TeacherNavbar";
 import Sidebar from "../../components/layout/TeacherSidebar";
 import RankingModal from "../../components/modals/RankingModal";
 
