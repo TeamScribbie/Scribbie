@@ -1,79 +1,74 @@
-import React, { useState, useEffect } from "react";
-import { Typography } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../../components/layout/navbar";
-import logo from "../../assets/scribbie-logo.png";
+import StudentNavbar from "../../components/layout/StudentNavbar";
+import StudentSidebar from "../../components/layout/StudentSidebar";
+
 const StudentHomepage = () => {
   const navigate = useNavigate();
-  const [expandClass, setExpandClass] = useState(true);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [open, setOpen] = useState(false);
+  const [classCode, setClassCode] = useState("");
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setClassCode("");
+  };
+
+  const handleJoinClass = () => {
+    if (classCode.trim()) {
+      navigate(`/student-class/${classCode.trim()}`); // ✅ Navigate to dynamic class page
+      handleClose();
+    }
+  };
 
   const styles = {
     container: {
-      height: "100vh",
+      minHeight: "100vh",
       width: "100vw",
-      display: "flex",
-      flexDirection: "column",
       overflow: "hidden",
+      backgroundColor: "#FFFBE0",
     },
-    header: {
+    navbar: {
       height: "60px",
-      backgroundColor: "#451513",
-      color: "white",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0 20px",
-    },
-    logo: {
-      height: "40px",
+      width: "100%",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      zIndex: 1000,
     },
     main: {
-      flex: 1,
       display: "flex",
-      flexDirection: isMobile ? "column" : "row",
-      overflow: "hidden",
+      marginTop: "60px",
+      height: "calc(100vh - 60px)",
     },
     sidebar: {
-      width: isMobile ? "100%" : "220px",
+      width: "200px",
+      height: "100%",
       backgroundColor: "#FFE9A7",
+      borderRight: "2px solid #e5c27c",
+      position: "fixed",
+      top: "60px",
+      left: 0,
+      bottom: 0,
+      overflowY: "auto",
       padding: "20px",
-      borderRight: isMobile ? "none" : "2px solid #e5c27c",
-      borderBottom: isMobile ? "2px solid #e5c27c" : "none",
-      display: "flex",
-      flexDirection: "column",
-    },
-    menuItem: {
-      fontWeight: "bold",
-      fontSize: "18px",
-      color: "#542d1d",
-      marginBottom: "10px",
-      cursor: "pointer",
-      padding: "8px 12px",
-      borderRadius: "10px",
-      backgroundColor: expandClass ? "#FFCE58" : "transparent",
-    },
-    submenuItem: {
-      fontSize: "16px",
-      marginLeft: "20px",
-      color: "#FFA500",
-      marginBottom: "6px",
-      cursor: "pointer",
     },
     content: {
+      marginLeft: "220px",
       flex: 1,
       padding: "30px",
-      backgroundColor: "#FFFBE0",
       overflowY: "auto",
       boxSizing: "border-box",
-      maxWidth: "100%",
+      backgroundColor: "#FFFBE0",
     },
     title: {
       fontWeight: "bold",
@@ -87,7 +82,7 @@ const StudentHomepage = () => {
       flexWrap: "wrap",
     },
     classCard: {
-      width: isMobile ? "100%" : "150px",
+      width: "150px",
       height: "120px",
       backgroundColor: "#FFCE58",
       borderRadius: "10px",
@@ -102,106 +97,80 @@ const StudentHomepage = () => {
     joinCard: {
       backgroundColor: "#FFE9A7",
     },
-    rightControls: {
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-    },
-    status: {
-      backgroundColor: "#38E54D",
-      color: "white",
-      padding: "4px 10px",
-      borderRadius: "10px",
-      fontSize: "12px",
-      fontWeight: "bold",
-    },
-    bell: {
-      backgroundColor: "#FFD966",
-      width: "35px",
-      height: "35px",
-      borderRadius: "50%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      fontWeight: "bold",
-      cursor: "pointer",
-    },
-    profile: {
-      width: "35px",
-      height: "35px",
-      borderRadius: "50%",
-      backgroundColor: "#542d1d",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      color: "white",
-      fontWeight: "bold",
-    },
-    dropdown: {
-      position: "absolute",
-      top: "60px",
-      right: "20px",
-      backgroundColor: "white",
-      border: "1px solid #ccc",
-      borderRadius: "10px",
-      padding: "10px",
-      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-      zIndex: 999,
-    },
   };
 
   return (
     <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <img src={logo} alt="Scribbie Logo" style={styles.logo} />
-        <div style={styles.rightControls}>
-          <div style={styles.status}>STUDENT</div>
-          <div style={styles.bell}>🔔</div>
-          <div style={styles.profile} onClick={() => setShowDropdown(!showDropdown)}>👤</div>
-          {showDropdown && (
-            <div style={styles.dropdown}>
-              <div style={{ marginBottom: "10px", cursor: "pointer" }}>My Account</div>
-              <div style={{ cursor: "pointer" }} onClick={() => navigate("/student-login")}>
-                Log Out
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Navbar */}
+      <div style={styles.navbar}>
+        <StudentNavbar />
       </div>
 
-      {/* Main layout */}
+      {/* Main */}
       <div style={styles.main}>
         {/* Sidebar */}
         <div style={styles.sidebar}>
-          <div style={styles.menuItem} onClick={() => setExpandClass(!expandClass)}>
-            Class
-          </div>
-          {expandClass && (
-            <>
-              <div style={styles.submenuItem} onClick={() => navigate("/student-lesson")}>
-                Lesson
-              </div>
-              <div style={styles.submenuItem} onClick={() => navigate("/student-challenge")}>
-                Challenge
-              </div>
-            </>
-          )}
-          <div style={{ ...styles.menuItem, marginTop: "20px", backgroundColor: "transparent" }}>
-            Leaderboard
-          </div>
+          <StudentSidebar />
         </div>
 
         {/* Content */}
         <div style={styles.content}>
           <Typography style={styles.title}>Active Classes</Typography>
           <div style={styles.classCards}>
+            {/* Example class cards */}
             <div style={styles.classCard}>Class 1</div>
-            <div style={{ ...styles.classCard, ...styles.joinCard }}>+ Join class</div>
+
+            {/* Join Class Card */}
+            <div
+              style={{ ...styles.classCard, ...styles.joinCard }}
+              onClick={handleOpen}
+            >
+              + Join class
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Join Class Dialog */}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          style: {
+            backgroundColor: "#FFE9A7", // Same as sidebar
+            borderRadius: "15px",
+          },
+        }}
+      >
+        <DialogTitle style={{ color: "#542d1d", fontWeight: "bold" }}>
+          Enter Class Name
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Class Name"
+            type="text"
+            fullWidth
+            value={classCode}
+            onChange={(e) => setClassCode(e.target.value)}
+            InputProps={{
+              style: {
+                backgroundColor: "white",
+                borderRadius: "8px",
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="error">
+            Cancel
+          </Button>
+          <Button onClick={handleJoinClass} variant="contained" color="primary">
+            Join
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
