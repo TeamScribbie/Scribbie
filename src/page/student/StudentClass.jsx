@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Drawer,
   IconButton
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -25,7 +24,7 @@ const StudentClass = () => {
 
   const [openJoinModal, setOpenJoinModal] = useState(false);
   const [newClassName, setNewClassName] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleOpenModal = () => setOpenJoinModal(true);
   const handleCloseModal = () => {
@@ -40,10 +39,6 @@ const StudentClass = () => {
     }
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   const activities = [
     { title: "📢 New Announcement", content: "Your teacher posted a reminder for the quiz tomorrow." },
     { title: "📝 Challenge #3", content: "Complete the Vocabulary Builder for this week!" },
@@ -51,31 +46,26 @@ const StudentClass = () => {
   ];
 
   return (
-    <div style={{ backgroundColor: "#FFFBE0", minHeight: "60vh", overflowX: "hidden" }}>
+    <div style={{ backgroundColor: "#FFFBE0", minHeight: "100vh", overflowX: "hidden" }}>
       <StudentNavbar />
+      <StudentSidebar onToggle={setSidebarOpen} />
 
-      {/* Top Controls: Sidebar toggle + Join Class */}
+      {/* Top Controls */}
       <Box
-      sx={{
-      paddingTop: "10px",
-      paddingX: "20px", // was 30px
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center"
-    }}
-  >
-        {/* Sidebar Toggle Button */}
-        <IconButton
-        onClick={toggleSidebar}
         sx={{
-        color: "#542d1d",
-        marginLeft: "-10px"  
-  }}
->
-  <MenuIcon fontSize="medium" />
-</IconButton>
+          paddingTop: "70px", // space below fixed navbar
+          paddingLeft: sidebarOpen ? "240px" : "80px",
+          paddingRight: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          transition: "padding-left 0.3s",
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#542d1d" }}>
+          {className ? `Classroom: ${className}` : "Welcome to Your Class!"}
+        </Typography>
 
-        {/* Join Class Button */}
         <Button
           onClick={handleOpenModal}
           variant="contained"
@@ -95,25 +85,16 @@ const StudentClass = () => {
         </Button>
       </Box>
 
-      {/* Sidebar Drawer */}
-      <Drawer
-        anchor="left"
-        open={sidebarOpen}
-        onClose={toggleSidebar}
-        PaperProps={{
-          sx: {
-            backgroundColor: "#FFE9A7",
-            width: 220,
-          },
+      {/* Main Content */}
+      <Box
+        sx={{
+          padding: "30px 20px 20px",
+          marginLeft: sidebarOpen ? "220px" : "60px",
+          transition: "margin-left 0.3s",
         }}
       >
-        <StudentSidebar />
-      </Drawer>
-
-      {/* Main Content */}
-      <Box sx={{ padding: "30px" }}>
         {/* Welcome Section */}
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#542d1d", marginBottom: 1 }}>
+        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#542d1d", marginBottom: 1 }}>
           🎉 Yay! You’ve entered your classroom. Let’s start learning together!
         </Typography>
 
@@ -131,7 +112,7 @@ const StudentClass = () => {
           <li>Have fun and do your best!</li>
         </ul>
 
-        {/* Activities Section */}
+        {/* Activities */}
         <Grid container spacing={3}>
           {activities.map((activity, index) => (
             <Grid item xs={12} md={4} key={index}>
