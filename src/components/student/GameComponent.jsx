@@ -1,12 +1,13 @@
 import React from "react";
 import GameChallengeLogic from "./GameChallengeLogic";
+import PictureMatchGame from "./PictureMatchGame"; // Make sure this file exists
 
-const GameComponent = ({ questions }) => {
-  return (
-    <div>
-      <GameChallengeLogic questions={questions} />
-    </div>
-  );
+const GameComponent = ({ questions, type, totalChallenges }) => {
+  if (type === "pictureMatch") {
+    return <PictureMatchGame questions={questions} totalChallenges={totalChallenges} />;
+  }
+
+  return <GameChallengeLogic questions={questions} totalChallenges={totalChallenges} />;
 };
 
 export default GameComponent;
