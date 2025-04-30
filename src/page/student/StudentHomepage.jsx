@@ -6,7 +6,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Button
+  Button,
+  Box,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import StudentNavbar from "../../components/layout/StudentNavbar";
@@ -16,6 +17,7 @@ const StudentHomepage = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [classCode, setClassCode] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true); // NEW
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -25,7 +27,7 @@ const StudentHomepage = () => {
 
   const handleJoinClass = () => {
     if (classCode.trim()) {
-      navigate(`/student-class/${classCode.trim()}`); // ✅ Navigate to dynamic class page
+      navigate(`/student-class/${classCode.trim()}`);
       handleClose();
     }
   };
@@ -33,42 +35,13 @@ const StudentHomepage = () => {
   const styles = {
     container: {
       minHeight: "100vh",
-      width: "100vw",
-      overflow: "hidden",
       backgroundColor: "#FFFBE0",
-    },
-    navbar: {
-      height: "60px",
-      width: "100%",
-      position: "fixed",
-      top: 0,
-      left: 0,
-      zIndex: 1000,
-    },
-    main: {
-      display: "flex",
-      marginTop: "60px",
-      height: "calc(100vh - 60px)",
-    },
-    sidebar: {
-      width: "200px",
-      height: "100%",
-      backgroundColor: "#FFE9A7",
-      borderRight: "2px solid #e5c27c",
-      position: "fixed",
-      top: "60px",
-      left: 0,
-      bottom: 0,
-      overflowY: "auto",
-      padding: "20px",
+      overflow: "hidden",
     },
     content: {
-      marginLeft: "220px",
-      flex: 1,
-      padding: "30px",
-      overflowY: "auto",
-      boxSizing: "border-box",
-      backgroundColor: "#FFFBE0",
+      marginLeft: sidebarOpen ? "220px" : "60px", // DYNAMIC SIDEBAR WIDTH
+      transition: "margin-left 0.3s",
+      padding: "90px 30px 30px", // accounts for fixed navbar
     },
     title: {
       fontWeight: "bold",
@@ -101,35 +74,20 @@ const StudentHomepage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Navbar */}
-      <div style={styles.navbar}>
-        <StudentNavbar />
-      </div>
+      <StudentNavbar />
+      <StudentSidebar onToggle={setSidebarOpen} />
 
-      {/* Main */}
-      <div style={styles.main}>
-        {/* Sidebar */}
-        <div style={styles.sidebar}>
-          <StudentSidebar />
-        </div>
-
-        {/* Content */}
-        <div style={styles.content}>
-          <Typography style={styles.title}>Active Classes</Typography>
-          <div style={styles.classCards}>
-            {/* Example class cards */}
-            <div style={styles.classCard}>Class 1</div>
-
-            {/* Join Class Card */}
-            <div
-              style={{ ...styles.classCard, ...styles.joinCard }}
-              onClick={handleOpen}
-            >
-              + Join class
-            </div>
+      <Box style={styles.content}>
+        <Typography style={styles.title}>Active Classes</Typography>
+        <div style={styles.classCards}>
+          <div
+            style={{ ...styles.classCard, ...styles.joinCard }}
+            onClick={handleOpen}
+          >
+            + Join class
           </div>
         </div>
-      </div>
+      </Box>
 
       {/* Join Class Dialog */}
       <Dialog
@@ -137,7 +95,7 @@ const StudentHomepage = () => {
         onClose={handleClose}
         PaperProps={{
           style: {
-            backgroundColor: "#FFE9A7", // Same as sidebar
+            backgroundColor: "#FFE9A7",
             borderRadius: "15px",
           },
         }}
