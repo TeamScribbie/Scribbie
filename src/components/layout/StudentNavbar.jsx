@@ -98,9 +98,27 @@ const StudentNavbar = ({ toggleSidebar }) => {
         </div>
 
         {showDropdown && (
-          <div style={styles.dropdown}>
-            <div style={{ marginBottom: "10px", cursor: "pointer" }}>My Account</div>
-            <div style={{ cursor: "pointer" }} onClick={() => navigate("/student-login")}>
+          <div style={{
+            position: "absolute",
+            top: "60px",
+            right: "20px",
+            backgroundColor: "black",
+            color: "white",
+            borderRadius: "10px",
+            padding: "10px",
+            zIndex: 1000,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+          }}>
+            <div
+              onClick={() => navigate("/student-profile")}
+              style={{ padding: "8px", cursor: "pointer", borderBottom: "1px solid white" }}
+            >
+              My Account
+            </div>
+            <div
+              onClick={() => navigate("/student-login")}
+              style={{ padding: "8px", cursor: "pointer" }}
+            >
               Log Out
             </div>
           </div>
