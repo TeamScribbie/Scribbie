@@ -6,7 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 const StudentSidebar = ({ onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [expandClass, setExpandClass] = useState(true);
   const [expandLesson, setExpandLesson] = useState(true);
   const [hovered, setHovered] = useState("");
