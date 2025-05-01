@@ -1,0 +1,48 @@
+.lesson-box {
+    width: 60px;
+    height: 60px;
+    background-color: #542d1d;
+    border: 5px solid #f9cc5b;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .lesson-box.unlocked {
+    background-color: #f9cc5b;
+    border-color: #542d1d;
+    color: #542d1d;
+  }
+  
+  .lesson-box.locked {
+    background-color: #c2b48c;
+    border-color: #e6d8b2;
+  }
+  
+  .lesson-box.chest {
+    background-color: transparent;
+    border: none;
+  }
+  
+  .chest-icon {
+    width: 60px;
+    height: auto;
+  }
+  
+  .star {
+    color: #ffdc64;
+    font-size: 26px;
+  }
+  
+  .label {
+    position: absolute;
+    top: -25px;
+    background-color: black;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+  }
+  

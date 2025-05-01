@@ -1,0 +1,42 @@
+.lesson-wrapper {
+    background-color: #fde7b2;
+    padding: 30px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+  }
+  
+  .lesson-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #542d1d;
+    color: #fff8dd;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+  }
+  
+  .back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #fff8dd;
+    cursor: pointer;
+  }
+  
+  .lesson-path {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+    gap: 40px;
+  }
+  
+  .line {
+    width: 5px;
+    height: 40px;
+    background-color: #542d1d;
+  }
+  
