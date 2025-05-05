@@ -150,6 +150,36 @@ export const startLessonProgress = async (lessonDefinitionId, token) => { // Add
     return data; // Returns the LessonProgress DTO/entity
 };
 
+export const submitActivityProgress = async (progressData, token) => { // Added export
+  // highlight-end
+      if (!progressData || !token) {
+          throw new Error('Progress data and auth token are required to submit progress.');
+      }
+      // Basic validation of required fields in progressData
+      if (progressData.lessonProgressId == null || progressData.activityNodeTypeId == null || progressData.isFinished == null) {
+          throw new Error('Missing required fields in progress data (lessonProgressId, activityNodeTypeId, isFinished).');
+      }
+      console.log(`lessonService: Submitting activity progress for node type ${progressData.activityNodeTypeId} in lesson progress ${progressData.lessonProgressId}`);
+  
+      const response = await fetch(`${API_BASE_URL}/activity-node-progress/submit`, {
+          method: 'POST',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(progressData), // Send the whole DTO object
+      });
+  
+      if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+          console.error(`Submit Activity Progress API Error (Node ${progressData.activityNodeTypeId}):`, errorData);
+          throw new Error(errorData.message || `Failed to submit activity progress. Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log(`lessonService: Raw submitActivityProgress response (Node ${progressData.activityNodeTypeId}):`, data);
+      return data; // Returns the updated ActivityNodeProgress DTO/entity
+  };
 
 // --- Placeholder for other functions ---
 // submitActivityProgress, etc.
