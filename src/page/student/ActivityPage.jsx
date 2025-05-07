@@ -1,10 +1,9 @@
-// src/page/student/ActivityPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/layout/navbar';
 import ActivityGameLogic from '../../components/student/ActivityGameLogic';
-import { getActivityNodeTypeDetails } from '../../services/activityService';
+import { getActivityNodeTypeDetails } from '../../services/activityService'; // Make sure this import is correct
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
 
 const ActivityPage = () => {
@@ -17,101 +16,138 @@ const ActivityPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // lessonProgressId is expected to be passed in location.state
     const lessonProgressId = location.state?.lessonProgressId;
-    const activityInstructions = location.state?.activityInstructions;
-    // We need classroomId if we want to navigate back to the specific lesson page
-    const classroomId = location.state?.classroomId; // <-- Make sure to pass this from LessonPage if needed
+    // classroomId might be needed for navigation, passed via location.state
+    const classroomId = location.state?.classroomId;
 
-    // --- Data Fetching (Modified to use Placeholder - remember to restore later) ---
+    // --- MODIFIED Data Fetching ---
     const fetchActivityData = useCallback(async () => {
-        // (Keep placeholder logic or restore API call as needed)
-         console.log(`Using placeholder data for Activity ID: ${activityId}`);
-         const placeholderData = { /* ... placeholder data ... */
-            activityNodeTypeId: parseInt(activityId) || 99,
-            activityType: 'QUIZ_MCQ',
-            orderIndex: 1,
-            instructions: activityInstructions || "Answer the placeholder questions!",
-            questions: [ /* ... placeholder questions ... */
-             { questionId: 901, questionText: "Why is it not working?", questionImageUrl: null, questionSoundUrl: null, choices: [ { choiceId: 1001, choiceText: "Idk", isCorrect: false }, { choiceId: 1002, choiceText: "Test", isCorrect: false }, { choiceId: 1003, choiceText: "404 Error", isCorrect: false }, { choiceId: 1004, choiceText: "All Of the Above", isCorrect: true } ] },
-             { questionId: 902, questionText: "Why is it not working? (2)", questionImageUrl: null, questionSoundUrl: null, choices: [ { choiceId: 1005, choiceText: "Idk", isCorrect: false }, { choiceId: 1006, choiceText: "Test", isCorrect: false }, { choiceId: 1007, choiceText: "404 Error", isCorrect: false }, { choiceId: 1008, choiceText: "All Of the Above", isCorrect: true } ] },
-             { questionId: 903, questionText: "Why is it not working? (3)", questionImageUrl: null, questionSoundUrl: null, choices: [ { choiceId: 1009, choiceText: "Idk", isCorrect: false }, { choiceId: 1010, choiceText: "Test", isCorrect: false }, { choiceId: 1011, choiceText: "404 Error", isCorrect: false }, { choiceId: 1012, choiceText: "All Of the Above", isCorrect: true } ] },
-             { questionId: 904, questionText: "Why is it not working? (4)", questionImageUrl: null, questionSoundUrl: null, choices: [ { choiceId: 1013, choiceText: "Idk", isCorrect: false }, { choiceId: 1014, choiceText: "Test", isCorrect: false }, { choiceId: 1015, "choiceText": "404 Error", isCorrect: false }, { choiceId: 1016, choiceText: "All Of the Above", isCorrect: true } ] },
-             { questionId: 905, questionText: "Why is it not working? (5)", questionImageUrl: null, questionSoundUrl: null, choices: [ { choiceId: 1017, choiceText: "Idk", isCorrect: false }, { choiceId: 1018, choiceText: "Test", isCorrect: false }, { choiceId: 1019, choiceText: "404 Error", isCorrect: false }, { choiceId: 1020, choiceText: "All Of the Above", isCorrect: true } ] }
-            ]
-         };
-         setTimeout(() => { setActivityData(placeholderData); setIsLoading(false); setError(null); }, 500);
-    }, [activityId, authState.token, activityInstructions]);
+        if (!activityId || !authState.token) {
+            setError("Activity ID or authentication token is missing.");
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null); // Clear previous errors
+
+        try {
+            console.log(`Workspaceing activity details for ActivityNodeType ID: ${activityId}`);
+            // This is the actual API call
+            const data = await getActivityNodeTypeDetails(activityId, authState.token);
+            
+            console.log("Fetched activity data:", data);
+
+            // Validate if the necessary data structure is present
+            // The backend DTO ActivityNodeTypeDetailDto ensures questions is a list (can be empty)
+            // and other fields like activityType, instructions should exist.
+            if (!data || typeof data.questions === 'undefined' || !data.activityType) {
+                console.error("Fetched data is missing expected structure.", data);
+                throw new Error("Received invalid data structure from server.");
+            }
+            
+            setActivityData(data); 
+        } catch (err) {
+            console.error("Failed to fetch activity data:", err);
+            // err.message might come from activityService (e.g., "Activity not found")
+            // or a generic message if the fetch itself failed.
+            setError(err.message || "An error occurred while fetching activity details.");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [activityId, authState.token]); // Dependencies for useCallback
 
     useEffect(() => {
         if (!lessonProgressId) {
             console.error("Error: lessonProgressId not found in navigation state.");
-            setError("Could not start activity: Missing progress ID. Please go back to the lesson page.");
+            setError("Could not start activity: Missing progress ID. Please go back to the lesson page and start the lesson again.");
             setIsLoading(false);
             return;
         }
-        fetchActivityData();
-    }, [fetchActivityData, lessonProgressId]);
+        
+        // Only fetch if activityId and token are available
+        if (activityId && authState.token) {
+            fetchActivityData();
+        } else if (!authState.token) {
+             setError("Authentication token not available. Please log in.");
+             setIsLoading(false);
+        } else if (!activityId) {
+            setError("Activity ID not available. Cannot fetch details.");
+            setIsLoading(false);
+        }
+    }, [activityId, authState.token, lessonProgressId, fetchActivityData]);
 
-    // --- MODIFIED Handle Completion ---
-    // Now navigates to summary page, passing results and necessary IDs
-    // highlight-start
+
     const handleActivityComplete = (finalScore, finalStatus, highestStreak, timeTaken) => {
         console.log(`Activity ${activityId} ended with status: ${finalStatus}. Score: ${finalScore}. Navigating to summary.`);
+        // Ensure activityData is available before trying to access its properties
+        const activityNodeTypeActualId = activityData?.activityNodeTypeId || parseInt(activityId);
+        const activityTypeActual = activityData?.activityType;
+
         navigate(
-            '/student/activity-summary', // New route for the summary page
+            '/student/activity-summary',
             {
                 state: {
-                    // Data for display and potential submission
                     score: finalScore,
-                    status: finalStatus, // 'COMPLETED' or 'FAILED'
+                    status: finalStatus,
                     highestStreak: highestStreak,
                     timeTaken: timeTaken,
-                    activityType: activityData?.activityType, // Pass activity type if needed
-                    // IDs needed for potential submission or restart
+                    activityType: activityTypeActual,
                     lessonProgressId: lessonProgressId,
-                    activityNodeTypeId: activityData?.activityNodeTypeId || parseInt(activityId), // Use fetched or param ID
+                    activityNodeTypeId: activityNodeTypeActualId,
                     studentId: authState.user?.identifier,
-                    // IDs needed for navigation (Restart/Continue)
-                    lessonId: lessonId,
-                    activityId: activityId,
-                    classroomId: classroomId // Pass classroomId if available and needed for "Continue" button
+                    lessonId: lessonId, // Original lessonId from params
+                    activityId: activityId, // Original activityId from params (used for restart/identification)
+                    classroomId: classroomId // Pass classroomId for "Continue Lesson" navigation from summary
                 }
             }
         );
     };
-    // highlight-end
 
-    // --- Render Logic (Pass modified onComplete) ---
+    // --- Render Logic ---
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
             <Navbar />
             <Box component="main" sx={{ flexGrow: 1, p: 3, mt: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                 {/* Loading and Error states remain the same */}
                 {isLoading && <CircularProgress sx={{ mt: 4 }} />}
-                {error && !isLoading && ( /* ... error Alert ... */
-                     <Alert severity="error" sx={{ mt: 4, width: '100%', maxWidth: '600px' }}>
-                         {error}
-                         <Button onClick={() => navigate(-1)} sx={{ ml: 2, mt: 1 }}>Go Back</Button>
+                
+                {error && !isLoading && (
+                     <Alert severity="error" sx={{ mt: 4, width: '100%', maxWidth: '600px', textAlign:'center' }}>
+                         <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'bold' }}>
+                            Error Loading Activity
+                         </Typography>
+                         <Typography variant="body2" component="div" sx={{ mt: 1 }}>
+                            {error}
+                         </Typography>
+                         <Button 
+                            onClick={() => navigate(classroomId && lessonId ? `/student/classroom/${classroomId}/lesson/${lessonId}` : -1)} 
+                            variant="contained"
+                            sx={{ mt: 2 }}
+                         >
+                            Go Back to Lesson
+                         </Button>
                     </Alert>
                 )}
 
-                {/* Render Game Logic - pass the modified onComplete handler */}
                 {!isLoading && !error && activityData && lessonProgressId && authState.user?.identifier && (
                     <>
-                        <Typography variant="h4" gutterBottom sx={{ my: 2, color: '#451513', textAlign: 'center' }}>
-                           Activity Time!
+                        <Typography variant="h4" gutterBottom sx={{ my: 2, color: '#451513', textAlign: 'center', fontWeight:'bold' }}>
+                           {activityData.instructions || "Activity Time!"} {/* Display fetched instructions or a default */}
                         </Typography>
                         <ActivityGameLogic
-                            key={activityId}
+                            // Use a key that depends on the actual loaded data to ensure re-initialization if data changes for the same route
+                            key={activityData.activityNodeTypeId + '-' + lessonProgressId} 
                             questions={activityData.questions || []}
                             activityType={activityData.activityType}
-                            // Removed IDs no longer needed as props here
-                            onComplete={handleActivityComplete} // Pass the updated handler
+                            onComplete={handleActivityComplete}
                         />
                     </>
                 )}
-                 {!isLoading && !error && !activityData && ( /* ... no data message ... */
-                    <Typography sx={{ mt: 4 }}>No activity data found or loaded.</Typography>
+                
+                {/* Message if no data is loaded and not loading, and no error is actively displayed */}
+                {!isLoading && !error && !activityData && (
+                    <Typography sx={{ mt: 4 }}>No activity data to display. If you just started the lesson, try going back and clicking the activity again.</Typography>
                  )}
             </Box>
         </Box>

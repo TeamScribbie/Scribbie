@@ -1,223 +1,176 @@
-// src/components/student/ActivityGameLogic.jsx
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
-import mascot from '../../assets/duh.png';
-import confetti from 'canvas-confetti';
-import { Button, Typography, Box, CircularProgress, Alert } from '@mui/material';
-// Remove the import for submitActivityProgress and useAuth, as submission happens on summary page
-// import { submitActivityProgress } from '../../services/lessonService';
-// import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, useParams } from 'react-router-dom'; // useParams to get lessonId from URL for navigation
+import { getActivityNodeDetails } from '../../services/activityService';
+import { submitActivityProgress } from '../../services/lessonService'; // Assuming this service function will handle submission
+import { AuthContext } from '../../context/AuthContext';
+import './ActivityGameLogic.css'; // Optional: Create and import a CSS file for styling
 
-const ActivityGameLogic = ({
-    questions,
-    activityType,
-    // Remove IDs related to submission as props, they'll be passed to summary page
-    // lessonProgressId,
-    // activityNodeTypeId,
-    // studentId,
-    onComplete // Callback: now receives onComplete(finalScore, finalStatus)
-}) => {
-    // --- State ---
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [score, setScore] = useState(0);
-    const [lives, setLives] = useState(3);
-    const [streak, setStreak] = useState(0);
-    const [highestRecordedStreak, setHighestRecordedStreak] = useState(0); // Track max streak
-    const [selectedChoice, setSelectedChoice] = useState(null);
-    const [isCorrect, setIsCorrect] = useState(null);
-    const [gameOver, setGameOver] = useState(false);
-    const [activityFinished, setActivityFinished] = useState(false);
-    const [startTime, setStartTime] = useState(Date.now()); // Keep start time
+const ActivityGameLogic = ({ activityNodeId, lessonProgressId }) => {
+    const navigate = useNavigate();
+    const { lessonId } = useParams(); // Get lessonId from the route for navigation back or to summary
+    const { user } = useContext(AuthContext);
 
-    const navigate = useNavigate(); // Keep navigate if needed for other things internally
+    const [activityDetails, setActivityDetails] = useState(null);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [selectedChoiceId, setSelectedChoiceId] = useState(null);
+    const [answers, setAnswers] = useState([]); // Stores { questionId, selectedChoiceId }
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [startTime, setStartTime] = useState(null);
 
-    // Track highest streak
     useEffect(() => {
-        if (streak > highestRecordedStreak) {
-            setHighestRecordedStreak(streak);
+        if (activityNodeId) {
+            setIsLoading(true);
+            setStartTime(Date.now()); // Record start time when activity loads
+            setAnswers([]); // Reset answers for the new activity node
+            setCurrentQuestionIndex(0); // Reset to first question
+            setSelectedChoiceId(null); // Reset selected choice
+            getActivityNodeDetails(activityNodeId)
+                .then(response => {
+                    setActivityDetails(response.data);
+                    if (response.data && response.data.questions) {
+                        // Initialize answers array based on fetched questions
+                        setAnswers(response.data.questions.map(q => ({ questionId: q.questionId, selectedChoiceId: null })));
+                    }
+                    setIsLoading(false);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch activity node details:", err);
+                    setError("Failed to load questions. Please ensure you are logged in and try again.");
+                    setIsLoading(false);
+                });
         }
-    }, [streak, highestRecordedStreak]);
+    }, [activityNodeId]); // Re-fetch if activityNodeId changes
 
-    // --- Handle Answer Selection ---
-    const handleAnswer = (choice) => {
-        if (selectedChoice) return;
-
-        setSelectedChoice(choice.choiceText);
-        const correct = choice.isCorrect;
-        setIsCorrect(correct);
-
-        let currentStreak = streak;
-        if (correct) {
-            setScore((prev) => prev + 1000 + (currentStreak * 100));
-            currentStreak++;
-            setStreak(currentStreak);
-        } else {
-            setLives((prev) => prev - 1);
-            setStreak(0);
-            currentStreak = 0;
-        }
-
-        // --- Game End Logic ---
-        // Check if game should end *after* processing the answer
-        const currentLives = correct ? lives : lives - 1;
-        const isLastQuestion = currentIndex + 1 >= questions.length;
-
-        if (currentLives <= 0) {
-             // Game Over - Call onComplete immediately
-             console.log("Game Over triggered");
-             const endTime = Date.now();
-             const timeTaken = Math.round((endTime - startTime) / 1000);
-             // Use highestRecordedStreak
-             onComplete(score, 'FAILED', highestRecordedStreak, timeTaken);
-             setGameOver(true); // Set state to stop further interaction
-        } else if (isLastQuestion) {
-             // Last question answered (and lives > 0) - Call onComplete immediately
-             console.log("Activity Finished triggered");
-             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-             const endTime = Date.now();
-             const timeTaken = Math.round((endTime - startTime) / 1000);
-              // Use highestRecordedStreak
-             onComplete(score, 'COMPLETED', highestRecordedStreak, timeTaken);
-             setActivityFinished(true); // Set state to stop further interaction
-        } else {
-             // Move to next question after a delay
-            setTimeout(() => {
-                 setCurrentIndex(currentIndex + 1);
-                 setSelectedChoice(null);
-                 setIsCorrect(null);
-            }, 1200);
+    const handleChoiceSelect = (choiceId) => {
+        setSelectedChoiceId(choiceId);
+        // Update the answers state for the current question
+        if (activityDetails && activityDetails.questions && activityDetails.questions[currentQuestionIndex]) {
+            const currentQuestion = activityDetails.questions[currentQuestionIndex];
+            const updatedAnswers = [...answers];
+            const answerIndex = updatedAnswers.findIndex(a => a.questionId === currentQuestion.questionId);
+            if (answerIndex !== -1) {
+                updatedAnswers[answerIndex].selectedChoiceId = choiceId;
+                setAnswers(updatedAnswers);
+            } else { // Should not happen if initialized correctly
+                updatedAnswers.push({ questionId: currentQuestion.questionId, selectedChoiceId: choiceId });
+                setAnswers(updatedAnswers);
+            }
         }
     };
 
-    // --- REMOVED Submission Logic and useEffect for submission ---
-    // Submission will now happen on the Summary Page
+    const handleNextQuestion = () => {
+        // If it's an instructional question without choices, or if a choice is selected for non-instructional
+        const currentQuestion = activityDetails.questions[currentQuestionIndex];
+        const canProceed = currentQuestion.instructional || selectedChoiceId !== null;
 
-    // --- Render Logic ---
-
-    // Don't render anything further if game has ended (onComplete has been called)
-     if (gameOver || activityFinished) {
-         // Optionally show a quick "Finished!" message before parent navigates away
-         return (
-             <Box sx={{ textAlign: 'center', mt: 4, p: 3 }}>
-                 <Typography variant="h5">{gameOver ? "Game Over!" : "Finished!"}</Typography>
-                 <CircularProgress sx={{mt: 2}}/>
-                 <Typography sx={{mt: 1}}>Loading summary...</Typography>
-             </Box>
-         );
-     }
-
-
-    // Render Active Game Question
-    const currentQuestion = questions?.[currentIndex];
-    if (!currentQuestion) {
-        if (questions === null || questions === undefined) {
-            return <CircularProgress />;
+        if (!canProceed) {
+            alert("Please select an answer to proceed.");
+            return;
         }
-        return <Alert severity="warning">No question data available or index out of bounds.</Alert>;
+
+        setSelectedChoiceId(null); // Reset for the next question
+
+        if (currentQuestionIndex < activityDetails.questions.length - 1) {
+            setCurrentQuestionIndex(currentQuestionIndex + 1);
+        } else {
+            // All questions answered, proceed to submit
+            handleSubmit();
+        }
+    };
+
+    const handleSubmit = async () => {
+        setIsLoading(true);
+        const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
+
+        // Prepare data for submission based on SubmitActivityProgressRequestDto
+        // The backend expects 'score'. Frontend cannot reliably calculate score without knowing correct answers from ChoiceDto.
+        // For now, we'll send score as 0, assuming backend calculates/validates score.
+        // This needs to be addressed if frontend needs to send an accurate score.
+        const answeredQuestionsDto = answers
+            .filter(a => a.selectedChoiceId !== null) // Only send answers where a choice was made
+            .map(a => ({
+                questionId: a.questionId,
+                selectedChoiceId: a.selectedChoiceId,
+            }));
+
+        const progressData = {
+            lessonProgressId: lessonProgressId,
+            activityNodeTypeId: activityNodeId,
+            score: 0, // Placeholder: Backend should ideally calculate this.
+            timeTakenSeconds: timeTakenSeconds,
+            answeredQuestions: answeredQuestionsDto,
+        };
+
+        try {
+            // Ensure submitActivityProgress is correctly defined in lessonService.js or activityService.js
+            // and that it matches the expected backend DTO.
+            // The DTO is SubmitActivityProgressRequestDto.java
+            await submitActivityProgress(progressData); // This function needs to exist in your services
+            navigate(`/lesson/${lessonId}/activity/${activityNodeId}/summary`, {
+                state: {
+                    lessonProgressId: lessonProgressId,
+                    activityNodeId: activityNodeId,
+                    // Potentially pass 'answers' or a result summary if needed by ActivitySummaryPage
+                }
+            });
+        } catch (err) {
+            console.error("Failed to submit activity progress:", err);
+            setError("Failed to submit progress. Please try again.");
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading) return <div className="loading-container"><p>Loading Activity...</p></div>;
+    if (error) return <div className="error-container"><p style={{ color: 'red' }}>{error}</p></div>;
+    if (!activityDetails || !activityDetails.questions || activityDetails.questions.length === 0) {
+        return <div className="container"><p>No questions found for this activity. It might be an instructional segment without direct questions, or the activity is not yet configured.</p></div>;
     }
 
-    // (Keep the rendering code for the active game question - Score, Lives, Question Text, Mascot, Choices Buttons - as it was in the previous version)
-    // ... Re-paste the Box container with Top Bar, Question Text, Mascot, Choices Grid here ...
-     return (
-        // Main Game View
-        <Box sx={{ textAlign: 'center', p: [1, 2], width: '100%', maxWidth: '700px', bgcolor: '#FFFBE0', borderRadius: 2, boxShadow: 1 }}>
-            {/* Top Bar: Score, Lives, Streak */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, p: 1, bgcolor: 'rgba(255, 255, 255, 0.7)', borderRadius: 1 }}>
-                <Typography variant="h6" sx={{ color: '#451513'}}>Score: {score.toLocaleString()}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {Array.from({ length: lives }).map((_, idx) => (
-                        <span key={`life-${idx}`} style={{ color: 'red', fontSize: '1.5rem', textShadow: '1px 1px #888' }}>❤️</span>
-                    ))}
-                    {Array.from({ length: 3 - lives }).map((_, idx) => (
-                         <span key={`lost-${idx}`} style={{ color: '#ccc', fontSize: '1.5rem' }}>♡</span>
-                    ))}
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <span style={{ fontSize: '1.5rem', color: 'orange' }}>⚡</span>
-                    <Typography variant="h6" sx={{ color: '#451513'}}>{streak}x</Typography>
-                </Box>
-            </Box>
+    const currentQuestion = activityDetails.questions[currentQuestionIndex];
+    const isInstructionalWithNoChoices = currentQuestion.instructional && (!currentQuestion.choices || currentQuestion.choices.length === 0);
 
-            {/* Question Text */}
-            <Typography variant="h5" sx={{ my: [2, 3], fontWeight: 'bold', color: '#451513', minHeight: '3em' }}>
-                {currentQuestion.questionText}
-            </Typography>
+    return (
+        <div className="activity-game-container">
+            <h2>{activityDetails.activityType.replace('_', ' ')}</h2>
+            {activityDetails.instructions && <p className="activity-instructions">{activityDetails.instructions}</p>}
 
-            {/* Optional: Mascot Image */}
-            <img src={mascot} alt="Mascot" style={{ height: '100px', marginBottom: '20px' }} />
+            <div className="question-area">
+                <h3>Question {currentQuestionIndex + 1} of {activityDetails.questions.length}</h3>
+                <p className={`question-text ${currentQuestion.instructional ? 'instructional-text' : ''}`}>
+                    {currentQuestion.instructional && !currentQuestion.questionText.toLowerCase().startsWith("instruction:") && <strong>Instruction: </strong>}
+                    {currentQuestion.questionText}
+                </p>
+                {currentQuestion.questionImageUrl && (
+                    <img src={currentQuestion.questionImageUrl} alt="Question content" className="question-image" />
+                )}
+                {/* Add audio player if currentQuestion.questionSoundUrl exists */}
+            </div>
 
-            {/* Choices Grid */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: ['1fr', '1fr 1fr'], gap: ['10px', '15px'], maxWidth: '600px', margin: '20px auto 0' }}>
-                {(currentQuestion.choices || []).map((choice) => {
-                    let buttonStyles = {};
-                    if (selectedChoice === choice.choiceText) {
-                        buttonStyles = isCorrect
-                            ? { bgcolor: '#4CAF50', color: 'white', '&:hover': { bgcolor: '#388E3C'} }
-                            : { bgcolor: '#F44336', color: 'white', '&:hover': { bgcolor: '#D32F2F'} };
-                    } else if (selectedChoice && !choice.isCorrect) {
-                         buttonStyles = { opacity: 0.6 };
-                    } else if (selectedChoice && choice.isCorrect) {
-                         buttonStyles = { bgcolor: '#4CAF50', color: 'white' };
-                    }
-                    return (
-                        <Button
+            {!isInstructionalWithNoChoices && (
+                 <div className="choices-area">
+                    {currentQuestion.choices.map(choice => (
+                        <button
                             key={choice.choiceId}
-                            onClick={() => handleAnswer(choice)}
-                            disabled={!!selectedChoice}
-                            variant="contained"
-                            sx={{ /* --- Paste previous button styles here --- */
-                                padding: ['12px', '15px'],
-                                borderRadius: '10px',
-                                border: `2px solid #451513`,
-                                bgcolor: '#FFE9A7',
-                                color: '#451513',
-                                fontSize: ['0.9rem', '1rem'],
-                                fontWeight: 'bold',
-                                textTransform: 'none',
-                                transition: 'background-color 0.3s, opacity 0.3s',
-                                '&:hover': {
-                                    bgcolor: '#FFD966',
-                                    boxShadow: '0 3px 5px rgba(0,0,0,0.2)'
-                                },
-                                '&:disabled': {
-                                    opacity: 1,
-                                    color: 'white', // Adjust if needed based on buttonStyles
-                                },
-                                ...buttonStyles // Apply dynamic styles
-                             }}
+                            onClick={() => handleChoiceSelect(choice.choiceId)}
+                            className={`choice-button ${selectedChoiceId === choice.choiceId ? 'selected' : ''}`}
                         >
                             {choice.choiceText}
-                        </Button>
-                    );
-                 })}
-            </Box>
-        </Box>
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <div className="navigation-area">
+                <button 
+                    onClick={handleNextQuestion} 
+                    disabled={isLoading || (!isInstructionalWithNoChoices && !selectedChoiceId && !currentQuestion.instructional && currentQuestion.choices && currentQuestion.choices.length > 0) }
+                >
+                    {currentQuestionIndex < activityDetails.questions.length - 1 ? 'Next Question' : 'Finish Activity'}
+                </button>
+            </div>
+        </div>
     );
-};
-
-// --- Updated PropTypes ---
-ActivityGameLogic.propTypes = {
-    questions: PropTypes.arrayOf(PropTypes.shape({
-        questionId: PropTypes.number.isRequired,
-        questionText: PropTypes.string.isRequired,
-        choices: PropTypes.arrayOf(PropTypes.shape({
-            choiceId: PropTypes.number.isRequired,
-            choiceText: PropTypes.string.isRequired,
-            isCorrect: PropTypes.bool
-        })),
-    })),
-    activityType: PropTypes.string,
-    // Remove IDs from props
-    // lessonProgressId: PropTypes.number.isRequired,
-    // activityNodeTypeId: PropTypes.number.isRequired,
-    // studentId: PropTypes.string.isRequired,
-    onComplete: PropTypes.func.isRequired, // Callback: onComplete(finalScore, finalStatus, highestStreak, timeTaken)
-};
-
-ActivityGameLogic.defaultProps = {
-    questions: [],
-    activityType: 'QUIZ_MCQ',
 };
 
 export default ActivityGameLogic;
