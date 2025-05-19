@@ -7,139 +7,196 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Select, // ✨ New MUI component
-  MenuItem, // ✨ New MUI component
-  FormControl, // ✨ New MUI component
-  InputLabel, // ✨ New MUI component
-  CircularProgress, // ✨ For loading state
-  FormHelperText // ✨ For errors
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  FormHelperText,
+  Box
 } from '@mui/material';
-import { useAuth } from '../../context/AuthContext'; // To get the token
-import { getAllCourses } from '../../services/courseService'; // ✨ Import the new service
+import { useAuth } from '../../context/AuthContext';
+import { getAvailableCoursesForAssignment } from '../../services/courseService';
 
-const AddClassDialog = ({ open, onClose, onAddClass, isLoading: isSubmitting }) => {
+const AddClassDialog = ({ open, onClose, onAddClass, isLoading: isSubmittingClass }) => {
   const { authState } = useAuth();
   const [classroomName, setClassroomName] = useState('');
   const [classroomCode, setClassroomCode] = useState('');
-  const [selectedCourseId, setSelectedCourseId] = useState(''); // ✨ State for selected course
-  const [availableCourses, setAvailableCourses] = useState([]); // ✨ State for fetched courses
+  const [selectedCourseId, setSelectedCourseId] = useState(''); // Initial state is an empty string
+  const [availableCourses, setAvailableCourses] = useState([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(false);
   const [courseError, setCourseError] = useState(null);
+  const [formError, setFormError] = useState('');
 
-  // Fetch courses when the dialog opens and authState.token is available
   const fetchCourses = useCallback(async () => {
-    if (open && authState.token) {
+    // Fetch only if dialog is open, user is authenticated, AND availableCourses is currently empty.
+    if (open && authState.token && availableCourses.length === 0) {
       setIsLoadingCourses(true);
       setCourseError(null);
       try {
-        const courses = await getAllCourses(authState.token);
-        setAvailableCourses(courses);
+        console.log("AddClassDialog: [FETCHING] Starting to fetch available courses...");
+        const courses = await getAvailableCoursesForAssignment(authState.token);
+        // +++ LOGGING POINT 1: What did getAvailableCoursesForAssignment return? +++
+        console.log("AddClassDialog: [FETCHED] Raw courses data from service:", JSON.stringify(courses, null, 2));
+
+        setAvailableCourses(courses || []); // Ensure it's an array
+        if (!courses || courses.length === 0) {
+            console.warn("AddClassDialog: [FETCHED] No courses returned or courses array is empty.");
+            setCourseError("No courses are available to assign. Please create a course first or contact an administrator.");
+        } else {
+            // +++ LOGGING POINT 2: Sanity check the structure of the first course if available +++
+            console.log("AddClassDialog: [FETCHED] First course details (if any):", JSON.stringify(courses[0], null, 2));
+        }
       } catch (err) {
-        console.error("Failed to fetch courses for dialog:", err);
-        setCourseError(err.message || "Could not load courses.");
-        setAvailableCourses([]); // Clear courses on error
+        console.error("AddClassDialog: [FETCH ERROR] Failed to fetch courses:", err);
+        setCourseError(err.message || "Could not load courses. Please try again.");
+        setAvailableCourses([]);
       } finally {
         setIsLoadingCourses(false);
       }
     }
-  }, [open, authState.token]);
+  }, [open, authState.token, availableCourses.length]);
 
   useEffect(() => {
-    fetchCourses();
-  }, [fetchCourses]); // fetchCourses is memoized by useCallback
+    if (open) {
+        fetchCourses();
+    }
+  }, [open, fetchCourses]);
 
-  // Reset fields when dialog visibility changes
+  // Reset form state when dialog is closed
   useEffect(() => {
     if (!open) {
+      console.log("AddClassDialog: [CLOSING DIALOG] Resetting form state.");
       setClassroomName('');
       setClassroomCode('');
-      setSelectedCourseId('');
-      setAvailableCourses([]); // Clear courses when dialog closes
-      setCourseError(null);   // Clear error when dialog closes
-    } else {
-        // When dialog opens, if courses haven't been loaded yet (e.g. token just became available), fetch them.
-        if(availableCourses.length === 0 && !isLoadingCourses && !courseError) {
-            fetchCourses();
-        }
+      setSelectedCourseId(''); // Crucially resets selectedCourseId
+      setAvailableCourses([]); // Clears courses to allow re-fetch next time
+      setCourseError(null);
+      setFormError('');
     }
-  }, [open, availableCourses.length, isLoadingCourses, courseError, fetchCourses]);
+  }, [open]);
 
   const handleCreateClick = () => {
-    if (classroomName.trim() && classroomCode.trim() && selectedCourseId) { // ✨ Ensure course is selected
-      onAddClass({
-        classroomName: classroomName.trim(),
-        classroomCode: classroomCode.trim(),
-        assignedCourseId: selectedCourseId, // ✨ Include selected course ID
-      });
-      // onClose(); // Keep dialog open until parent confirms success/failure via isLoading prop
-    } else {
-      alert('Please fill all fields, including selecting a course.');
+    setFormError('');
+    // +++ LOGGING POINT 4: Value of selectedCourseId AT THE START of handleCreateClick +++
+    console.log("AddClassDialog: [CREATE CLICK] Initial selectedCourseId:", `"${selectedCourseId}"`, "Type:", typeof selectedCourseId);
+
+    if (!classroomName.trim()) {
+      setFormError('Class Name is required.');
+      return;
     }
+    // Classroom code can be empty as backend can generate it.
+    // Client-side validation for length is optional.
+    // if (classroomCode.trim().length > 10) {
+    //   setFormError('Class Code cannot exceed 10 characters.');
+    //   return;
+    // }
+
+    // This condition (!selectedCourseId) will be true if selectedCourseId is "" (empty string)
+    if (!selectedCourseId) {
+      setFormError('Please select a course to assign.');
+      // +++ LOGGING POINT 5: Validation for selectedCourseId failed +++
+      console.error("AddClassDialog: [VALIDATION FAIL] selectedCourseId is empty or falsy. Value:", `"${selectedCourseId}"`);
+      return; // Exit if no course is selected
+    }
+
+    // This part is only reached if selectedCourseId is NOT an empty string (and not null/undefined)
+    const dataToSend = {
+      classroomName: classroomName.trim(),
+      classroomCode: classroomCode.trim(),
+      assignedCourseId: selectedCourseId, // Value from state
+    };
+    // +++ LOGGING POINT 6: Data being passed to onAddClass +++
+    console.log("AddClassDialog: [SENDING] Calling onAddClass with data:", JSON.stringify(dataToSend, null, 2));
+    onAddClass(dataToSend);
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={() => !isSubmittingClass && onClose()} maxWidth="xs" fullWidth>
       <DialogTitle className="dialog-title">Create a class</DialogTitle>
-      <DialogContent className="dialog-content">
+      <DialogContent className="dialog-content" sx={{ paddingTop: '20px !important' }}>
         <TextField
           autoFocus
           margin="dense"
+          id="classroomName"
           label="Class Name"
+          type="text"
           fullWidth
+          variant="outlined"
           value={classroomName}
           onChange={(e) => setClassroomName(e.target.value)}
-          variant="outlined"
-          disabled={isSubmitting}
+          disabled={isSubmittingClass}
+          required // HTML5 required
         />
         <TextField
           margin="dense"
+          id="classroomCode"
           label="Class Code"
+          type="text"
           fullWidth
+          variant="outlined"
           value={classroomCode}
           onChange={(e) => setClassroomCode(e.target.value)}
-          variant="outlined"
-          disabled={isSubmitting}
+          disabled={isSubmittingClass}
+          helperText="Max 10 characters. If left empty, a code will be generated."
         />
-
-        {/* ✨ Course Selection Dropdown ✨ */}
-        <FormControl fullWidth margin="dense" disabled={isSubmitting || isLoadingCourses} error={!!courseError}>
-          <InputLabel id="select-course-label">Assign Course</InputLabel>
+        <FormControl fullWidth margin="dense" disabled={isSubmittingClass || isLoadingCourses} error={!!courseError || (!selectedCourseId && formError.includes('course'))}>
+          <InputLabel id="assign-course-label">Assign Course *</InputLabel>
           <Select
-            labelId="select-course-label"
-            id="select-course"
-            value={selectedCourseId}
-            label="Assign Course"
-            onChange={(e) => setSelectedCourseId(e.target.value)}
+            labelId="assign-course-label"
+            id="assign-course-select"
+            value={selectedCourseId} // Controlled by state
+            label="Assign Course *" // MUI uses this for the floating label
+            onChange={(e) => {
+              const newValue = e.target.value;
+              // +++ LOGGING POINT 3: Value selected from dropdown +++
+              console.log("AddClassDialog: [SELECTION CHANGE] Course selected. e.target.value:", `"${newValue}"`, "Type:", typeof newValue);
+              setSelectedCourseId(newValue);
+            }}
+            required // HTML5 required
           >
-            {isLoadingCourses ? (
-              <MenuItem value="" disabled>
-                <CircularProgress size={20} sx={{mr: 1}} /> Loading Courses...
+            {/* Default/Placeholder MenuItem. Its value is an empty string. */}
+            <MenuItem value="" disabled>
+              <em>{isLoadingCourses ? "Loading..." : "Select a Course"}</em>
+            </MenuItem>
+
+            {isLoadingCourses && (
+              <MenuItem value="" disabled style={{ justifyContent: 'center' }}>
+                <CircularProgress size={20} />
               </MenuItem>
-            ) : availableCourses.length === 0 && !courseError ? (
-                 <MenuItem value="" disabled>No courses available to assign.</MenuItem>
-            ) : (
-              availableCourses.map((course) => (
-                <MenuItem key={course.courseId} value={course.courseId}>
-                  {course.title} {/* Assuming course object has 'title' */}
-                </MenuItem>
-              ))
             )}
+
+            {!isLoadingCourses && availableCourses.map((course) => {
+              // console.log(`AddClassDialog: [RENDERING MENUITEM] Title: "${course.title}", ID (for value): ${course.courseId}, Type of ID: ${typeof course.courseId}`);
+              return (
+                <MenuItem key={course.courseId} value={course.courseId}> {/* course.courseId is likely a number */}
+                  {course.title} {course.description ? `(${course.description.substring(0,30)}...)` : ''}
+                </MenuItem>
+              );
+            })}
+
+            {!isLoadingCourses && availableCourses.length === 0 && !courseError && (
+                 <MenuItem value="" disabled>No courses available.</MenuItem>
+             )}
           </Select>
-          {courseError && <FormHelperText>{courseError}</FormHelperText>}
-           {availableCourses.length > 0 && !selectedCourseId && !isLoadingCourses && (
-             <FormHelperText>Please select a course.</FormHelperText>
-           )}
+          {courseError && <FormHelperText error>{courseError}</FormHelperText>}
+          {/* This error shows if validation fails for course selection in handleCreateClick */}
+          {!selectedCourseId && formError.includes('course') && <FormHelperText error>{formError}</FormHelperText>}
         </FormControl>
+
+        {/* This shows general form errors like "Class Name is required" */}
+        {formError && !formError.includes('course') && <FormHelperText error sx={{mt: 1, textAlign: 'center'}}>{formError}</FormHelperText>}
+
       </DialogContent>
       <DialogActions className="dialog-actions">
-        <Button onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+        <Button onClick={onClose} disabled={isSubmittingClass}>Cancel</Button>
         <Button
           onClick={handleCreateClick}
           variant="contained"
           className="dialog-create-button"
-          disabled={isSubmitting || isLoadingCourses || !classroomName.trim() || !classroomCode.trim() || !selectedCourseId}
+          disabled={isSubmittingClass || isLoadingCourses}
         >
-          {isSubmitting ? <CircularProgress size={24} color="inherit"/> : 'Create'}
+          {isSubmittingClass ? <CircularProgress size={24} color="inherit" /> : 'Create'}
         </Button>
       </DialogActions>
     </Dialog>
@@ -149,8 +206,8 @@ const AddClassDialog = ({ open, onClose, onAddClass, isLoading: isSubmitting }) 
 AddClassDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  onAddClass: PropTypes.func.isRequired, // Expects func taking { classroomName, classroomCode, assignedCourseId }
-  isLoading: PropTypes.bool, // Prop to indicate submission is in progress
+  onAddClass: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool, // Prop from parent indicating submission is in progress
 };
 
 export default AddClassDialog;

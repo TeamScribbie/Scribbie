@@ -42,34 +42,48 @@ export const getTeacherClassrooms = async (teacherId, token) => {
  * @throws {Error} - Throws an error if the creation fails.
  */
 export const createClassroom = async (classroomData, token) => {
-   if (!token) {
+  if (!token) {
     throw new Error('Auth token is required.');
   }
-   if (!classroomData.classroomName || !classroomData.classroomCode) {
-       throw new Error('Classroom Name and Code are required.');
-   }
-   // ... (rest of the function remains the same) ...
+  // It's good practice to check for classroomName here as well,
+  // though the backend @NotBlank will catch it.
+  if (!classroomData || !classroomData.classroomName) { // Added a check for classroomData itself
+      // Log the problematic classroomData
+      console.error("classroomService.js: [ERROR] classroomData or classroomData.classroomName is missing.", classroomData);
+      throw new Error('Classroom Name is required.');
+  }
+
+  // +++ LOGGING POINT A: What data did this service function receive? +++
+  console.log("classroomService.js: [RECEIVED] Data passed to createClassroom:", JSON.stringify(classroomData, null, 2));
+
+  const payloadObject = {
+      classroomName: classroomData.classroomName,
+      classroomCode: classroomData.classroomCode,
+      assignedCourseId: classroomData.assignedCourseId
+  };
+
+  // +++ LOGGING POINT B: What object is ACTUALLY being stringified? +++
+  console.log("classroomService.js: [STRINGIFYING] Object being sent to backend:", JSON.stringify(payloadObject, null, 2));
+
   const response = await fetch(`${API_BASE_URL}/classrooms`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-        classroomName: classroomData.classroomName,
-        classroomCode: classroomData.classroomCode,
-    }),
+    body: JSON.stringify(payloadObject), // Use the explicitly constructed object
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-    console.error('Create Classroom API Error:', errorData);
+    console.error('classroomService.js: [API ERROR] Create Classroom API Error:', errorData);
     throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
   }
 
-  return await response.json();
+  const responseData = await response.json();
+  console.log("classroomService.js: [API SUCCESS] Create Classroom API Success:", responseData);
+  return responseData;
 };
-
 /**
  * Fetches the classrooms a specific student is enrolled in or pending for.
  * @param {string} studentId - The ID of the student.
@@ -177,14 +191,18 @@ export const updateEnrollmentStatus = async (classroomId, studentId, status, tok
       throw new Error('Invalid status provided. Must be APPROVED or REJECTED.');
   }
   // ... (rest of the function remains the same) ...
- const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/students/${studentId}/status`, {
-   method: 'PUT',
-   headers: {
-     'Authorization': `Bearer ${token}`,
-     'Content-Type': 'application/json',
-   },
-   body: JSON.stringify({ status }),
- });
+const response = await fetch(`${API_BASE_URL}/classrooms`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ // This object is what gets turned into the JSON payload
+      classroomName: classroomData.classroomName,
+      classroomCode: classroomData.classroomCode, // This is fine if it's an empty string; backend handles it
+      assignedCourseId: classroomData.assignedCourseId // <<< THIS LINE IS ESSENTIAL
+  }),
+});
 
  if (!response.ok) {
    const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));

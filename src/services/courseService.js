@@ -1,18 +1,21 @@
-const API_BASE_URL = 'http://localhost:8080/api'; // Or your actual API base URL
+// src/services/courseService.js
+const API_BASE_URL = 'http://localhost:8080/api';
 
 /**
- * Fetches a list of all available courses.
+ * Fetches a list of all available courses for assignment.
+ * Calls the new endpoint in ClassroomController.
  * @param {string} token - The JWT authentication token.
- * @returns {Promise<Array<object>>} - A promise that resolves with an array of course objects (e.g., { courseId, title }).
+ * @returns {Promise<Array<object>>} - A promise that resolves with an array of course objects (e.g., { courseId, title, description }).
  * @throws {Error} - Throws an error if the fetch fails.
  */
-export const getAllCourses = async (token) => {
+export const getAvailableCoursesForAssignment = async (token) => {
     if (!token) {
-        throw new Error('Auth token is required to fetch courses.');
+        throw new Error('Auth token is required to fetch available courses.');
     }
-    console.log("courseService: Fetching all courses...");
+    console.log("courseService (frontend): Fetching available courses for assignment...");
 
-    const response = await fetch(`${API_BASE_URL}/courses`, { // Assuming this endpoint will exist
+    // Make sure this endpoint matches what you defined in ClassroomController.java
+    const response = await fetch(`${API_BASE_URL}/classrooms/available-courses`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -21,11 +24,17 @@ export const getAllCourses = async (token) => {
     });
 
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        console.error('Get All Courses API Error:', errorData);
-        throw new Error(errorData.message || `Failed to fetch courses. Status: ${response.status}`);
+        // Handle cases where response might not be JSON (e.g. network error)
+        let errorData;
+        try {
+            errorData = await response.json();
+        } catch (e) {
+            errorData = { message: `HTTP error! Status: ${response.status}. Response not JSON.` };
+        }
+        console.error('Get Available Courses API Error:', errorData);
+        throw new Error(errorData.message || `Failed to fetch available courses. Status: ${response.status}`);
     }
     const data = await response.json();
-    console.log("courseService: Raw getAllCourses response:", data);
-    return Array.isArray(data) ? data : []; // Ensure it returns an array
+    console.log("courseService (frontend): Raw getAvailableCoursesForAssignment response:", data);
+    return Array.isArray(data) ? data : [];
 };
