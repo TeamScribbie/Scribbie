@@ -1,19 +1,24 @@
-// src/components/layout/TeacherSidebar.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
+
+// Import role constants (optional, but good for consistency if defined centrally)
+// For now, we'll use string literals like "ROLE_ADMIN"
 
 const TeacherSidebar = ({ isOpen, activeItem = 'Classes' }) => {
   const navigate = useNavigate();
+  const { authState } = useAuth(); // Get authentication state
+
+  const userRoles = authState.user?.roles || []; // Get roles, default to empty array
+
+  // Helper to check for roles
+  const hasRole = (role) => userRoles.includes(role);
 
   const handleNavigation = (path) => {
-    console.log(`Navigating to ${path}`);
-    if (path === '/teacher/classes') {
-      navigate('/teacher-homepage');
-    } else if (path === '/teacher/grades') {
-       console.log('Navigate to Grades (not implemented)');
-    }
+    console.log(`Teacher Sidebar: Navigating to ${path}`);
+    navigate(path); // Navigate directly to the path
   };
 
   if (!isOpen) {
@@ -25,18 +30,49 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes' }) => {
       <Typography variant="h6" className="sidebar-title">
         Menu
       </Typography>
-      <div
-        className={`sidebar-item ${activeItem === 'Classes' ? 'active' : ''}`}
-        onClick={() => handleNavigation('/teacher/classes')}
-      >
-        Classes
-      </div>
-      <div
-        className={`sidebar-item ${activeItem === 'Grades' ? 'active' : ''}`}
-        onClick={() => handleNavigation('/teacher/grades')}
-      >
-        Grades
-      </div>
+
+      {/* Common Teacher Items */}
+      {(hasRole("ROLE_TEACHER") || hasRole("ROLE_ADMIN") || hasRole("ROLE_SUPERADMIN")) && (
+        <div
+          className={`sidebar-item ${activeItem === 'Classes' ? 'active' : ''}`}
+          onClick={() => handleNavigation('/teacher-homepage')} // Main page for class/request overview
+        >
+          My Dashboard
+        </div>
+      )}
+      
+      {/* Example: Grades - visible to all teacher types */}
+      {(hasRole("ROLE_TEACHER") || hasRole("ROLE_ADMIN") || hasRole("ROLE_SUPERADMIN")) && (
+        <div
+            className={`sidebar-item ${activeItem === 'Grades' ? 'active' : ''}`}
+            onClick={() => console.log('Navigate to Grades (not implemented yet)')} // Placeholder
+        >
+            Grades
+        </div>
+      )}
+
+
+      {/* ✨ Admin Specific Items ✨ */}
+      {(hasRole("ROLE_ADMIN") || hasRole("ROLE_SUPERADMIN")) && (
+        <div
+          className={`sidebar-item ${activeItem === 'ManageCourses' ? 'active' : ''}`}
+          onClick={() => handleNavigation('/teacher/manage-courses')} // New route
+        >
+          Manage Courses
+        </div>
+      )}
+
+      {/* ✨ Superadmin Specific Items ✨ */}
+      {hasRole("ROLE_SUPERADMIN") && (
+        <div
+          className={`sidebar-item ${activeItem === 'AppointAdmin' ? 'active' : ''}`}
+          onClick={() => handleNavigation('/teacher/appoint-admin')} // New route
+        >
+          Appoint Admin
+        </div>
+      )}
+      
+      {/* You can add more items and conditions here */}
     </>
   );
 };

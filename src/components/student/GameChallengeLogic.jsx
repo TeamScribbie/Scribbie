@@ -15,37 +15,44 @@ const GameChallengeLogic = ({ questions }) => {
 
   const navigate = useNavigate();
 
-  const handleAnswer = (choice) => {
-    setSelectedChoice(choice);
+  const handleAnswer = (choiceObj) => { // choiceObj can be null if timer runs out
+        if (isAnswerSubmitted) return;
 
-    if (choice === questions[currentIndex].correctAnswer) {
-      setScore((prev) => prev + 10000);
-      setStreak((prev) => prev + 1);
-    } else {
-      setLives((prev) => prev - 1);
-      setStreak(0);
-    }
+        if (timerIdRef.current) clearInterval(timerIdRef.current); // Stop the current question's timer
+        setIsAnswerSubmitted(true); // Mark that the answer for the current question has been processed
+        setSelectedChoice(choiceObj); // Store the selected choice object (or null if timer ran out)
+        setTotalQuestionsAnswered(prev => prev + 1);
 
-    setTimeout(() => {
-      if (lives - (choice !== questions[currentIndex].correctAnswer ? 1 : 0) <= 0) {
-        setGameOver(true);
-      } else if (currentIndex + 1 < questions.length) {
-        setCurrentIndex(currentIndex + 1);
-        setSelectedChoice(null);
-      } else {
-        // Finished all questions
-        setShowCompletionPopup(true);
+        let currentStreak = streak;
+        // Assuming questions[currentIndex].choices is an array of choice objects,
+        // and one of them has an `isCorrect: true` property.
+        // const correctAnswerObj = questions[currentIndex].choices.find(c => c.isCorrect); // You'd need this if choiceObj didn't carry its own correctness
 
-        // Trigger confetti
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      }
-    }, 1000);
-  };
+        if (choiceObj && choiceObj.isCorrect) {
+            // Calculate new score: base score + streak bonus
+            const newScore = localScore + 1000 + (currentStreak * 100); // Example scoring logic
+            setLocalScore(newScore);
+            if(onScoreUpdate) onScoreUpdate(newScore); // Update score for the parent (and LiveLeaderboard)
 
+
+            currentStreak++;
+            setStreak(currentStreak);
+            setTotalCorrectAnswers(prev => prev + 1);
+        } else {
+            // Incorrect answer or timer ran out
+            setLives(prev => prev - 1);
+            setStreak(0); // Reset streak on incorrect answer
+            currentStreak = 0; // Reset for any subsequent calculations if needed in this scope
+
+            // If score needs to be updated for the parent even on incorrect answer (e.g. if it didn't change but parent needs to know)
+            if(onScoreUpdate) onScoreUpdate(localScore);
+        }
+
+        // Delay before moving to the next question or ending the challenge
+        setTimeout(() => {
+            proceedToNextQuestionOrEnd(); // This function handles the logic to move to next question or end the game
+        }, 1500); // 1.5 seconds delay to show feedback (e.g., correct/incorrect choice color)
+    };
   const handleSubmitScore = () => {
     const savedBestScore = parseInt(localStorage.getItem('scribbieScore')) || 0;
 

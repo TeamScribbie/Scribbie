@@ -1,112 +1,110 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode'; // Ensure this is installed or handle token inspection differently
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
-    user: null,
-    userType: null,
+    user: null, // Will store { id, name, identifier, roles: [] }
+    userType: null, // 'Student', 'Teacher' (this might become redundant if roles are comprehensive)
     token: null,
   });
 
-  // --- MODIFIED useEffect for Persistence ---
   useEffect(() => {
      console.log("AuthContext: useEffect trying to restore auth state...");
      const storedToken = localStorage.getItem('authToken');
-     const storedUserString = localStorage.getItem('authUser'); // Get user string
+     const storedUserString = localStorage.getItem('authUser');
 
-     // highlight-start
-     // Only proceed if BOTH token and user string exist
      if (storedToken && storedUserString) {
          console.log("AuthContext: Found token and user string in localStorage.");
          try {
-             // 1. Decode Token
-             const decodedPayload = jwtDecode(storedToken);
-             console.log("AuthContext: Decoded Token Payload:", decodedPayload);
+             const decodedPayload = jwtDecode(storedToken); // Use jwt-decode
+             const currentTime = Date.now() / 1000;
 
-             // 2. Check Token Expiration (Very Important!)
-             const currentTime = Date.now() / 1000; // JWT 'exp' is in seconds
              if (decodedPayload.exp < currentTime) {
                  console.warn("AuthContext: Stored token has expired.");
-                 // Don't set auth state, clear storage instead
-                 logout(); // Use logout function to clear storage and state
-                 return; // Stop processing
+                 localStorage.removeItem('authToken');
+                 localStorage.removeItem('authUser');
+                 setAuthState({ isAuthenticated: false, user: null, userType: null, token: null }); // Explicitly clear state
+                 return;
              }
 
-             // 3. Parse User Data
              const storedUser = JSON.parse(storedUserString);
              console.log("AuthContext: Parsed Stored User Data:", storedUser);
 
-             // 4. Set Authenticated State (if token is valid and user data parsed)
+             // Ensure roles are part of the storedUser, or fallback to decoded token if available (though backend login response is better source)
+             const roles = storedUser?.roles || decodedPayload?.roles || [];
+             // Determine userType based on roles for consistency if possible, or use stored userType
+             let determinedUserType = storedUser?.userType;
+             if (!determinedUserType && roles.length > 0) {
+                if (roles.includes("ROLE_STUDENT")) determinedUserType = "Student";
+                else if (roles.includes("ROLE_TEACHER") || roles.includes("ROLE_ADMIN") || roles.includes("ROLE_SUPERADMIN")) determinedUserType = "Teacher"; // Or more specific if needed by UI
+             }
+
+
              setAuthState({
                  isAuthenticated: true,
                  user: { // Reconstruct user object carefully
-                     id: storedUser?.id || decodedPayload?.sub || null, // Use stored ID or fallback to token subject
-                     name: storedUser?.name || null,
-                     identifier: storedUser?.identifier || decodedPayload?.sub || null, // Use stored identifier or fallback
-                     roles: storedUser?.roles || decodedPayload?.roles || [], // Use stored roles or fallback
+                     id: storedUser?.id || decodedPayload?.sub,
+                     name: storedUser?.name || decodedPayload?.name, // Assuming name is in token or storedUser
+                     identifier: storedUser?.identifier || decodedPayload?.sub,
+                     roles: roles, // ✨ Store roles
                  },
-                 userType: storedUser?.userType || null, // Must get userType from stored data
+                 userType: determinedUserType, // 'Student' or 'Teacher' (can be refined)
                  token: storedToken,
              });
              console.log("AuthContext: Auth state successfully restored from localStorage.");
-             // highlight-end
-
          } catch (e) {
              console.error("AuthContext: Error processing stored auth data:", e);
-             // If decoding or parsing fails, clear invalid stored data
-             logout(); // Use logout function to clear storage and state
+             localStorage.removeItem('authToken');
+             localStorage.removeItem('authUser');
+             setAuthState({ isAuthenticated: false, user: null, userType: null, token: null });
          }
      } else {
          console.log("AuthContext: Token or user data missing in localStorage.");
-         // Ensure state is logged out if nothing valid is found
-         // Note: logout() also sets the state, so calling it here might be redundant
-         // if the initial state is already logged-out, but it ensures storage is clear.
-         // If you are certain the initial state handles this, you can remove this else block's logout()
-         logout();
+         // Ensure state is fully logged out if nothing valid is found
+         setAuthState({ isAuthenticated: false, user: null, userType: null, token: null });
      }
-     // Run only once on component mount
   }, []);
 
 
-  const login = (userData, type) => {
-    console.log("AuthContext: Storing login response", userData, "Type:", type);
-    const token = userData?.token || null;
+  const login = (loginResponseData, type) => { // loginResponseData is the direct body from backend
+    console.log("AuthContext: Storing login response", loginResponseData, "Type:", type);
+    const token = loginResponseData?.token;
 
     if (token) {
         try {
-            const decodedPayload = jwtDecode(token);
-            console.log("AuthContext: Decoded Token Payload on Login:", decodedPayload);
+            // The backend LoginResponse DTO already includes id, identifier, name, and roles.
+            // No need to decode JWT here for these details if backend provides them.
+            // const decodedPayload = jwtDecode(token); // Optional: if you need 'exp' or other JWT claims not in response body
 
-            // Prepare user details from response AND potentially token
             const userDetails = {
-              id: userData?.id || decodedPayload?.sub || null,
-              name: userData?.name || null,
-              identifier: userData?.identifier || decodedPayload?.sub || null,
-              roles: userData?.roles || decodedPayload?.roles || [],
+              id: loginResponseData.id,
+              name: loginResponseData.name,
+              identifier: loginResponseData.identifier,
+              roles: loginResponseData.roles || [], // ✨ Get roles from loginResponseData
             };
 
             setAuthState({
                 isAuthenticated: true,
                 user: userDetails,
-                userType: type,
+                userType: type, // 'Student' or 'Teacher' (for general UI distinction)
                 token: token,
             });
 
-            // Store both token and user details (including type)
             localStorage.setItem('authToken', token);
-            localStorage.setItem('authUser', JSON.stringify({...userDetails, userType: type })); // Include userType
-            console.log("AuthContext: Saved token and user data to localStorage.");
+            // Store userDetails (which includes roles) and userType
+            localStorage.setItem('authUser', JSON.stringify({...userDetails, userType: type }));
+            console.log("AuthContext: Saved token and user data (with roles) to localStorage.");
 
         } catch (error) {
-            console.error("AuthContext: Error decoding token during login:", error);
-            logout(); // Log out if token is invalid on login
+            console.error("AuthContext: Error processing login data:", error);
+            logout(); // Log out if there's an issue
         }
     } else {
-        console.error("AuthContext: Login response missing token!", userData);
+        console.error("AuthContext: Login response missing token!", loginResponseData);
         logout();
     }
   };
@@ -123,7 +121,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('authUser');
   };
 
-  // Make sure the value includes the latest authState
   const value = {
     authState,
     login,
