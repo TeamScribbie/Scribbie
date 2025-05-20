@@ -21,6 +21,8 @@ import ChallengeSummaryPage from './page/student/ChallengeSummaryPage'; // You'l
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
+import ClassroomStudentProgressOverviewPage from "./page/teacher/ClassroomStudentProgressOverviewPage.jsx";
+import StudentCourseDetailPage from "./page/teacher/StudentCourseDetailPage.jsx";
 // import TeacherProfile from './page/teacher/TeacherProfile'; // Placeholder
 
 // Placeholder pages for Admin and Superadmin (you'll create these later)
@@ -131,6 +133,17 @@ const App = () => {
 
         {/* --- Default Route --- */}
         <Route path="/" element={<Navigate to="/student-login" replace />} />
+
+          {/* --- NEW TEACHER PROGRESS ROUTES START --- */}
+          <Route
+              path="/teacher/classroom/:classroomId/progress"
+              element={<ClassroomStudentProgressOverviewPage />}
+          />
+          <Route
+              path="/teacher/classroom/:classroomId/student/:studentId/progress"
+              element={<StudentCourseDetailPage />}
+          />
+          {/* --- NEW TEACHER PROGRESS ROUTES END --- */}
 
         {/* --- Catch-all for undefined routes (Optional but recommended) --- */}
         <Route path="*" element={
