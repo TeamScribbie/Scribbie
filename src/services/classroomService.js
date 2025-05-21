@@ -183,46 +183,36 @@ export const getPendingRequests = async (classroomId, token) => {
  * @returns {Promise<object>} - A promise that resolves with the API response (e.g., success message).
  * @throws {Error} - Throws an error if the update fails.
  */
+
 export const updateEnrollmentStatus = async (classroomId, studentId, status, token) => {
   if (!classroomId || !studentId || !status || !token) {
-   throw new Error('Classroom ID, Student ID, status, and auth token are required.');
- }
-  if (status !== 'APPROVED' && status !== 'REJECTED') {
-      throw new Error('Invalid status provided. Must be APPROVED or REJECTED.');
+    throw new Error('Classroom ID, Student ID, status, and auth token are required.');
   }
-  // ... (rest of the function remains the same) ...
-const response = await fetch(`${API_BASE_URL}/classrooms`, {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ // This object is what gets turned into the JSON payload
-      classroomName: classroomData.classroomName,
-      classroomCode: classroomData.classroomCode, // This is fine if it's an empty string; backend handles it
-      assignedCourseId: classroomData.assignedCourseId // <<< THIS LINE IS ESSENTIAL
-  }),
-});
+  if (status !== 'APPROVED' && status !== 'REJECTED') {
+    throw new Error('Invalid status provided. Must be APPROVED or REJECTED.');
+  }
 
- if (!response.ok) {
-   const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-   console.error(`Update Enrollment Status API Error (Class ${classroomId}, Student ${studentId}):`, errorData);
-   throw new Error(errorData.message || `Failed to update status. Status: ${response.status}`);
- }
- return await response.json();
+  // Correct endpoint URL
+  const endpointUrl = `${API_BASE_URL}/classrooms/${classroomId}/students/${studentId}/status`; //
+
+  const response = await fetch(endpointUrl, {
+    method: 'PUT', 
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+
+    body: JSON.stringify({ status: status }), //
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+    console.error(`Update Enrollment Status API Error (Class ${classroomId}, Student ${studentId}):`, errorData);
+    throw new Error(errorData.message || `Failed to update status. Status: ${response.status}`);
+  }
+  return await response.json();
 };
 
-
-/**
- * Fetches details for a specific classroom.
- * NOTE: This relies on the backend '/api/classrooms/{classroomId}/details' endpoint.
- * Ensure the backend response includes 'assignedCourseId' for lesson fetching.
- * @param {number|string} classroomId - The ID of the classroom.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise resolving with classroom details.
- * @throws {Error} - Throws an error if fetch fails.
- */
-// highlight-start
 export const getClassroomDetails = async (classroomId, token) => { // Added export
 // highlight-end
   if (!classroomId || !token) {

@@ -1,3 +1,4 @@
+// AI Context/Frontend/components/layout/TeacherSidebar.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Typography } from '@mui/material';
@@ -65,10 +66,12 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes' }) => {
       {/* ✨ Superadmin Specific Items ✨ */}
       {hasRole("ROLE_SUPERADMIN") && (
         <div
-          className={`sidebar-item ${activeItem === 'AppointAdmin' ? 'active' : ''}`}
-          onClick={() => handleNavigation('/teacher/appoint-admin')} // New route
+          // highlight-start
+          className={`sidebar-item ${activeItem === 'ManageAdmins' ? 'active' : ''}`}
+          onClick={() => handleNavigation('/teacher/manage-admins')} // Updated path
         >
-          Appoint Admin
+          Manage Admins 
+          {/*// highlight-end*/}
         </div>
       )}
       

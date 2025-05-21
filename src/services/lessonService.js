@@ -1,188 +1,280 @@
-// src/services/lessonService.js
+// AI Context/Frontend/services/lessonService.js
 
-// Assuming API_BASE_URL is defined globally or imported
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// ... (getLessonDefinitions, getActivityNodeTypesForLesson, createLessonDefinition, createActivityNodeTypeForLesson remain THE SAME)
+// ... (getStudentLessonProgress, startLessonProgress, submitActivityProgress remain THE SAME)
+
+// --- Question Management (Now interacts with ActivityController's nested paths) ---
+
 /**
- * Fetches lesson definitions for a given course.
- * @param {number|string} courseId - The ID of the course.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<Array<object>>} - A promise that resolves with an array of lesson definition summary objects.
- * @throws {Error} - Throws an error if the fetch fails.
+ * Creates a new question for a specific Activity Node Type.
+ * POST /api/activity-node-types/{activityNodeTypeId}/questions
  */
-// highlight-start
-export const getLessonDefinitions = async (courseId, token) => { // Added export
-// highlight-end
+export const createQuestionForActivityNode = async (activityNodeTypeId, questionData, token) => {
+    if (!activityNodeTypeId || !questionData || !token) {
+        throw new Error('ActivityNodeType ID, question data, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(questionData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to create question. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
+ * Fetches all questions for a specific Activity Node Type.
+ * GET /api/activity-node-types/{activityNodeTypeId}/questions
+ */
+export const getQuestionsForActivityNode = async (activityNodeTypeId, token) => {
+    if (!activityNodeTypeId || !token) {
+        throw new Error('ActivityNodeType ID and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to fetch questions. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
+ * Updates an existing question.
+ * PUT /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}
+ * Note: activityNodeTypeId in the path is for context/consistency, actual update targets questionId.
+ */
+export const updateQuestion = async (activityNodeTypeId, questionId, questionData, token) => {
+    if (!activityNodeTypeId || !questionId || !questionData || !token) {
+        throw new Error('ActivityNodeType ID, Question ID, question data, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(questionData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to update question. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
+ * Deletes a question.
+ * DELETE /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}
+ */
+export const deleteQuestion = async (activityNodeTypeId, questionId, token) => {
+    if (!activityNodeTypeId || !questionId || !token) {
+        throw new Error('ActivityNodeType ID, Question ID, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to delete question. Status: ${response.status}`);
+    }
+    if (response.status === 204) return { message: "Question deleted successfully" };
+    return response.json();
+};
+
+// --- Choice Management (Now interacts with ActivityController's nested paths) ---
+
+/**
+ * Fetches choices for a specific question.
+ * GET /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices
+ */
+export const getChoicesForQuestion = async (activityNodeTypeId, questionId, token) => {
+    if (!activityNodeTypeId || !questionId || !token) {
+        throw new Error('ActivityNodeType ID, Question ID, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to fetch choices. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
+ * Creates a choice for a specific question.
+ * POST /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices
+ */
+export const createChoiceForQuestion = async (activityNodeTypeId, questionId, choiceData, token) => {
+    if (!activityNodeTypeId || !questionId || !choiceData || !token) {
+        throw new Error('ActivityNodeType ID, Question ID, choice data, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(choiceData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to create choice. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
+ * Updates an existing choice.
+ * PUT /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices/{choiceId}
+ */
+export const updateChoice = async (activityNodeTypeId, questionId, choiceId, choiceData, token) => {
+    if (!activityNodeTypeId || !questionId || !choiceId || !choiceData || !token) {
+        throw new Error('ActivityNodeType ID, Question ID, Choice ID, choice data, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices/${choiceId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(choiceData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to update choice. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
+ * Deletes a choice.
+ * DELETE /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices/{choiceId}
+ */
+export const deleteChoice = async (activityNodeTypeId, questionId, choiceId, token) => {
+    if (!activityNodeTypeId || !questionId || !choiceId || !token) {
+        throw new Error('ActivityNodeType ID, Question ID, Choice ID, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices/${choiceId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to delete choice. Status: ${response.status}`);
+    }
+    if (response.status === 204) return { message: "Choice deleted successfully" };
+    return response.json();
+};
+
+// ... (other lesson service functions like those related to student progress can remain)
+export const getLessonDefinitions = async (courseId, token) => {
   if (!courseId || !token) {
     throw new Error('Course ID and auth token are required to fetch lesson definitions.');
   }
-  console.log(`lessonService: Fetching definitions for courseId: ${courseId}`);
-
   const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lesson-definitions`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
   });
-
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-    console.error(`Get Lesson Definitions API Error (Course ${courseId}):`, errorData);
     throw new Error(errorData.message || `Failed to fetch lesson definitions. Status: ${response.status}`);
   }
-
-  const data = await response.json();
-  console.log(`lessonService: Raw getLessonDefinitions response (Course ${courseId}):`, data);
-  return Array.isArray(data) ? data : [];
+  return response.json();
 };
 
-/**
- * Fetches activity node types for a specific lesson definition.
- * @param {number|string} lessonDefinitionId - The ID of the lesson definition.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<Array<object>>} - A promise that resolves with an array of activity node type summary objects.
- * @throws {Error} - Throws an error if the fetch fails.
- */
-// highlight-start
-export const getActivityNodeTypesForLesson = async (lessonDefinitionId, token) => { // Added export
-// highlight-end
+export const getActivityNodeTypesForLesson = async (lessonDefinitionId, token) => {
   if (!lessonDefinitionId || !token) {
-    throw new Error('Lesson Definition ID and auth token are required to fetch activity nodes.');
+    throw new Error('Lesson Definition ID and auth token are required.');
   }
-  console.log(`lessonService: Fetching activity node types for lessonDefinitionId: ${lessonDefinitionId}`);
-
   const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/activity-node-types`, {
      method: 'GET',
-     headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-     },
+     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
   });
-
   if (!response.ok) {
      const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-     console.error(`Get Activity Node Types API Error (LessonDef ${lessonDefinitionId}):`, errorData);
      throw new Error(errorData.message || `Failed to fetch activity node types. Status: ${response.status}`);
   }
-  const data = await response.json();
-   console.log(`lessonService: Raw getActivityNodeTypesForLesson response (LessonDef ${lessonDefinitionId}):`, data);
-  return Array.isArray(data) ? data : [];
+  return response.json();
 };
 
-
-/**
- * Fetches a student's progress for a specific lesson definition.
- * @param {string} studentId - The ID of the student.
- * @param {number|string} lessonDefinitionId - The ID of the lesson definition.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object|null>} - A promise that resolves with the LessonProgress object or null if no progress found (404).
- * @throws {Error} - Throws an error if the fetch fails for reasons other than 404.
- */
-// highlight-start
-export const getStudentLessonProgress = async (studentId, lessonDefinitionId, token) => { // Added export
-// highlight-end
-  if (!studentId || !lessonDefinitionId || !token) {
-      throw new Error('Student ID, Lesson Definition ID, and auth token are required to fetch progress.');
-  }
-   console.log(`lessonService: Fetching progress for student ${studentId} on lessonDefinitionId: ${lessonDefinitionId}`);
-
-  const response = await fetch(`${API_BASE_URL}/students/${studentId}/lesson-progress/definition/${lessonDefinitionId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-  });
-
-   // Handle 404 (Not Found) as "progress not started" -> return null
-   if (response.status === 404) {
-       console.log(`lessonService: No existing progress found (404) for student ${studentId} on lesson ${lessonDefinitionId}.`);
-       return null;
-   }
-
-  // Handle other errors
-  if (!response.ok) {
-     const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-      console.error(`Get Student Lesson Progress API Error (Student ${studentId}, LessonDef ${lessonDefinitionId}):`, errorData);
-     throw new Error(errorData.message || `Failed to fetch lesson progress. Status: ${response.status}`);
-  }
-
-  const data = await response.json();
-  console.log(`lessonService: Raw getStudentLessonProgress response (Student ${studentId}, LessonDef ${lessonDefinitionId}):`, data);
-  return data; // Returns LessonProgress DTO/entity object
-};
-
-
-/**
- * Starts lesson progress for a student on a specific lesson definition.
- * Corresponds to POST /api/lesson-progress/start
- * @param {number|string} lessonDefinitionId - The ID of the lesson definition to start.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves with the LessonProgress object (new or existing).
- * @throws {Error} - Throws an error if the request fails.
- */
-// highlight-start
-export const startLessonProgress = async (lessonDefinitionId, token) => { // Added export
-// highlight-end
-    if (!lessonDefinitionId || !token) {
-        throw new Error('Lesson Definition ID and auth token are required to start progress.');
+export const createLessonDefinition = async (courseId, lessonData, token) => {
+    if (!courseId || !lessonData || !token) {
+        throw new Error('Course ID, lesson data, and auth token are required.');
     }
-    console.log(`lessonService: Starting/getting progress for lessonDefinitionId: ${lessonDefinitionId}`);
-
-    const response = await fetch(`${API_BASE_URL}/lesson-progress/start`, {
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ lessonDefinitionId }), // Matches StartLessonRequestDto
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(lessonData),
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        console.error(`Start Lesson Progress API Error (LessonDef ${lessonDefinitionId}):`, errorData);
-        throw new Error(errorData.message || `Failed to start lesson progress. Status: ${response.status}`);
+        throw new Error(errorData.message || `Failed to create lesson. Status: ${response.status}`);
     }
-
-    const data = await response.json();
-    console.log(`lessonService: Raw startLessonProgress response (LessonDef ${lessonDefinitionId}):`, data);
-    return data; // Returns the LessonProgress DTO/entity
+    return response.json();
 };
 
-export const submitActivityProgress = async (progressData, token) => { // Added export
-  // highlight-end
+export const createActivityNodeTypeForLesson = async (lessonDefinitionId, activityNodeData, token) => {
+    if (!lessonDefinitionId || !activityNodeData || !token) {
+        throw new Error('Lesson Definition ID, activity node data, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/activity-node-types`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(activityNodeData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to create activity node type. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+export const getStudentLessonProgress = async (studentId, lessonDefinitionId, token) => {
+  if (!studentId || !lessonDefinitionId || !token) {
+      throw new Error('Student ID, Lesson Definition ID, and auth token are required.');
+  }
+  const response = await fetch(`${API_BASE_URL}/students/${studentId}/lesson-progress/definition/${lessonDefinitionId}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+   if (response.status === 404) return null;
+  if (!response.ok) {
+     const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+     throw new Error(errorData.message || `Failed to fetch lesson progress. Status: ${response.status}`);
+  }
+  return response.json();
+};
+
+export const startLessonProgress = async (lessonDefinitionId, token) => {
+    if (!lessonDefinitionId || !token) {
+        throw new Error('Lesson Definition ID and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/lesson-progress/start`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonDefinitionId }),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to start lesson progress. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+export const submitActivityProgress = async (progressData, token) => {
       if (!progressData || !token) {
-          throw new Error('Progress data and auth token are required to submit progress.');
+          throw new Error('Progress data and auth token are required.');
       }
-      // Basic validation of required fields in progressData
-      if (progressData.lessonProgressId == null || progressData.activityNodeTypeId == null || progressData.isFinished == null) {
-          throw new Error('Missing required fields in progress data (lessonProgressId, activityNodeTypeId, isFinished).');
-      }
-      console.log(`lessonService: Submitting activity progress for node type ${progressData.activityNodeTypeId} in lesson progress ${progressData.lessonProgressId}`);
-  
       const response = await fetch(`${API_BASE_URL}/activity-node-progress/submit`, {
           method: 'POST',
-          headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(progressData), // Send the whole DTO object
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(progressData),
       });
-  
       if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-          console.error(`Submit Activity Progress API Error (Node ${progressData.activityNodeTypeId}):`, errorData);
           throw new Error(errorData.message || `Failed to submit activity progress. Status: ${response.status}`);
       }
-  
-      const data = await response.json();
-      console.log(`lessonService: Raw submitActivityProgress response (Node ${progressData.activityNodeTypeId}):`, data);
-      return data; // Returns the updated ActivityNodeProgress DTO/entity
+      return response.json();
   };
-
-// --- Placeholder for other functions ---
-// submitActivityProgress, etc.
-
-// Make sure getClassroomDetails is also exported if it's in this file
-// export const getClassroomDetails = async (...) => { ... }; // Example
