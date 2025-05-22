@@ -27,6 +27,8 @@ import LessonManagementPage from './page/teacher/LessonManagementPage';
 import ManageCoursesPage from './page/teacher/ManageCoursesPage.jsx'; 
 import ManageAdminsPage from './page/teacher/ManageAdminsPage.jsx'; 
 import ActivityNodeEditorPage from './page/teacher/ActivityNodeEditorPage.jsx'; // New import for the new page
+import ChallengeQuestionsEditorPage from './page/teacher/ChallengeQuestionsEditorPage.jsx'; // New Page
+
 
 // ProtectedRoute component (ensure this is defined as you had it)
 const ProtectedRoute = ({ allowedRoles, children }) => {
@@ -131,6 +133,15 @@ const App = () => {
           }
         />
         {/* highlight-end */}
+
+        <Route
+          path="/teacher/course/:courseId/lesson/:lessonDefinitionId/challenge/:challengeDefinitionId/edit-questions"
+          element={
+            <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
+              <ChallengeQuestionsEditorPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/" element={<Navigate to="/student-login" replace />} />
         <Route path="*" element={

@@ -109,13 +109,7 @@ const ActivityGameLogic = ({
         <Box sx={{ 
         textAlign: 'center', 
         p: [1, 2], 
-        width: '100%', // It will try to take full width of its parent in ActivityPage
-        // OPTION 1: Larger fixed max-width
-        // maxWidth: '1000px', 
-        // OPTION 2: Percentage-based max-width (relative to parent)
-        maxWidth: '90%', 
-        // OPTION 3: No specific max-width, will be constrained by parent's padding
-        // maxWidth: 'none', // Or simply remove the maxWidth property
+        width: '100%', 
         bgcolor: '#FFFBE0', 
         borderRadius: 2, 
         boxShadow: 1 
