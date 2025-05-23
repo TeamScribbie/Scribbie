@@ -174,6 +174,33 @@ export const getPendingRequests = async (classroomId, token) => {
   return Array.isArray(data) ? data : [];
 };
 
+// --- NEW FUNCTION (Option B) ---
+export const getClassroomById = async (classroomId, token) => {
+  if (!classroomId || !token) {
+    throw new Error('Classroom ID and auth token are required to fetch classroom details.');
+  }
+  console.log(`classroomService: Fetching classroom by ID (targeting details): ${classroomId}`);
+
+  // Append /details to the URL to match the backend endpoint
+  const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/details`, { // <<<< CORRECTED URL
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+    console.error(`Get Classroom By ID (details) API Error (Classroom ${classroomId}):`, errorData);
+    throw new Error(errorData.message || `Failed to fetch classroom details. Status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log(`classroomService: Raw getClassroomById (details) response (Classroom ${classroomId}):`, data);
+  return data;
+};
+
 /**
  * Updates the enrollment status (Approve/Reject) for a student in a classroom.
  * @param {number|string} classroomId - The ID of the classroom.

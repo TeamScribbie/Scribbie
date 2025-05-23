@@ -3,6 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
 // Import Authentication Context Provider
+// Ensure useAuth is also exported from AuthContext if ProtectedRoute is in the same file or imported separately
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Import Page Components
@@ -19,7 +20,8 @@ import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
-import LessonManagementPage from './page/teacher/LessonManagementPage';
+import ClassroomStudentProgressOverviewPage from "./page/teacher/ClassroomStudentProgressOverviewPage.jsx";
+import StudentCourseDetailPage from "./page/teacher/StudentCourseDetailPage.jsx";
 // import TeacherProfile from './page/teacher/TeacherProfile'; // Placeholder
 
 // --- CORRECT IMPORT ---
@@ -27,7 +29,8 @@ import LessonManagementPage from './page/teacher/LessonManagementPage';
 import ManageCoursesPage from './page/teacher/ManageCoursesPage.jsx'; 
 import ManageAdminsPage from './page/teacher/ManageAdminsPage.jsx'; 
 import ActivityNodeEditorPage from './page/teacher/ActivityNodeEditorPage.jsx'; // New import for the new page
-import ChallengeQuestionsEditorPage from './page/teacher/ChallengeQuestionsEditorPage.jsx'; // New Page
+import ChallengeQuestionsEditorPage from './page/teacher/ChallengeQuestionsEditorPage.jsx';
+import LessonManagementPage from "./page/teacher/LessonManagementPage.jsx"; // New Page
 
 
 // ProtectedRoute component (ensure this is defined as you had it)
@@ -142,6 +145,16 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+
+          {/* --- NEW TEACHER PROGRESS ROUTES START --- */}
+          <Route
+              path="/teacher/classroom/:classroomId/progress"
+              element={<ClassroomStudentProgressOverviewPage />}
+          />
+          <Route
+              path="/teacher/classroom/:classroomId/student/:studentId/progress"
+              element={<StudentCourseDetailPage />}
+          />
 
         <Route path="/" element={<Navigate to="/student-login" replace />} />
         <Route path="*" element={
