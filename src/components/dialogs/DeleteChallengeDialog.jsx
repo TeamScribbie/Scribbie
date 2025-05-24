@@ -2,7 +2,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
-    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress
+    Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress, Typography
 } from '@mui/material';
 
 const DeleteChallengeDialog = ({ open, onClose, onConfirmDelete, isLoading, lessonTitle }) => {

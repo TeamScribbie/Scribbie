@@ -6,7 +6,7 @@ import Navbar from '../../components/layout/navbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import {
     Typography, Box, CircularProgress, Alert, Paper, Button,
-    List, ListItem, ListItemText, IconButton, Divider, Snackbar, Chip
+    List, ListItem, ListItemText, IconButton, Snackbar, Chip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -23,8 +23,9 @@ import {
     deleteQuestion,
     createChoiceForQuestion,
     updateChoice,
-    deleteChoice
-} from '../../services/lessonService'; // Uses updated lessonService
+    deleteChoice,
+    updateQuestionOrderForActivityNode
+} from '../../services/lessonService';
 
 import AddEditQuestionDialog from '../../components/dialogs/AddEditQuestionDialog';
 
@@ -44,7 +45,7 @@ const ActivityNodeEditorPage = () => {
     const [pageError, setPageError] = useState(null);
 
     const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
-    const [editingQuestion, setEditingQuestion] = useState(null); // Holds the full question object for editing
+    const [editingQuestion, setEditingQuestion] = useState(null);
     const [isDialogSaving, setIsDialogSaving] = useState(false);
     const [isOrderSaving, setIsOrderSaving] = useState(false);
     const [dialogError, setDialogError] = useState(null);
@@ -61,21 +62,20 @@ const ActivityNodeEditorPage = () => {
         setIsLoadingPage(true);
         setPageError(null);
         try {
-            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
+            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token); //
             setActivityNodeDetails(data);
-            // Initialize local state for questions, ensuring choices is an array and orderIndex is set
-            const formattedQuestions = (data.questions || []).map((q, index) => ({
+            const formattedQuestions = (data.questions || []).map((q, index) => ({ //
                 ...q,
-                choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}`, isNew: false, isModified: false, isDeleted: false })) : [],
-                orderIndex: q.orderIndex !== undefined ? q.orderIndex : index,
+                choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}`, isNew: false, isModified: false, isDeleted: false })) : [], //
+                orderIndex: q.orderIndex !== undefined ? q.orderIndex : index, //
                 isNew: false,
                 isModified: false,
                 isDeleted: false,
-            })).sort((a, b) => a.orderIndex - b.orderIndex);
+            })).sort((a, b) => a.orderIndex - b.orderIndex); //
             setQuestions(formattedQuestions);
-            setModifiedQuestionOrderIds(new Set()); // Reset on fetch
+            setModifiedQuestionOrderIds(new Set());
         } catch (err) {
-            setPageError(err.message || "Could not load activity node details.");
+            setPageError(err.message || "Could not load activity node details."); //
             setQuestions([]);
         } finally {
             setIsLoadingPage(false);
@@ -86,42 +86,41 @@ const ActivityNodeEditorPage = () => {
         if (authState.isAuthenticated && authState.token) {
             fetchActivityNodeData();
         } else if (authState.isAuthenticated === false) {
-            setPageError("User not authenticated. Please log in.");
+            setPageError("User not authenticated. Please log in."); //
             setIsLoadingPage(false);
         }
     }, [authState.isAuthenticated, authState.token, fetchActivityNodeData]);
 
     const handleOpenAddQuestionDialog = () => {
-        setEditingQuestion(null); // Important: null for "add" mode
+        setEditingQuestion(null);
         setDialogError(null);
         setIsQuestionDialogOpen(true);
     };
 
     const handleOpenEditQuestionDialog = (questionToEdit) => {
-        setEditingQuestion(JSON.parse(JSON.stringify(questionToEdit))); // Pass a deep copy to the dialog
+        setEditingQuestion(JSON.parse(JSON.stringify(questionToEdit)));
         setDialogError(null);
         setIsQuestionDialogOpen(true);
     };
 
     const handleDeleteQuestionLocalOrApi = async (questionId, indexInUI) => {
-        const questionToDelete = questions[indexInUI];
-        if (window.confirm(`Are you sure you want to delete Question ${indexInUI + 1}: "${questionToDelete.questionText.substring(0, 30)}..."?`)) {
-            if (!questionToDelete.questionId) { // It's a new, unsaved question
+        const questionToDelete = questions[indexInUI]; //
+        if (window.confirm(`Are you sure you want to delete Question ${indexInUI + 1}: "${questionToDelete.questionText.substring(0, 30)}..."?`)) { //
+            if (!questionToDelete.questionId) {
                 setQuestions(prev => prev.filter((_, idx) => idx !== indexInUI)
-                                         .map((q, newIdx) => ({ ...q, orderIndex: newIdx })));
+                    .map((q, newIdx) => ({ ...q, orderIndex: newIdx })));
                 setSnackbarMessage("Unsaved question removed locally.");
                 setSnackbarOpen(true);
                 return;
             }
-            // For existing questions, call API
-            setIsOrderSaving(true); // Use a general saving indicator
+            setIsOrderSaving(true);
             try {
-                await deleteQuestion(activityNodeTypeId, questionToDelete.questionId, authState.token);
-                setSnackbarMessage("Question deleted successfully!");
+                await deleteQuestion(activityNodeTypeId, questionToDelete.questionId, authState.token); //
+                setSnackbarMessage("Question deleted successfully!"); //
                 setSnackbarOpen(true);
-                fetchActivityNodeData(); // Refresh list
+                fetchActivityNodeData();
             } catch (err) {
-                setSnackbarMessage(`Error deleting question: ${err.message}`);
+                setSnackbarMessage(`Error deleting question: ${err.message}`); //
                 setSnackbarOpen(true);
             } finally {
                 setIsOrderSaving(false);
@@ -130,117 +129,119 @@ const ActivityNodeEditorPage = () => {
     };
 
     const handleSaveQuestionFromDialog = async (payloadFromDialog) => {
-        if (!authState.token) {
-            setDialogError("Authentication missing."); // Error for dialog
+        // This function remains the same as it handles full updates from the dialog correctly.
+        if (!authState || !authState.token) {
+            setDialogError("Authentication missing. Please log in again.");
+            setIsDialogSaving(false);
             return;
         }
+
+        if (!activityNodeTypeId) {
+            setDialogError("Activity Node ID context is missing. Cannot save question.");
+            setIsDialogSaving(false);
+            return;
+        }
+
         setIsDialogSaving(true);
         setDialogError(null);
 
         try {
-            const { choices, isNew, questionId, ...questionDataForApi } = payloadFromDialog;
-            // questionDataForApi now contains: questionText, instructional, questionImageUrl, questionSoundUrl, orderIndex
+            if (payloadFromDialog.isNew || !payloadFromDialog.questionId) {
+                const { choices, ...questionDataForApi } = payloadFromDialog;
+                const savedOrUpdatedQuestion = await createQuestionForActivityNode( //
+                    activityNodeTypeId,
+                    questionDataForApi,
+                    authState.token
+                );
 
-            let savedOrUpdatedQuestion;
-            if (isNew || !questionId) {
-                savedOrUpdatedQuestion = await createQuestionForActivityNode(activityNodeTypeId, questionDataForApi, authState.token);
-                setSnackbarMessage("Question added successfully!");
+                if (savedOrUpdatedQuestion && savedOrUpdatedQuestion.questionId && choices && choices.length > 0) {
+                    for (const choice of choices) {
+                        const choicePayload = { choiceText: choice.choiceText, isCorrect: !!choice.isCorrect };
+                        await createChoiceForQuestion( //
+                            activityNodeTypeId,
+                            savedOrUpdatedQuestion.questionId,
+                            choicePayload,
+                            authState.token
+                        );
+                    }
+                    setSnackbarMessage("Question and choices added successfully!");
+                } else {
+                    setSnackbarMessage("Question added successfully.");
+                }
+
             } else {
-                savedOrUpdatedQuestion = await updateQuestion(activityNodeTypeId, questionId, questionDataForApi, authState.token);
+                await updateQuestion( //
+                    activityNodeTypeId,
+                    payloadFromDialog.questionId,
+                    payloadFromDialog,
+                    authState.token
+                );
                 setSnackbarMessage("Question updated successfully!");
             }
-
-            // Handle choices if the question was saved/updated successfully
-            if (savedOrUpdatedQuestion && savedOrUpdatedQuestion.questionId && Array.isArray(choices)) {
-                for (const choice of choices) {
-                    const choicePayloadForApi = { choiceText: choice.choiceText, isCorrect: !!choice.isCorrect };
-                    if (choice.isDeleted && choice.choiceId) {
-                        await deleteChoice(activityNodeTypeId, savedOrUpdatedQuestion.questionId, choice.choiceId, authState.token);
-                    } else if (!choice.isDeleted && (choice.isNew || !choice.choiceId)) {
-                        await createChoiceForQuestion(activityNodeTypeId, savedOrUpdatedQuestion.questionId, choicePayloadForApi, authState.token);
-                    } else if (!choice.isDeleted && choice.isModified && choice.choiceId) { // isModified flag from dialog's choice state
-                        await updateChoice(activityNodeTypeId, savedOrUpdatedQuestion.questionId, choice.choiceId, choicePayloadForApi, authState.token);
-                    }
-                }
-            }
             setIsQuestionDialogOpen(false);
-            fetchActivityNodeData(); // Refresh the list
+            setEditingQuestion(null);
+            fetchActivityNodeData();
         } catch (err) {
             console.error("Error saving question from dialog:", err);
-            setDialogError(`Save failed: ${err.message || "An unexpected error occurred."}`);
-            //Snackbar will be shown by parent if dialogError is set
+            const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred.";
+            setDialogError(`Save failed: ${errorMessage}`);
         } finally {
             setIsDialogSaving(false);
         }
     };
-    
+
     const handleMoveQuestion = (currentIndex, direction) => {
-        const newQuestions = [...questions];
-        const targetIndex = currentIndex + direction;
+        const newQuestions = [...questions]; //
+        const targetIndex = currentIndex + direction; //
 
-        if (targetIndex < 0 || targetIndex >= newQuestions.length) return;
+        if (targetIndex < 0 || targetIndex >= newQuestions.length) return; //
 
-        // Swap elements
-        [newQuestions[currentIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[currentIndex]];
+        [newQuestions[currentIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[currentIndex]]; //
 
-        // Update orderIndex for all questions and mark them as modified
-        const reorderedQuestions = newQuestions.map((q, idx) => {
-            const orderChanged = q.orderIndex !== idx;
-            if (q.questionId && orderChanged) { // Mark existing questions whose order changed
-                setModifiedQuestionOrderIds(prev => new Set(prev).add(q.questionId));
+        const reorderedQuestions = newQuestions.map((q, idx) => { //
+            const orderChanged = q.orderIndex !== idx; //
+            if (q.questionId && orderChanged) {
+                setModifiedQuestionOrderIds(prev => new Set(prev).add(q.questionId)); //
             }
-            return { ...q, orderIndex: idx, isModified: q.isModified || orderChanged };
+            return { ...q, orderIndex: idx };
         });
-        setQuestions(reorderedQuestions);
+        setQuestions(reorderedQuestions); //
     };
 
     const handleSaveOrder = async () => {
         if (!authState.token) {
-            setSnackbarMessage("Authentication missing."); setSnackbarOpen(true); return;
+            setSnackbarMessage("Authentication missing.");
+            setSnackbarOpen(true);
+            return;
         }
-        if (modifiedQuestionOrderIds.size === 0) {
-            setSnackbarMessage("No order changes to save."); setSnackbarOpen(true); return;
+        if (modifiedQuestionOrderIds.size === 0) { //
+            setSnackbarMessage("No order changes to save."); //
+            setSnackbarOpen(true);
+            return;
         }
 
         setIsOrderSaving(true);
-        setSnackbarMessage(''); // Clear previous messages
-        let success = true;
+        setSnackbarMessage('');
 
-        for (const question of questions) {
-            if (question.questionId && modifiedQuestionOrderIds.has(question.questionId)) {
-                const payload = { // Only send fields relevant for update, especially orderIndex
-                    questionText: question.questionText,
-                    instructional: question.instructional,
-                    questionImageUrl: question.questionImageUrl,
-                    questionSoundUrl: question.questionSoundUrl,
-                    orderIndex: question.orderIndex
-                };
-                try {
-                    await updateQuestion(activityNodeTypeId, question.questionId, payload, authState.token);
-                } catch (err) {
-                    console.error(`Failed to update order for question ${question.questionId}:`, err);
-                    setSnackbarMessage(`Error saving order for Q "${question.questionText.substring(0,20)}...". Changes might be partial.`);
-                    setSnackbarOpen(true);
-                    success = false;
-                    // Decide whether to break or try to save others
-                    break; 
-                }
-            }
-        }
-        setIsOrderSaving(false);
-        if (success) {
+        try {
+            await updateQuestionOrderForActivityNode(activityNodeTypeId, questions, authState.token);
+
             setSnackbarMessage("Question order saved successfully!");
-            setSnackbarOpen(true);
-            setModifiedQuestionOrderIds(new Set()); // Clear modified flags
-            // Optionally re-fetch to confirm, or trust local state if backend updates correctly
+            setModifiedQuestionOrderIds(new Set());
             fetchActivityNodeData();
+        } catch (err) {
+            console.error("Failed to update question order:", err);
+            setSnackbarMessage(`Error saving order: ${err.message}`);
+        } finally {
+            setIsOrderSaving(false);
+            setSnackbarOpen(true);
         }
     };
 
     const pageTitle = activityNodeDetails
-        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}`
+        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}` //
         : 'Loading Activity Node Editor...';
-    const lessonManagementPath = `/teacher/course/${courseId}/lessons`;
+    const lessonManagementPath = `/teacher/course/${courseId}/lessons`; //
 
     return (
         <Box className="teacher-homepage-container">
@@ -251,7 +252,7 @@ const ActivityNodeEditorPage = () => {
                 <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
                     <Button component={RouterLink} to={lessonManagementPath} state={{ courseId: courseId, lessonDefinitionId: lessonDefinitionId }}
-                        startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">
+                            startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">
                         Back to Lessons for Course {courseId}
                     </Button>
 
@@ -273,12 +274,12 @@ const ActivityNodeEditorPage = () => {
                                 <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#451513' }}>Questions</Typography>
                                 <Box>
                                     <Button variant="outlined" startIcon={<AddIcon />} onClick={handleOpenAddQuestionDialog}
-                                        sx={{ mr: 2 }} disabled={isDialogSaving || isOrderSaving}>
+                                            sx={{ mr: 2 }} disabled={isDialogSaving || isOrderSaving}>
                                         Add New Question
                                     </Button>
                                     <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveOrder}
-                                        disabled={isDialogSaving || isOrderSaving || modifiedQuestionOrderIds.size === 0}
-                                        sx={{ bgcolor: '#FFC107', color: 'black', '&:hover': { bgcolor: '#FFA000' } }}>
+                                            disabled={isDialogSaving || isOrderSaving || modifiedQuestionOrderIds.size === 0}
+                                            sx={{ bgcolor: '#FFC107', color: 'black', '&:hover': { bgcolor: '#FFA000' } }}>
                                         {isOrderSaving ? <CircularProgress size={24} color="inherit" /> : "Save Order"}
                                     </Button>
                                 </Box>
@@ -291,15 +292,8 @@ const ActivityNodeEditorPage = () => {
                             ) : (
                                 <List>
                                     {questions.map((question, index) => (
-                                        <Paper key={question.questionId || question.tempId || `q-${index}`} elevation={2} sx={{ mb: 1.5, overflow: 'hidden' }}>
-                                            <ListItem
-                                                sx={{
-                                                    display: 'flex',
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center', // Vertically center content of ListItem
-                                                    py: 1.5,
-                                                }}
-                                            >
+                                        <Paper key={question.questionId || `q-${index}`} elevation={2} sx={{ mb: 1.5, overflow: 'hidden' }}>
+                                            <ListItem sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', py: 1.5 }}>
                                                 <Box sx={{ display: 'flex', flexDirection: 'column', mr: 1, alignSelf: 'stretch', justifyContent: 'center' }}>
                                                     <IconButton onClick={() => handleMoveQuestion(index, -1)} disabled={index === 0 || isDialogSaving || isOrderSaving} size="small" title="Move Up">
                                                         <ArrowUpwardIcon fontSize="small" />
@@ -312,14 +306,15 @@ const ActivityNodeEditorPage = () => {
                                                     primary={
                                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                                             <Typography component="span" sx={{ fontWeight: 'medium', color: '#451513', mr: 1 }}>
-                                                                {`${index + 1}. ${question.questionText || 'Untitled Question'}`.substring(0, 70)}
-                                                                { (question.questionText?.length || 0) > 70 ? "..." : ""}
+                                                                {`${index + 1}. ${question.questionText || 'Untitled Question'}`}
                                                             </Typography>
                                                             {modifiedQuestionOrderIds.has(question.questionId) &&
                                                                 <Chip label="Order Changed" size="small" color="info" sx={{ml: 1, fontSize: '0.65rem', height: '16px', fontStyle: 'italic'}}/>
                                                             }
                                                         </Box>
                                                     }
+                                                    // --- THIS IS THE REVERTED CHANGE ---
+                                                    // Restoring the detailed choices display
                                                     secondary={
                                                         <>
                                                             <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block' }}>
@@ -327,13 +322,13 @@ const ActivityNodeEditorPage = () => {
                                                             </Typography>
                                                             <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                                                                 Choices: {(question.choices && question.choices.filter(c => !c.isDeleted).length > 0)
-                                                                    ? question.choices.filter(c => !c.isDeleted).slice(0, 2).map(c => `"${c.choiceText.substring(0,15) + (c.choiceText.length > 15 ? "..." : "")}"`).join(' | ') + (question.choices.filter(c => !c.isDeleted).length > 2 ? "..." : "")
-                                                                    : "None"}
+                                                                ? question.choices.filter(c => !c.isDeleted).slice(0, 2).map(c => `"${c.choiceText.substring(0,15) + (c.choiceText.length > 15 ? "..." : "")}"`).join(' | ') + (question.choices.filter(c => !c.isDeleted).length > 2 ? "..." : "")
+                                                                : "None"}
                                                             </Typography>
                                                         </>
                                                     }
                                                 />
-                                                <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', pl: 1}}> {/* Use ml: 'auto' to push to the right */}
+                                                <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', pl: 1}}>
                                                     <IconButton edge="end" aria-label="edit" onClick={() => handleOpenEditQuestionDialog(question)} sx={{mr:0.5}} disabled={isDialogSaving || isOrderSaving}>
                                                         <EditIcon />
                                                     </IconButton>
@@ -359,7 +354,6 @@ const ActivityNodeEditorPage = () => {
                     activityNodeTypeId={activityNodeTypeId}
                     isLoading={isDialogSaving}
                     error={dialogError}
-                    // Pass the calculated orderIndex for a new question
                     orderIndexForNewQuestion={editingQuestion ? editingQuestion.orderIndex : questions.length}
                 />
             )}

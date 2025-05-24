@@ -1,20 +1,25 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getClassroomCourseProgressOverview } from '../../services/progressService';
-import { getClassroomById } from '../../services/classroomService';
+import { getClassroomById, removeStudentFromClassroom } from '../../services/classroomService';
 import { useAuth } from '../../context/AuthContext';
 import {
-    Box, Container, Typography, Paper, Table, TableBody, TableCell,
+    Box, Typography, Paper, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert, Button, Tooltip,
-    Breadcrumbs, Link as MuiLink, useTheme, CssBaseline
+    Breadcrumbs, Link as MuiLink, useTheme, CssBaseline,
+    Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, IconButton
 } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+// highlight-start
+// Import the component from its own file
 import StudentProgressRow from './StudentProgressRow';
+// highlight-end
 import Navbar from '../../components/layout/navbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import '../../styles/TeacherHomepage.css';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const ClassroomStudentProgressOverviewPage = () => {
     const { classroomId } = useParams();
@@ -22,17 +27,15 @@ const ClassroomStudentProgressOverviewPage = () => {
     const { authState } = useAuth();
     const theme = useTheme();
 
-    // Define desired yellow color (consistent with StudentCourseDetailPage)
     const yellowAccent = {
-        main: '#FFC107', // Amber/yellow
-        hover: '#FFA000', // Darker shade for hover
+        main: '#FFC107',
+        hover: '#FFA000',
         contrastText: theme.palette.getContrastText('#FFC107'),
     };
 
-    // --- NEW: Define brown color ---
     const brownAccent = {
-        main: '#795548', // A common brown color (Material Design Brown 500)
-        contrastText: theme.palette.getContrastText('#795548'), // Auto-detects best contrast (black or white)
+        main: '#795548',
+        contrastText: theme.palette.getContrastText('#795548'),
     };
 
     const [progressData, setProgressData] = useState([]);
@@ -42,62 +45,36 @@ const ClassroomStudentProgressOverviewPage = () => {
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
+    const [studentToRemove, setStudentToRemove] = useState(null);
+    const [isRemoving, setIsRemoving] = useState(false);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
     const fetchData = useCallback(async () => {
-        // ... (fetchData logic remains the same)
-        if (!classroomId) {
-            setError("Classroom ID is missing.");
-            setLoading(false);
-            return;
-        }
-        if (!authState.token) {
-            setError("Authentication token not found. Please log in again.");
+        if (!classroomId || !authState.token) {
+            setError("Classroom ID or auth token is missing.");
             setLoading(false);
             return;
         }
         setLoading(true);
         setError('');
-        let currentClassroomName = `Classroom ${classroomId}`;
-        let currentCourseName = 'N/A';
-
         try {
-            try {
-                const classroomDetails = await getClassroomById(classroomId, authState.token);
-                currentClassroomName = classroomDetails.classroomName || currentClassroomName;
-                if (classroomDetails.assignedCourse) {
-                    currentCourseName = classroomDetails.assignedCourse.courseName || currentCourseName;
-                }
-            } catch (classroomError) {
-                console.error("Failed to fetch classroom details:", classroomError);
-                setError(prev => prev ? `${prev}\nFailed to load classroom details: ${classroomError.message}` : `Failed to load classroom details: ${classroomError.message}`);
-            }
-            setClassroomName(currentClassroomName);
+            const classroomDetails = await getClassroomById(classroomId, authState.token);
+            setClassroomName(classroomDetails.classroomName);
+            setCourseName(classroomDetails.assignedCourse?.courseName || 'N/A');
 
             const overview = await getClassroomCourseProgressOverview(classroomId);
             setProgressData(Array.isArray(overview) ? overview : []);
-            if (Array.isArray(overview) && overview.length > 0 && overview[0].courseName) {
-                setCourseName(overview[0].courseName);
-            } else if (currentCourseName !== 'N/A') {
-                setCourseName(currentCourseName);
-            }
         } catch (err) {
-            console.error("Error fetching progress data:", err);
-            setError(prev => prev ? `${prev}\nFailed to load progress data: ${err.message || 'Please try again.'}` : `Failed to load progress data: ${err.message || 'Please try again.'}`);
+            console.error("Error fetching data:", err);
+            setError(`Failed to load data: ${err.message || 'Please try again.'}`);
         } finally {
             setLoading(false);
         }
     }, [classroomId, authState.token]);
 
     useEffect(() => {
-        if (authState.token && classroomId) {
-            fetchData();
-        } else if (!classroomId) {
-            setError("Classroom ID is missing in URL.");
-            setLoading(false);
-        } else if (!authState.token) {
-            setError("Authentication required to view this page.");
-            setLoading(false);
-        }
-    }, [fetchData, authState.token, classroomId]);
+        fetchData();
+    }, [fetchData]);
 
     const handleStudentClick = (student) => {
         navigate(`/teacher/classroom/${classroomId}/student/${student.studentId}/progress`, {
@@ -107,6 +84,30 @@ const ClassroomStudentProgressOverviewPage = () => {
                 studentName: student.studentName
             }
         });
+    };
+
+    const handleOpenRemoveDialog = (student) => {
+        setStudentToRemove(student);
+    };
+
+    const handleCloseRemoveDialog = () => {
+        setStudentToRemove(null);
+    };
+
+    const handleConfirmRemove = async () => {
+        if (!studentToRemove) return;
+
+        setIsRemoving(true);
+        try {
+            await removeStudentFromClassroom(classroomId, studentToRemove.studentId, authState.token);
+            setSnackbar({ open: true, message: 'Student removed successfully!', severity: 'success' });
+            setProgressData(prev => prev.filter(s => s.studentId !== studentToRemove.studentId));
+            handleCloseRemoveDialog();
+        } catch (err) {
+            setSnackbar({ open: true, message: `Error: ${err.message}`, severity: 'error' });
+        } finally {
+            setIsRemoving(false);
+        }
     };
 
     if (loading) {
@@ -129,31 +130,18 @@ const ClassroomStudentProgressOverviewPage = () => {
                 <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
                 <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: theme.palette.background.default, minHeight: 'calc(100vh - 64px)'}}>
+                    {/* Breadcrumbs and Header */}
+                    {/* ... (This part remains the same) ... */}
                     <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb" sx={{ mb: 2.5 }}>
-                        <MuiLink
-                            component="button"
-                            onClick={() => navigate('/teacher-homepage')}
-                            sx={{
-                                display: 'flex', alignItems: 'center', color: 'text.secondary',
-                                fontSize: '0.875rem', textDecoration: 'none',
-                                '&:hover': { textDecoration: 'underline', color: yellowAccent.main }
-                            }}
-                        >
+                        <MuiLink component="button" onClick={() => navigate('/teacher-homepage')} sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline', color: yellowAccent.main }}}>
                             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
                             Teacher Home
                         </MuiLink>
                         <Typography color="text.primary" sx={{ fontSize: '0.875rem' }}>Student Progress Overview</Typography>
                     </Breadcrumbs>
-
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, mt: 3, flexWrap: 'wrap', gap: 2 }}>
                         <Box>
-                            <Typography
-                                variant="h4" component="h1" gutterBottom
-                                sx={{
-                                    fontWeight: 'bold',
-                                    color: brownAccent.main // MODIFIED: Title color to brown
-                                }}
-                            >
+                            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: brownAccent.main }}>
                                 Student Progress Overview
                             </Typography>
                             <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.1rem', lineHeight: 1.4 }}>
@@ -164,86 +152,64 @@ const ClassroomStudentProgressOverviewPage = () => {
                             </Typography>
                         </Box>
                         <Tooltip title="Back to Teacher Homepage">
-                            <Button
-                                variant="contained"
-                                startIcon={<ArrowBackIcon />}
-                                onClick={() => navigate('/teacher-homepage')}
-                                sx={{
-                                    backgroundColor: yellowAccent.main,
-                                    color: yellowAccent.contrastText,
-                                    '&:hover': { backgroundColor: yellowAccent.hover },
-                                    mt: { xs: 1, sm: 0 }, fontWeight: 500
-                                }}
-                            >
+                            <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={() => navigate('/teacher-homepage')} sx={{ backgroundColor: yellowAccent.main, color: yellowAccent.contrastText, '&:hover': { backgroundColor: yellowAccent.hover }, mt: { xs: 1, sm: 0 }, fontWeight: 500 }}>
                                 Back to Home
                             </Button>
                         </Tooltip>
                     </Box>
+                    {/* End Breadcrumbs and Header */}
 
-                    {error && (
-                        <Alert severity="error" sx={{ mt: 2, mb: 3 }} variant="outlined">{error.trim()}</Alert>
-                    )}
-
-                    {!loading && progressData.length === 0 && !error.includes("Failed to load progress data") && (
-                        <Paper elevation={0} sx={{ p: 3, textAlign: 'center', mt: 3, backgroundColor: 'transparent', border: `1px dashed ${theme.palette.divider}` }}>
-                            <Typography variant="h6" color="text.secondary" gutterBottom>No Progress Data Found</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Currently, there's no student progress data available for this course.
-                            </Typography>
-                        </Paper>
-                    )}
-
-                    {!loading && progressData.length > 0 && (
-                        <Paper elevation={2} sx={{ mt: 2, overflowX: 'auto', borderRadius: 2 }}>
-                            <TableContainer>
-                                <Table stickyHeader aria-label="student progress table">
-                                    <TableHead>
-                                        <TableRow sx={{
-                                            "& th": {
-                                                backgroundColor: brownAccent.main, // MODIFIED: Table header background to brown
-                                                color: brownAccent.contrastText, // MODIFIED: Table header text color for contrast
-                                                fontWeight: '600',
-                                                py: 1.2,
-                                                fontSize: '0.875rem',
-                                                // Optional: if you want a border matching the brown
-                                                // borderBottom: `1px solid ${theme.palette.augmentColor({ color: { main: brownAccent.main } }).dark}`
-                                                borderBottom: `1px solid ${theme.palette.grey[400]}` // A neutral border
-                                            },
-                                        }}>
-                                            <TableCell>Student Name</TableCell>
-                                            <TableCell align="center">Lessons Completed</TableCell>
-                                            <TableCell align="center">Avg. Score (%)</TableCell>
-                                            <TableCell align="center">Total Time Spent</TableCell>
-                                            <TableCell align="center">View Details</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {progressData.map((studentProgress, index) => (
-                                            <StudentProgressRow
-                                                key={studentProgress.studentId || index}
-                                                studentId={studentProgress.studentId}
-                                                studentName={studentProgress.studentName}
-                                                completedLessons={studentProgress.completedLessons}
-                                                totalLessonsInCourse={studentProgress.totalLessons}
-                                                averageScore={studentProgress.overallScore}
-                                                totalTimeSpent={studentProgress.totalTimeSpent}
-                                                onViewDetails={() => handleStudentClick(studentProgress)}
-                                                yellowAccent={yellowAccent} // Pass yellow for the "Details" button
-                                                sx={{
-                                                    '&:hover': {
-                                                        backgroundColor: theme.palette.action.hover
-                                                    },
-                                                    '&:last-child td, &:last-child th': { border: 0 }
-                                                }}
-                                            />
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Paper>
-                    )}
+                    <Paper elevation={2} sx={{ mt: 2, overflowX: 'auto', borderRadius: 2 }}>
+                        <TableContainer>
+                            <Table stickyHeader aria-label="student progress table">
+                                <TableHead>
+                                    <TableRow sx={{"& th": {backgroundColor: brownAccent.main, color: brownAccent.contrastText, fontWeight: '600', py: 1.2, fontSize: '0.875rem', borderBottom: `1px solid ${theme.palette.grey[400]}`}}}>
+                                        <TableCell>Student Name</TableCell>
+                                        <TableCell align="center">Lessons Completed</TableCell>
+                                        <TableCell align="center">Avg. Score (%)</TableCell>
+                                        <TableCell align="center">Total Time Spent</TableCell>
+                                        <TableCell align="center">View Details</TableCell>
+                                        <TableCell align="center">Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {progressData.map((studentProgress) => (
+                                        <StudentProgressRow
+                                            key={studentProgress.studentId}
+                                            {...studentProgress}
+                                            onViewDetails={() => handleStudentClick(studentProgress)}
+                                            yellowAccent={yellowAccent}
+                                            onRemove={() => handleOpenRemoveDialog(studentProgress)}
+                                            sx={{'&:hover': {backgroundColor: theme.palette.action.hover}, '&:last-child td, &:last-child th': { border: 0 }}}
+                                        />
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Paper>
                 </Box>
             </div>
+
+            <Dialog open={!!studentToRemove} onClose={handleCloseRemoveDialog}>
+                <DialogTitle>{"Remove Student from Classroom?"}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to remove <strong>{studentToRemove?.studentName}</strong> from this classroom? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseRemoveDialog} disabled={isRemoving}>Cancel</Button>
+                    <Button onClick={handleConfirmRemove} color="error" autoFocus disabled={isRemoving}>
+                        {isRemoving ? <CircularProgress size={24} /> : 'Remove'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </div>
     );
 };

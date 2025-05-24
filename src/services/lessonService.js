@@ -366,4 +366,30 @@ export const deleteActivityNode = async (activityNodeTypeId, token) => {
     return response.json();
 };
 
+export const updateQuestionOrderForActivityNode = async (activityNodeTypeId, questions, token) => {
+    // This payload only contains the ID and new order index, which is safe.
+    const payload = {
+        questions: questions.map(q => ({
+            questionId: q.questionId,
+            orderIndex: q.orderIndex
+        }))
+    };
+
+    const response = await fetch(`${API_BASE_URL}/${activityNodeTypeId}/questions/order`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update question order.');
+    }
+
+    return await response.json();
+};
+
 

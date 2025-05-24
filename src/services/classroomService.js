@@ -269,3 +269,41 @@ export const getClassroomDetails = async (classroomId, token) => { // Added expo
   }
   return data;
 };
+
+export const removeStudentFromClassroom = async (classroomId, studentId, token) => {
+  // Ensure classroomId and studentId are not undefined or null
+  if (!classroomId || !studentId) {
+    throw new Error('Classroom ID and Student ID are required.');
+  }
+  if (!token) {
+    throw new Error('Authentication token is required.');
+  }
+
+  // Use API_BASE_URL and ensure the path matches the backend controller
+  const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/students/${studentId}`, {
+// highlight-end
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+      // 'Content-Type': 'application/json' // Not typically needed for DELETE if no body
+    }
+  });
+
+  if (!response.ok) {
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch (e) {
+      // If response is not JSON, or error parsing JSON
+      errorData = { message: `Failed to remove student. Server responded with ${response.status}.` };
+    }
+    throw new Error(errorData.message || 'Failed to remove student from classroom.');
+  }
+
+  // For a DELETE request, the backend might return a 200 OK with a message,
+  // or a 204 No Content. Handle both.
+  if (response.status === 204) {
+    return { message: "Student removed successfully." }; // Or any other consistent success object/message
+  }
+  return await response.json(); // If backend sends a JSON body with success message
+};
