@@ -10,17 +10,18 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext'; // Corrected path
 
-import Navbar from '../../components/layout/navbar';
-import TeacherSidebar from '../../components/layout/TeacherSidebar';
-import CourseCard from '../../components/cards/CourseCard.jsx';
-import AddCourseDialog from '../../components/dialogs/AddCourseDialog.jsx';
-import DeleteCourseDialog from '../../components/dialogs/DeleteCourseDialog.jsx'; // Import DeleteCourseDialog
+import Navbar from '../../components/layout/navbar'; // Corrected path
+import TeacherSidebar from '../../components/layout/TeacherSidebar'; // Corrected path
+import CourseCard from '../../components/cards/CourseCard.jsx'; // Corrected path
+import AddCourseDialog from '../../components/dialogs/AddCourseDialog.jsx'; // Corrected path
+import DeleteCourseDialog from '../../components/dialogs/DeleteCourseDialog.jsx'; // Corrected path
+import EditCourseDialog from '../../components/dialogs/EditCourseDialog.jsx'; // ✨ Import EditCourseDialog ✨
 
-import { getAllCoursesForAdmin, createCourse, deleteCourse } from '../../services/courseService'; // Import deleteCourse
+import { getAllCoursesForAdmin, createCourse, deleteCourse, updateCourse } from '../../services/courseService'; // ✨ Import updateCourse ✨
 
-import '../../styles/TeacherHomepage.css';
+import '../../styles/TeacherHomepage.css'; // Corrected path
 
 const ManageCoursesPage = () => {
     const navigate = useNavigate();
@@ -31,20 +32,23 @@ const ManageCoursesPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Add Course Dialog State
     const [addCourseError, setAddCourseError] = useState(null);
     const [isAddCourseDialogOpen, setIsAddCourseDialogOpen] = useState(false);
     const [isSubmittingCourse, setIsSubmittingCourse] = useState(false);
 
-    // Delete Course Dialog State
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [courseToDelete, setCourseToDelete] = useState(null); // Stores { courseId, title }
+    const [courseToDelete, setCourseToDelete] = useState(null);
     const [isDeletingCourse, setIsDeletingCourse] = useState(false);
     const [deleteCourseError, setDeleteCourseError] = useState(null);
 
+    // ✨ Edit Course Dialog State ✨
+    const [isEditCourseDialogOpen, setIsEditCourseDialogOpen] = useState(false);
+    const [editingCourse, setEditingCourse] = useState(null); // Stores the full course object to edit
+    const [isUpdatingCourse, setIsUpdatingCourse] = useState(false);
+    const [updateCourseError, setUpdateCourseError] = useState(null);
+    // ✨ End Edit Course Dialog State ✨
 
     const fetchCourses = useCallback(async () => {
-        // ... (fetchCourses logic remains the same as previous correct version)
         if (!authState.token) {
             console.log("ManageCoursesPage: No auth token, skipping fetch.");
             return;
@@ -67,12 +71,11 @@ const ManageCoursesPage = () => {
     }, [authState.token]);
 
     const userHasRequiredRoles = authState.isAuthenticated &&
-                                 authState.user &&
-                                 Array.isArray(authState.user.roles) &&
-                                 (authState.user.roles.includes("ROLE_ADMIN") || authState.user.roles.includes("ROLE_SUPERADMIN"));
+        authState.user &&
+        Array.isArray(authState.user.roles) &&
+        (authState.user.roles.includes("ROLE_ADMIN") || authState.user.roles.includes("ROLE_SUPERADMIN"));
 
     useEffect(() => {
-        // ... (useEffect logic remains the same as previous correct version)
         if (authState.isAuthenticated) {
             if (userHasRequiredRoles) {
                 fetchCourses();
@@ -88,7 +91,6 @@ const ManageCoursesPage = () => {
 
 
     const handleAddCourse = async (newCourseData) => {
-        // ... (handleAddCourse logic remains the same)
         if (!authState.token) {
             setAddCourseError("Authentication error. Cannot add course."); return;
         }
@@ -106,14 +108,12 @@ const ManageCoursesPage = () => {
 
     const handleManageLessons = (courseId) => {
         console.log(`Navigating to lesson management for course ID: ${courseId}`);
-        navigate(`/teacher/course/${courseId}/lessons`); 
+        navigate(`/teacher/course/${courseId}/lessons`);
     };
 
-    // --- Delete Course Handlers ---
     const handleOpenDeleteDialog = (course) => {
-        // course object now contains courseId and title from CourseCard
         setCourseToDelete(course);
-        setDeleteCourseError(null); // Clear previous delete errors
+        setDeleteCourseError(null);
         setIsDeleteDialogOpen(true);
     };
 
@@ -131,35 +131,56 @@ const ManageCoursesPage = () => {
         setDeleteCourseError(null);
         try {
             await deleteCourse(courseToDelete.courseId, authState.token);
-            // On successful deletion:
             setCourses(prevCourses => prevCourses.filter(c => c.courseId !== courseToDelete.courseId));
             handleCloseDeleteDialog();
-            // Optionally, show a success notification (e.g., using a Snackbar)
         } catch (err) {
             console.error("ManageCoursesPage: Error deleting course", err);
             setDeleteCourseError(err.message || "Failed to delete course. Please try again.");
-            // Dialog can remain open for user to see error, or close it:
-            // handleCloseDeleteDialog(); 
         } finally {
             setIsDeletingCourse(false);
         }
     };
-    // --- End Delete Course Handlers ---
 
-
-    const handleEditCourse = (course) => {
-        alert(`Edit course: ${course.title} (To Be Implemented)`);
-        // For later: setEditingCourse(course); setIsEditCourseDialogOpen(true);
+    // --- ✨ Edit Course Handlers ✨ ---
+    const handleOpenEditDialog = (course) => {
+        setEditingCourse(course); // Set the course to be edited
+        setUpdateCourseError(null); // Clear previous edit errors
+        setIsEditCourseDialogOpen(true);
     };
 
-    // ... (Return statement needs to be updated to include DeleteCourseDialog)
+    const handleCloseEditDialog = () => {
+        setIsEditCourseDialogOpen(false);
+        setEditingCourse(null);
+    };
+
+    const handleConfirmUpdateCourse = async (updatedData) => {
+        if (!editingCourse || !authState.token) {
+            setUpdateCourseError("Course data or token missing. Cannot update.");
+            return;
+        }
+        setIsUpdatingCourse(true);
+        setUpdateCourseError(null);
+        try {
+            const returnedUpdatedCourse = await updateCourse(editingCourse.courseId, updatedData, authState.token);
+            setCourses(prevCourses =>
+                prevCourses.map(c => (c.courseId === editingCourse.courseId ? returnedUpdatedCourse : c))
+            );
+            handleCloseEditDialog();
+        } catch (err) {
+            console.error("ManageCoursesPage: Error updating course", err);
+            setUpdateCourseError(err.message || "Failed to update course. Please try again.");
+        } finally {
+            setIsUpdatingCourse(false);
+        }
+    };
+    // --- ✨ End Edit Course Handlers ✨ ---
 
     return (
         <Box className="teacher-homepage-container">
             <Box className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
-            <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}> {/* FAB will be a child of this */}
+            <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
                 <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
                     <Typography variant="h5" className="main-content-heading" gutterBottom>
@@ -176,11 +197,11 @@ const ManageCoursesPage = () => {
                                     <Grid item xs={12} sm={6} md={4} key={course.courseId || Math.random()}>
                                         <CourseCard
                                             course={course}
-                                            onManageLessons={handleManageLessons} 
-                                            onEdit={handleEditCourse}
+                                            onManageLessons={handleManageLessons}
+                                            onEdit={handleOpenEditDialog} // ✨ Use handleOpenEditDialog ✨
                                             onDelete={handleOpenDeleteDialog}
-                                            isAdminOrSuperAdmin={userHasRequiredRoles}
-                                            currentUserId={authState.user?.id}
+                                            isAdminOrSuperAdmin={userHasRequiredRoles} // For UI display logic in CourseCard
+                                            currentUserId={authState.user?.id} // For UI display logic in CourseCard
                                         />
                                     </Grid>
                                 ))}
@@ -190,19 +211,18 @@ const ManageCoursesPage = () => {
                             )}
                         </>
                     )}
-                     {authState.isAuthenticated && !userHasRequiredRoles && !isLoading && (
+                    {authState.isAuthenticated && !userHasRequiredRoles && !isLoading && (
                         <Alert severity="error" sx={{ mt: 2 }}>
                             You do not have permission to manage courses.
                         </Alert>
                     )}
                     {!authState.isAuthenticated && !isLoading && (
-                         <Alert severity="warning" sx={{ mt: 2 }}>
+                        <Alert severity="warning" sx={{ mt: 2 }}>
                             Please log in to manage courses.
                         </Alert>
                     )}
-                </Box> {/* End of teacher-main-content */}
+                </Box>
 
-                {/* FAB is NOW a direct child of teacher-content-area, sibling to teacher-main-content */}
                 {userHasRequiredRoles && (
                     <Fab
                         color="primary"
@@ -211,18 +231,17 @@ const ManageCoursesPage = () => {
                         sx={{
                             position: 'fixed',
                             bottom: 32,
-                            right: 32, // This should be relative to teacher-content-area if it creates a new context, or viewport
+                            right: 32,
                             bgcolor: '#451513',
                             '&:hover': { bgcolor: '#5d211f' },
-                            zIndex: 1050 // Good to have a z-index
+                            zIndex: 1050
                         }}
                     >
                         <AddIcon />
                     </Fab>
                 )}
-            </Box> {/* End of teacher-content-area */}
+            </Box>
 
-            {/* Dialogs can remain at the end of the top-level Box or here */}
             <AddCourseDialog
                 open={isAddCourseDialogOpen}
                 onClose={() => setIsAddCourseDialogOpen(false)}
@@ -237,9 +256,21 @@ const ManageCoursesPage = () => {
                     onConfirmDelete={handleConfirmDeleteCourse}
                     courseName={courseToDelete.title}
                     isLoading={isDeletingCourse}
+                    error={deleteCourseError} // Pass error to dialog
                 />
             )}
-        </Box> // End of teacher-homepage-container
+            {/* ✨ Add EditCourseDialog to the render tree ✨ */}
+            {editingCourse && (
+                <EditCourseDialog
+                    open={isEditCourseDialogOpen}
+                    onClose={handleCloseEditDialog}
+                    onUpdateCourse={handleConfirmUpdateCourse}
+                    course={editingCourse}
+                    isLoading={isUpdatingCourse}
+                    error={updateCourseError}
+                />
+            )}
+        </Box>
     );
 };
 

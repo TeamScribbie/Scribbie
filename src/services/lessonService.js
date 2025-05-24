@@ -278,3 +278,92 @@ export const submitActivityProgress = async (progressData, token) => {
       }
       return response.json();
   };
+
+/**
+ * ✨ ADD THIS FUNCTION TO UPDATE A LESSON ✨
+ * Updates an existing lesson definition.
+ * @param {string|number} courseId - The ID of the course the lesson belongs to.
+ * @param {string|number} lessonId - The ID of the lesson to update.
+ * @param {object} lessonData - The data to update (e.g., { lessonTitle, lessonDescription }).
+ * @param {string} token - The JWT auth token.
+ * @returns {Promise<object>} - The updated lesson object.
+ */
+export const updateLessonDefinition = async (courseId, lessonId, lessonData, token) => {
+    if (!courseId || !lessonId || !token) {
+        throw new Error('Course ID, Lesson ID, and auth token are required.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(lessonData),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        console.error(`Update Lesson API Error (ID ${lessonId}):`, errorData);
+        throw new Error(errorData.message || 'Failed to update lesson.');
+    }
+
+    return response.json();
+};
+
+/**
+ * ✨ ADD THIS FUNCTION TO DELETE A LESSON ✨
+ * Deletes a lesson definition.
+ * @param {string|number} courseId - The ID of the course.
+ * @param {string|number} lessonId - The ID of the lesson to delete.
+ * @param {string} token - The JWT auth token.
+ * @returns {Promise<object>} - A promise that resolves with the success message.
+ */
+export const deleteLessonDefinition = async (courseId, lessonId, token) => {
+    if (!courseId || !lessonId || !token) {
+        throw new Error('Course ID, Lesson ID, and auth token are required for deletion.');
+    }
+
+    const response = await fetch(`http://localhost:8080/api/courses/${courseId}/lessons/${lessonId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || 'Failed to delete lesson.');
+    }
+
+    return response.json();
+};
+
+/**
+ * ✨ ADD THIS FUNCTION TO DELETE AN ACTIVITY NODE ✨
+ * Deletes an activity node type.
+ * @param {string|number} activityNodeTypeId - The ID of the activity node to delete.
+ * @param {string} token - The JWT auth token.
+ * @returns {Promise<object>} - A promise that resolves with the success message.
+ */
+export const deleteActivityNode = async (activityNodeTypeId, token) => {
+    if (!activityNodeTypeId || !token) {
+        throw new Error('Activity Node ID and auth token are required for deletion.');
+    }
+
+    const response = await fetch(`http://localhost:8080/api/activity-node-types/${activityNodeTypeId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || 'Failed to delete activity node.');
+    }
+
+    return response.json();
+};
+
+

@@ -140,3 +140,34 @@ export const getCourseById = async (courseId, token) => {
     console.log(`courseService (frontend): Raw getCourseById response (ID ${courseId}):`, data);
     return data; // Expects CourseDetailDto from backend
 };
+
+/**
+ * ✨ NEW FUNCTION: Updates an existing course.
+ * @param {string|number} courseId - The ID of the course to update.
+ * @param {object} courseData - Object containing updated course details (e.g., { title, description }).
+ * @param {string} token - The JWT authentication token.
+ * @returns {Promise<object>} - A promise that resolves with the updated course object.
+ */
+export const updateCourse = async (courseId, courseData, token) => {
+    if (!courseId || !token) {
+        throw new Error('Course ID, course data, and auth token are required for update.');
+    }
+    console.log(`courseService (frontend): Updating course with ID: ${courseId}`);
+
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(courseData),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        console.error(`Update Course API Error (ID ${courseId}):`, errorData);
+        throw new Error(errorData.message || `Failed to update course. Status: ${response.status}`);
+    }
+    return response.json(); // Expects the updated CourseDetailDto from backend
+};
+// ✨ END OF NEW FUNCTION ✨
