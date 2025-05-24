@@ -35,27 +35,27 @@ export const getChallengeQuestions = async (lessonDefinitionId, token) => {
  * @param {string} token - The JWT authentication token.
  * @returns {Promise<object>} - A promise that resolves to the challenge progress object (includes config).
  */
-export const startChallengeAttempt = async (lessonDefinitionId, token) => {
-    if (!lessonDefinitionId || !token) {
-        throw new Error('Lesson Definition ID and auth token are required to start a challenge.');
-    }
-    console.log(`challengeService: Starting challenge for lessonDefinitionId: ${lessonDefinitionId}`);
-    const response = await fetch(`${API_BASE_URL}/challenges/start`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ lessonDefinitionId }),
-    });
+// export const startChallengeAttempt = async (lessonDefinitionId, token) => {
+//     if (!lessonDefinitionId || !token) {
+//         throw new Error('Lesson Definition ID and auth token are required to start a challenge.');
+//     }
+//     console.log(`challengeService: Starting challenge for lessonDefinitionId: ${lessonDefinitionId}`);
+//     const response = await fetch(`${API_BASE_URL}/challenges/start`, {
+//         method: 'POST',
+//         headers: {
+//             'Authorization': `Bearer ${token}`,
+//             'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({ lessonDefinitionId }),
+//     });
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        console.error(`Start Challenge API Error (LessonDef ${lessonDefinitionId}):`, errorData);
-        throw new Error(errorData.message || `Failed to start challenge. Status: ${response.status}`);
-    }
-    return response.json(); // Returns ChallengeProgressDto with config
-};
+//     if (!response.ok) {
+//         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+//         console.error(`Start Challenge API Error (LessonDef ${lessonDefinitionId}):`, errorData);
+//         throw new Error(errorData.message || `Failed to start challenge. Status: ${response.status}`);
+//     }
+//     return response.json(); // Returns ChallengeProgressDto with config
+// };
 
 /**
  * Submits the final results of a challenge attempt.

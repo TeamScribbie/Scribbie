@@ -59,97 +59,41 @@ const App = () => {
   return (
     <AuthProvider>
       <Routes>
-        {/* ... (Public Routes and Student Protected Routes remain the same) ... */}
+        {/* Public Routes */}
         <Route path="/student-login" element={<StudentLogin />} />
         <Route path="/student-register" element={<StudentRegistration />} />
         <Route path="/teacher-login" element={<TeacherLogin />} />
         <Route path="/teacher-register" element={<TeacherRegistration />} />
 
-        <Route path="/student-homepage" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <StudentHomepage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student-profile" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <StudentProfile />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/classroom/:classroomId/lessons" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <LessonPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/lesson/:lessonId/activity/:activityId" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ActivityPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/activity-summary" element={
-             <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ActivitySummaryPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/lesson/:lessonDefinitionId/challenge" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ChallengePage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/challenge-summary" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ChallengeSummaryPage />
-            </ProtectedRoute>
-        } />
+        {/* Student Protected Routes */}
+        <Route path="/student-homepage" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><StudentHomepage /></ProtectedRoute>} />
+        <Route path="/student-profile" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><StudentProfile /></ProtectedRoute>} />
+        <Route path="/student/classroom/:classroomId/lessons" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><LessonPage /></ProtectedRoute>} />
+        
+        {/* UPDATED Activity and Summary Routes */}
+        <Route 
+            path="/student/lesson/:lessonDefinitionId/activity-node/:activityNodeTypeId/play" 
+            element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivityPage /></ProtectedRoute>} 
+        />
+        <Route 
+            path="/student/activity-summary" 
+            element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivitySummaryPage /></ProtectedRoute>} 
+        />
+        
+        <Route path="/student/lesson/:lessonDefinitionId/challenge" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ChallengePage /></ProtectedRoute>} />
+        <Route path="/student/challenge-summary" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ChallengeSummaryPage /></ProtectedRoute>} />
 
         {/* Teacher Protected Routes */}
-        <Route path="/teacher-homepage" element={
-          <ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-            <TeacherHomepage />
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher/manage-courses" element={
-          <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-            <ManageCoursesPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher/manage-admins" element={
-          <ProtectedRoute allowedRoles={["ROLE_SUPERADMIN"]}>
-            <ManageAdminsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher/course/:courseId/lessons" element={
-          <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-            <LessonManagementPage />
-          </ProtectedRoute>
-        } />
-        {/* highlight-start */}
-        {/* New Route for ActivityNodeEditorPage */}
-        <Route
-          path="/teacher/course/:courseId/lesson/:lessonDefinitionId/node/:activityNodeTypeId/edit"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-              <ActivityNodeEditorPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* highlight-end */}
+        <Route path="/teacher-homepage" element={<ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}><TeacherHomepage /></ProtectedRoute>} />
+        <Route path="/teacher/manage-courses" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ManageCoursesPage /></ProtectedRoute>} />
+        <Route path="/teacher/manage-admins" element={<ProtectedRoute allowedRoles={["ROLE_SUPERADMIN"]}><ManageAdminsPage /></ProtectedRoute>} />
+        <Route path="/teacher/course/:courseId/lessons" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><LessonManagementPage /></ProtectedRoute>} />
+        <Route path="/teacher/course/:courseId/lesson/:lessonDefinitionId/node/:activityNodeTypeId/edit" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ActivityNodeEditorPage /></ProtectedRoute>} />
+        <Route path="/teacher/course/:courseId/lesson/:lessonDefinitionId/challenge/:challengeDefinitionId/edit-questions" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ChallengeQuestionsEditorPage /></ProtectedRoute>} />
 
-        <Route
-          path="/teacher/course/:courseId/lesson/:lessonDefinitionId/challenge/:challengeDefinitionId/edit-questions"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-              <ChallengeQuestionsEditorPage />
-            </ProtectedRoute>
-          }
-        />
-
+        {/* Default and Catch-all */}
         <Route path="/" element={<Navigate to="/student-login" replace />} />
-        <Route path="*" element={
-            <div style={{ textAlign: 'center', marginTop: '50px' }}>
-                <h2>404 - Page Not Found</h2>
-                <p>Sorry, the page you are looking for does not exist.</p>
-            </div>
-        } />
+        <Route path="*" element={ <div style={{ textAlign: 'center', marginTop: '50px' }}><h2>404 - Page Not Found</h2><p>Sorry, the page you are looking for does not exist.</p></div>} />
       </Routes>
     </AuthProvider>
   );

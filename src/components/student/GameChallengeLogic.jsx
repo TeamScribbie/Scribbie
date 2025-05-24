@@ -1,233 +1,192 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Added useRef
 import { useNavigate } from "react-router-dom";
 import mascot from "../../assets/duh.png"; 
 import confetti from "canvas-confetti";
 
-const GameChallengeLogic = ({ questions }) => {
+// Assuming GameChallengeLogic receives full question objects including choices
+// where each choice is an object like: { choiceId: '...', choiceText: '...', isCorrect: true/false }
+
+const GameChallengeLogic = ({ questions, challengeConfig, onChallengeComplete, onScoreUpdate }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [localScore, setLocalScore] = useState(0); // Renamed from score to avoid conflict if parent passes score
+  const [lives, setLives] = useState(challengeConfig?.initialHealth || 3);
   const [streak, setStreak] = useState(0);
-  const [selectedChoice, setSelectedChoice] = useState(null);
+  const [highestStreak, setHighestStreak] = useState(0);
+  const [selectedChoice, setSelectedChoice] = useState(null); // This will store the selected choice *object*
+  const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
+  
+  const [timeLeft, setTimeLeft] = useState(challengeConfig?.initialQuestionTimeSeconds || 15); // Default to 15s if no config
+  const timerIdRef = useRef(null);
+
   const [gameOver, setGameOver] = useState(false);
-  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
-  const [isNewHighScore, setIsNewHighScore] = useState(false);
+  const [challengeStatus, setChallengeStatus] = useState('IN_PROGRESS'); // 'COMPLETED', 'FAILED'
+  
+  const [totalQuestionsAnswered, setTotalQuestionsAnswered] = useState(0);
+  const [totalCorrectAnswers, setTotalCorrectAnswers] = useState(0);
+  const startTimeRef = useRef(Date.now());
+
 
   const navigate = useNavigate();
 
-  const handleAnswer = (choiceObj) => { // choiceObj can be null if timer runs out
-        if (isAnswerSubmitted) return;
-
-        if (timerIdRef.current) clearInterval(timerIdRef.current); // Stop the current question's timer
-        setIsAnswerSubmitted(true); // Mark that the answer for the current question has been processed
-        setSelectedChoice(choiceObj); // Store the selected choice object (or null if timer ran out)
-        setTotalQuestionsAnswered(prev => prev + 1);
-
-        let currentStreak = streak;
-        // Assuming questions[currentIndex].choices is an array of choice objects,
-        // and one of them has an `isCorrect: true` property.
-        // const correctAnswerObj = questions[currentIndex].choices.find(c => c.isCorrect); // You'd need this if choiceObj didn't carry its own correctness
-
-        if (choiceObj && choiceObj.isCorrect) {
-            // Calculate new score: base score + streak bonus
-            const newScore = localScore + 1000 + (currentStreak * 100); // Example scoring logic
-            setLocalScore(newScore);
-            if(onScoreUpdate) onScoreUpdate(newScore); // Update score for the parent (and LiveLeaderboard)
-
-
-            currentStreak++;
-            setStreak(currentStreak);
-            setTotalCorrectAnswers(prev => prev + 1);
-        } else {
-            // Incorrect answer or timer ran out
-            setLives(prev => prev - 1);
-            setStreak(0); // Reset streak on incorrect answer
-            currentStreak = 0; // Reset for any subsequent calculations if needed in this scope
-
-            // If score needs to be updated for the parent even on incorrect answer (e.g. if it didn't change but parent needs to know)
-            if(onScoreUpdate) onScoreUpdate(localScore);
-        }
-
-        // Delay before moving to the next question or ending the challenge
-        setTimeout(() => {
-            proceedToNextQuestionOrEnd(); // This function handles the logic to move to next question or end the game
-        }, 1500); // 1.5 seconds delay to show feedback (e.g., correct/incorrect choice color)
-    };
-  const handleSubmitScore = () => {
-    const savedBestScore = parseInt(localStorage.getItem('scribbieScore')) || 0;
-
-    if (score > savedBestScore) {
-      localStorage.setItem('scribbieScore', score);
+  useEffect(() => {
+    if (streak > highestStreak) {
+      setHighestStreak(streak);
     }
-
-    // Save challenge completion
-    const completedChallenges = JSON.parse(localStorage.getItem('completedChallenges')) || [];
-    const currentChallengeId = parseInt(window.location.pathname.split("/").pop());
-
-    if (!completedChallenges.includes(currentChallengeId)) {
-      completedChallenges.push(currentChallengeId);
-    }
-    localStorage.setItem('completedChallenges', JSON.stringify(completedChallenges));
-
-    setTimeout(() => {
-      navigate('/student-homepage'); 
-    }, 500);
-  };
+  }, [streak, highestStreak]);
 
   useEffect(() => {
     if (gameOver) {
-      const savedBestScore = parseInt(localStorage.getItem('scribbieScore')) || 0;
-      if (score > savedBestScore) {
-        setIsNewHighScore(true);
-      }
+        const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
+        onChallengeComplete(localScore, highestStreak, totalQuestionsAnswered, challengeStatus, timeTaken);
     }
-  }, [gameOver, score]);
+  }, [gameOver, localScore, highestStreak, totalQuestionsAnswered, challengeStatus, onChallengeComplete]);
+
+
+  useEffect(() => {
+    if (currentIndex < questions.length && !gameOver) {
+      setTimeLeft(challengeConfig?.initialQuestionTimeSeconds || 15); // Reset timer for new question
+      setIsAnswerSubmitted(false); // Allow new answer
+      setSelectedChoice(null); // Clear previous selection
+
+      timerIdRef.current = setInterval(() => {
+        setTimeLeft(prevTime => {
+          if (prevTime <= 1) {
+            clearInterval(timerIdRef.current);
+            handleAnswer(null); // Timer runs out, counts as incorrect/no answer
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timerIdRef.current); // Cleanup timer on unmount or question change
+  }, [currentIndex, questions.length, gameOver, challengeConfig]);
+
+
+  const proceedToNextQuestionOrEnd = () => {
+    if (lives <= 0) {
+      setChallengeStatus('FAILED');
+      setGameOver(true);
+      return;
+    }
+    if (currentIndex + 1 < questions.length) {
+      setCurrentIndex(prevIndex => prevIndex + 1);
+      // Timer reset and other states are handled in the useEffect for currentIndex
+    } else {
+      // All questions answered
+      setChallengeStatus('COMPLETED');
+      setGameOver(true);
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    }
+  };
+  
+  const handleAnswer = (choiceObj) => { // choiceObj is the full choice object or null
+    if (isAnswerSubmitted) return;
+
+    if (timerIdRef.current) clearInterval(timerIdRef.current);
+    setIsAnswerSubmitted(true);
+    setSelectedChoice(choiceObj); // Store the selected choice object
+    setTotalQuestionsAnswered(prev => prev + 1);
+
+    let currentStreak = streak;
+
+    if (choiceObj && choiceObj.isCorrect) { // Check the isCorrect property of the choice object
+        const newScore = localScore + 1000 + (currentStreak * 100); 
+        setLocalScore(newScore);
+        if(onScoreUpdate) onScoreUpdate(newScore); 
+
+        currentStreak++;
+        setStreak(currentStreak);
+        setTotalCorrectAnswers(prev => prev + 1);
+    } else {
+        // Incorrect answer or timer ran out
+        setLives(prev => prev - 1);
+        setStreak(0); 
+        currentStreak = 0; 
+        if(onScoreUpdate) onScoreUpdate(localScore);
+    }
+    
+    setTimeout(() => {
+        proceedToNextQuestionOrEnd(); 
+    }, 1500); 
+  };
+
+
+  if (questions.length === 0) {
+    return <Typography sx={{textAlign: 'center', mt: 3}}>No questions loaded for this challenge.</Typography>;
+  }
 
   if (gameOver) {
+    // The onChallengeComplete callback will navigate to summary, so this might not be shown for long
+    // or could be removed if navigation is immediate.
     return (
       <div style={{ textAlign: "center", marginTop: "80px" }}>
         <h3 style={{ color: "#451513", fontSize: "24px", marginBottom: "10px" }}>
-          Score
+          Challenge Ended!
         </h3>
-
         <div style={{ fontSize: "60px", fontWeight: "bold", color: "#451513", marginBottom: "10px" }}>
-          {score.toLocaleString()}
+          Score: {localScore.toLocaleString()}
         </div>
-
-        {isNewHighScore && (
-          <div style={{
-            marginTop: "10px",
-            fontSize: "24px",
-            color: "#38E54D",
-            animation: "fadeBounce 1s infinite",
-            fontWeight: "bold",
-          }}>
-            🎉 New High Score!
-          </div>
-        )}
-
-        <p style={{ color: "#451513", fontSize: "18px", marginTop: "30px" }}>
-          Beat the highest score: <strong>20,000</strong>
-        </p>
-
-        <button
-          style={{
-            backgroundColor: "#FFD966",
-            color: "#451513",
-            padding: "12px 30px",
-            fontSize: "18px",
-            border: "none",
-            borderRadius: "999px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            marginTop: "20px",
-          }}
-          onClick={handleSubmitScore}
-        >
-          SUBMIT
-        </button>
+        {/* The summary page will handle detailed display and submission */}
       </div>
     );
   }
-
-  if (showCompletionPopup) {
-    return (
-      <div style={{
-        position: "fixed",
-        top: 0, left: 0,
-        width: "100vw", height: "100vh",
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 999,
-        animation: "fadeIn 0.5s",
-      }}>
-        <div style={{
-          backgroundColor: "#FFF2D0",
-          padding: "40px",
-          borderRadius: "20px",
-          textAlign: "center",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
-          width: "300px",
-          transform: "scale(1)",
-          animation: "scaleUp 0.4s ease-in-out",
-        }}>
-          <h2 style={{ color: "#451513", marginBottom: "20px" }}>
-            🎉 Challenge Completed!
-          </h2>
-          <p style={{ fontWeight: "bold", color: "#542d1d" }}>Great job!</p>
-          <button
-            style={{
-              backgroundColor: "#451513",
-              color: "white",
-              padding: "10px 20px",
-              fontSize: "16px",
-              border: "none",
-              borderRadius: "999px",
-              fontWeight: "bold",
-              marginTop: "20px",
-              cursor: "pointer",
-            }}
-            onClick={handleSubmitScore}
-          >
-            OK
-          </button>
-        </div>
-      </div>
-    );
+  
+  const currentQuestion = questions[currentIndex];
+   if (!currentQuestion || !Array.isArray(currentQuestion.choices)) {
+    console.error("Current question or its choices are invalid:", currentQuestion);
+    return <Typography color="error">Error: Question data is missing or malformed.</Typography>;
   }
+
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
+    <div style={{ textAlign: "center", padding: "20px", backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '100%', maxWidth: '700px'}}>
       {/* Top Bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <div></div>
-        <div style={{ fontSize: "24px", fontWeight: "bold" }}>{score.toLocaleString()}</div>
-
-        {/* Lives and Streak */}
+        <div style={{fontSize: "20px", fontWeight: "bold", color: "#451513" }}>Time: {timeLeft}s</div>
+        <div style={{ fontSize: "24px", fontWeight: "bold" }}>{localScore.toLocaleString()}</div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {Array.from({ length: lives }, (_, idx) => (
             <span key={idx} style={{ color: "red", fontSize: "20px" }}>❤️</span>
           ))}
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <span style={{ fontSize: "20px", color: "gold" }}>⚡</span>
+            <span style={{ fontSize: "20px", color: "orange" }}>⚡</span>
             <span style={{ fontWeight: "bold" }}>{streak}x</span>
           </div>
         </div>
       </div>
 
       {/* Question */}
-      <h2 style={{ marginBottom: "10px", fontWeight: "bold", color: "#451513" }}>
-        {questions[currentIndex].question}
+      <h2 style={{ marginBottom: "10px", fontWeight: "bold", color: "#451513", minHeight: '3em' }}>
+        {currentQuestion.questionText}
       </h2>
 
       {/* Mascot */}
-      <img src={mascot} alt="Mascot" style={{ height: "120px", marginBottom: "20px" }} />
+      <img src={mascot} alt="Mascot" style={{ height: "100px", marginBottom: "20px" }} />
 
       {/* Choices */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", maxWidth: "500px", margin: "0 auto" }}>
-        {questions[currentIndex].choices.map((choice, idx) => (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", maxWidth: "600px", margin: "0 auto" }}>
+        {currentQuestion.choices.map((choice) => ( // choice is now an object
           <button
-            key={idx}
+            key={choice.choiceId || choice.choiceText} // Use choiceId if available, fallback for safety
             onClick={() => handleAnswer(choice)}
-            disabled={!!selectedChoice}
+            disabled={isAnswerSubmitted} // Disable after an answer is submitted for the current question
             style={{
-              padding: "20px",
+              padding: "18px",
               borderRadius: "10px",
               border: "2px solid #451513",
-              backgroundColor:
-                selectedChoice === choice
-                  ? (choice === questions[currentIndex].correctAnswer ? "#38E54D" : "#E63946")
-                  : "#FFE9A7",
-              color: "#451513",
+              backgroundColor: isAnswerSubmitted && selectedChoice?.choiceId === choice.choiceId // Check if this is the selected choice
+                                ? (selectedChoice.isCorrect ? "#38E54D" : "#E63946") // Color based on correctness of selected
+                                : (isAnswerSubmitted && choice.isCorrect ? "#A5D6A7" : "#FFE9A7"), // Highlight correct if wrong one was picked
+              color: isAnswerSubmitted && (selectedChoice?.choiceId === choice.choiceId || choice.isCorrect) ? "white" : "#451513",
               fontSize: "16px",
               fontWeight: "bold",
-              cursor: "pointer",
-              transition: "background-color 0.3s",
+              cursor: isAnswerSubmitted ? "default" : "pointer",
+              transition: "background-color 0.3s, transform 0.2s",
+              opacity: isAnswerSubmitted && selectedChoice && selectedChoice.choiceId !== choice.choiceId && !choice.isCorrect ? 0.7 : 1,
             }}
           >
-            {choice}
+            {choice.choiceText} {/* Render the text of the choice */}
           </button>
         ))}
       </div>

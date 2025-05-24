@@ -25,6 +25,9 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ActivityIcon from '@mui/icons-material/Extension';
 import ChallengeIcon from '@mui/icons-material/EmojiEvents';
 import ReplayIcon from '@mui/icons-material/Replay';
+// LockIcon is no longer needed for challenge button logic
+// import LockIcon from '@mui/icons-material/Lock'; 
+
 
 import '../../styles/TeacherHomepage.css';
 import '../../styles/LessonPage.css'; 
@@ -140,86 +143,89 @@ const LessonPage = () => {
     };
 
     const handleActivityNodeClick = async (activityNode, lesson, isReplay = false) => {
-        console.log(`[handleActivityNodeClick] Activity: "${activityNode.activityTitle}", isFinished: ${activityNode.isFinished}, isReplayAttempt: ${isReplay}`);
+        // activityNode is expected to have: activityId (which is activityNodeTypeId), activityTitle, instructions, isFinished
+        // lesson is expected to have: lessonDefinitionId, lessonProgressId (can be null initially)
+
+        console.log(`[LessonPage] Activity Clicked: "${activityNode.activityTitle || 'Untitled Activity'}", Node ID (activityNodeTypeId): ${activityNode.activityId}, LessonDef ID: ${lesson.lessonDefinitionId}, isReplay: ${isReplay}`);
         
-        // Prevent direct click on finished item if not explicitly a replay from replay button
         if (!isReplay && activityNode.isFinished) {
-            console.log(`Activity "${activityNode.activityTitle}" is already finished. Use the replay button.`);
-            // Optionally provide a snackbar message to the user here.
-            // setSnackbarMessage("This activity is complete. Use the replay button to try again.");
-            // setSnackbarOpen(true);
+            console.log(`Activity "${activityNode.activityTitle}" is already finished. Use the replay button to play again.`);
+            setSnackbarMessage(`Activity "${activityNode.activityTitle}" is complete. Click replay to try again.`); // Using snackbar state if available
+            setSnackbarOpen(true); // Assuming you have these states for snackbar
             return; 
         }
 
-        if (!authState.token) {
-            setError("Authentication token missing.");
-            console.error("[handleActivityNodeClick] Auth token missing.");
+        if (!authState.token || !authState.user?.identifier) {
+            setError("Authentication details missing. Please log in again.");
+            console.error("[LessonPage] Auth token or user identifier missing.");
             return;
         }
 
         try {
             let currentLessonProgressId = lesson.lessonProgressId;
-            let currentLessonStatus = lesson.progressStatus;
 
-            // Only call startLessonProgress if there's no lessonProgressId yet.
-            // For replays, we'll use the existing lessonProgressId.
-            // The ActivityPage itself will handle the "replay" state.
             if (!currentLessonProgressId) {
-                console.log(`[handleActivityNodeClick] No lessonProgressId. Calling startLessonProgress for lessonId: ${lesson.lessonDefinitionId}`);
+                console.log(`[LessonPage] No lessonProgressId for lesson ${lesson.lessonDefinitionId}. Calling startLessonProgress.`);
                 const progressData = await startLessonProgress(lesson.lessonDefinitionId, authState.token);
-                console.log("[handleActivityNodeClick] Response from startLessonProgress:", progressData);
-
                 if (!progressData?.lessonProgressId) {
                     throw new Error("Failed to obtain a valid Lesson Progress ID from startLessonProgress.");
                 }
                 currentLessonProgressId = progressData.lessonProgressId;
-                currentLessonStatus = progressData.status;
-
-                // Update local state for this lesson
+                
+                // Update local state to reflect new progressId and status for this lesson
                 setLessonsData(prevData => prevData.map(l =>
                     l.lessonDefinitionId === lesson.lessonDefinitionId
-                        ? { ...l, lessonProgressId: currentLessonProgressId, progressStatus: currentLessonStatus }
+                        ? { ...l, lessonProgressId: currentLessonProgressId, progressStatus: progressData.status || 'IN_PROGRESS' }
                         : l
                 ));
+                 console.log(`[LessonPage] Started/updated lesson progress. New ID: ${currentLessonProgressId}`);
             } else {
-                 console.log(`[handleActivityNodeClick] Using existing lessonProgressId: ${currentLessonProgressId} for lessonId: ${lesson.lessonDefinitionId}. Is Replay: ${isReplay}`);
+                 console.log(`[LessonPage] Using existing lessonProgressId: ${currentLessonProgressId} for lesson ${lesson.lessonDefinitionId}.`);
             }
             
-            console.log(`[handleActivityNodeClick] Navigating to activity. LessonProgressID: ${currentLessonProgressId}`);
+            console.log(`[LessonPage] Navigating to Activity Player Page. Route: /student/lesson/${lesson.lessonDefinitionId}/activity-node/${activityNode.activityId}/play`);
+            
             navigate(
-                `/student/lesson/${lesson.lessonDefinitionId}/activity/${activityNode.activityId}`,
+                // Ensure params match the route definition in App.jsx
+                `/student/lesson/${lesson.lessonDefinitionId}/activity-node/${activityNode.activityId}/play`,
                 { 
                     state: { 
                         lessonProgressId: currentLessonProgressId, 
                         activityInstructions: activityNode.instructions, 
-                        classroomId: classroomId, 
-                        activityTitle: activityNode.activityTitle, 
-                        isReplay // Pass the isReplay flag to ActivityPage
+                        activityTitle: activityNode.activityTitle,
+                        classroomId: classroomId, // Make sure classroomId is available in LessonPage's scope
+                        // isReplay // You can pass this if the player page needs to distinguish
                     } 
                 }
             );
         } catch (err) {
-            setError(`Could not start or navigate to the activity: ${err.message}`); // This will be line 174 if error is from startLessonProgress
-            console.error("[handleActivityNodeClick] Error in handler: ", err);
+            setError(`Could not start or navigate to the activity: ${err.message}`);
+            console.error("[LessonPage] Error in handleActivityNodeClick: ", err);
+             setSnackbarMessage(`Error starting activity: ${err.message}`); // Using snackbar state
+             setSnackbarOpen(true); // Assuming you have these states for snackbar
         }
     };
 
+    
     const handleChallengeClick = (lesson, isReplay = false) => {
         console.log(`Clicked Challenge for Lesson ID: ${lesson.lessonDefinitionId} (Replay: ${isReplay})`);
         if (!lesson.challengeDefinitionId) {
             setError("This lesson does not have a challenge configured.");
             return;
         }
-        // The ChallengePage itself will call startChallengeAttempt, which creates a new progress record for challenges.
         navigate(`/student/lesson/${lesson.lessonDefinitionId}/challenge`, {
-            state: { classroomId: classroomId, lessonTitle: lesson.lessonTitle, isReplay }
+            state: { 
+                classroomId: classroomId, 
+                lessonTitle: lesson.lessonTitle,
+                isReplay 
+            }
         });
     };
 
-    if (isLoading) { /* ... loading UI ... */ 
+    if (isLoading) { 
         return ( <Box className="teacher-homepage-container"><Navbar /><Box className="teacher-main-content" sx={{ textAlign: 'center', pt: 5 }}><CircularProgress /><Typography>Loading lessons...</Typography></Box></Box>);
     }
-    if (error) {  /* ... error UI ... */ 
+    if (error) {  
         return ( <Box className="teacher-homepage-container"><Navbar /><Box className="teacher-main-content" sx={{ textAlign: 'center', pt: 5 }}><Alert severity="error">{error}</Alert></Box></Box>);
     }
 
@@ -244,9 +250,11 @@ const LessonPage = () => {
                     <List sx={{ width: '100%', maxWidth: 700, margin: '0 auto' }}>
                         {lessonsData.map((lesson, lessonIdx) => {
                             const isCurrentLessonCompleted = lesson.progressStatus === 'COMPLETED';
-                            // Removed isCurrentLessonLocked logic - all lessons are accessible
-                            // const areAllActivitiesInLessonCompleted = lesson.activityNodes.every(an => an.isFinished);
                             const isChallengeEffectivelyCompleted = isCurrentLessonCompleted && lesson.challengeDefinitionId;
+                            
+                            // For testing: Challenge is always playable if it exists.
+                            const isChallengePlayableForTesting = !!lesson.challengeDefinitionId;
+
 
                             return (
                                 <Paper key={lesson.lessonDefinitionId} elevation={2} sx={{ mb: 2, borderRadius: '8px', overflow: 'hidden' }}>
@@ -276,7 +284,6 @@ const LessonPage = () => {
                                                 <ListItem
                                                     button
                                                     key={node.activityId}
-                                                    // For main click, if it's finished, treat as replay. If not, it's a normal play.
                                                     onClick={() => handleActivityNodeClick(node, lesson, node.isFinished)}
                                                     sx={{ 
                                                         pl: 4, 
@@ -284,7 +291,6 @@ const LessonPage = () => {
                                                         my: 0.5, borderRadius: '4px',
                                                         '&:hover': { bgcolor: 'action.hover' }
                                                     }}
-                                                    // No longer using isNodeLocked for disabled state
                                                 >
                                                     <ListItemIcon>
                                                         {node.isFinished ? <CheckCircleIcon fontSize="small" color="success" /> : <ActivityIcon fontSize="small" color="action"/>}
@@ -306,52 +312,43 @@ const LessonPage = () => {
                                             ))}
                                             
                                             {lesson.challengeDefinitionId && (
-                                                (() => {
-                                                    // All activities must be done to unlock challenge initially
-                                                    const areAllActivitiesCompletedForChallengeUnlock = lesson.activityNodes.every(an => an.isFinished);
-                                                    
-                                                    return (
-                                                        <ListItem
-                                                            button
-                                                            onClick={() => {
-                                                                if (!areAllActivitiesCompletedForChallengeUnlock && !isChallengeEffectivelyCompleted) {
-                                                                    alert("Please complete all activities in this lesson before attempting the challenge.");
-                                                                    return;
-                                                                }
-                                                                handleChallengeClick(lesson, isChallengeEffectivelyCompleted);
-                                                            }}
-                                                            sx={{ 
-                                                                pl: 4, mt: 1, borderTop: '1px dashed #ddd', 
-                                                                bgcolor: isChallengeEffectivelyCompleted ? 'rgba(76,175,80,0.15)' : (areAllActivitiesCompletedForChallengeUnlock ? '#fff0b2' : 'rgba(230,230,230,0.5)'), // Grey if locked by activities
-                                                                my: 0.5, borderRadius: '4px',
-                                                                cursor: (!areAllActivitiesCompletedForChallengeUnlock && !isChallengeEffectivelyCompleted) ? 'not-allowed' : 'pointer',
-                                                                opacity: (!areAllActivitiesCompletedForChallengeUnlock && !isChallengeEffectivelyCompleted) ? 0.6 : 1,
-                                                                '&:hover': { bgcolor: isChallengeEffectivelyCompleted ? 'rgba(76,175,80,0.25)' : (areAllActivitiesCompletedForChallengeUnlock ? '#ffe999' : 'rgba(220,220,220,0.7)') }
-                                                            }}
-                                                           
+                                                <ListItem
+                                                    button
+                                                    onClick={() => {
+                                                        // Removed the lock check for testing
+                                                        handleChallengeClick(lesson, isChallengeEffectivelyCompleted);
+                                                    }}
+                                                    sx={{ 
+                                                        pl: 4, mt: 1, borderTop: '1px dashed #ddd', 
+                                                        // Simplified background for testing: always indicates playable or completed
+                                                        bgcolor: isChallengeEffectivelyCompleted ? 'rgba(76,175,80,0.15)' : '#fff0b2', 
+                                                        my: 0.5, borderRadius: '4px',
+                                                        cursor: 'pointer', // Always clickable for testing
+                                                        opacity: 1, // Always full opacity for testing
+                                                        '&:hover': { bgcolor: isChallengeEffectivelyCompleted ? 'rgba(76,175,80,0.25)' : '#ffe999'}
+                                                    }}
+                                                >
+                                                    <ListItemIcon>
+                                                        {isChallengeEffectivelyCompleted ? <CheckCircleIcon fontSize="small" color="success"/> :
+                                                          <ChallengeIcon fontSize="small" sx={{color: '#FFA000'}}/>
+                                                        }
+                                                    </ListItemIcon>
+                                                    <ListItemText 
+                                                        primary={`${lesson.lessonTitle} - Challenge!`}
+                                                        // Simplified secondary text for testing
+                                                        secondary={isChallengeEffectivelyCompleted ? "Challenge Completed! Click to Replay" : "Ready to Play (Testing Mode)"}
+                                                        primaryTypographyProps={{color: '#A15C00', fontWeight: 'medium'}}
+                                                    />
+                                                    {isChallengeEffectivelyCompleted && (
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={(e) => { e.stopPropagation(); handleChallengeClick(lesson, true); }}
+                                                            title="Replay Challenge"
                                                         >
-                                                            <ListItemIcon>
-                                                                {isChallengeEffectivelyCompleted ? <CheckCircleIcon fontSize="small" color="success"/> :
-                                                                 (!areAllActivitiesCompletedForChallengeUnlock ? <LockIcon fontSize="small" /> : <ChallengeIcon fontSize="small" sx={{color: '#FFA000'}}/>)
-                                                                }
-                                                            </ListItemIcon>
-                                                            <ListItemText 
-                                                                primary={`${lesson.lessonTitle} - Challenge!`}
-                                                                secondary={isChallengeEffectivelyCompleted ? "Challenge Completed! Click to Replay" : (!areAllActivitiesCompletedForChallengeUnlock ? "Complete activities to unlock" : "Ready to Play!")}
-                                                                primaryTypographyProps={{color: (!areAllActivitiesCompletedForChallengeUnlock && !isChallengeEffectivelyCompleted) ? 'text.disabled' : '#A15C00', fontWeight: 'medium'}}
-                                                            />
-                                                            {isChallengeEffectivelyCompleted && (
-                                                                <IconButton 
-                                                                    size="small" 
-                                                                    onClick={(e) => { e.stopPropagation(); handleChallengeClick(lesson, true); }}
-                                                                    title="Replay Challenge"
-                                                                >
-                                                                    <ReplayIcon fontSize="small" />
-                                                                </IconButton>
-                                                            )}
-                                                        </ListItem>
-                                                    );
-                                                })()
+                                                            <ReplayIcon fontSize="small" />
+                                                        </IconButton>
+                                                    )}
+                                                </ListItem>
                                             )}
                                         </List>
                                     </Collapse>
