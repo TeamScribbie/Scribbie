@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api'; // Ensure this is defined correctly
+const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
 
 export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     if (!activityNodeTypeId || !token) {
@@ -38,4 +38,26 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     const data = await response.json();
     // ... (rest of your existing logic for handling data) ...
     return data;
+};
+
+// ✨ THIS FUNCTION WILL SEND THE FOCUSED PAYLOAD FOR DETAILS UPDATE ✨
+export const updateActivityNodeTypeDetails = async (activityNodeTypeId, detailsData, token) => {
+    if (!activityNodeTypeId || !detailsData || !token) {
+        throw new Error('Activity Node ID, details data, and auth token are required.');
+    }
+    // Ensure detailsData only contains what the backend DTO expects for this specific update
+    // e.g., { activityTitle, instructions }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(detailsData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
+        throw new Error(errorData.message || `Failed to update activity node details. Status: ${response.status}`);
+    }
+    return response.json();
 };

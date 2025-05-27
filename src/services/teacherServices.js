@@ -1,6 +1,5 @@
 // AI Context/Frontend/services/teacherService.js_new
-const API_BASE_URL = 'http://localhost:8080/api'; // Ensure this matches your backend URL
-
+const API_BASE_URL = 'http://152.42.254.129:8080/api'; 
 /**
  * Fetches all teachers. (Superadmin access)
  * @param {string} token - The JWT authentication token.

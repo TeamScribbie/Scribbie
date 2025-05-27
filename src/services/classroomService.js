@@ -1,6 +1,6 @@
 // src/services/classroomService.js
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
 
 /**
  * Fetches the classrooms handled by a specific teacher.
@@ -174,6 +174,33 @@ export const getPendingRequests = async (classroomId, token) => {
   return Array.isArray(data) ? data : [];
 };
 
+// --- NEW FUNCTION (Option B) ---
+export const getClassroomById = async (classroomId, token) => {
+  if (!classroomId || !token) {
+    throw new Error('Classroom ID and auth token are required to fetch classroom details.');
+  }
+  console.log(`classroomService: Fetching classroom by ID (targeting details): ${classroomId}`);
+
+  // Append /details to the URL to match the backend endpoint
+  const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/details`, { // <<<< CORRECTED URL
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+    console.error(`Get Classroom By ID (details) API Error (Classroom ${classroomId}):`, errorData);
+    throw new Error(errorData.message || `Failed to fetch classroom details. Status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log(`classroomService: Raw getClassroomById (details) response (Classroom ${classroomId}):`, data);
+  return data;
+};
+
 /**
  * Updates the enrollment status (Approve/Reject) for a student in a classroom.
  * @param {number|string} classroomId - The ID of the classroom.
@@ -241,4 +268,42 @@ export const getClassroomDetails = async (classroomId, token) => { // Added expo
       console.warn(`classroomService: Response for classroom ${classroomId} details is MISSING 'assignedCourseId'. Lesson fetching will likely fail.`);
   }
   return data;
+};
+
+export const removeStudentFromClassroom = async (classroomId, studentId, token) => {
+  // Ensure classroomId and studentId are not undefined or null
+  if (!classroomId || !studentId) {
+    throw new Error('Classroom ID and Student ID are required.');
+  }
+  if (!token) {
+    throw new Error('Authentication token is required.');
+  }
+
+  // Use API_BASE_URL and ensure the path matches the backend controller
+  const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/students/${studentId}`, {
+// highlight-end
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+      // 'Content-Type': 'application/json' // Not typically needed for DELETE if no body
+    }
+  });
+
+  if (!response.ok) {
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch (e) {
+      // If response is not JSON, or error parsing JSON
+      errorData = { message: `Failed to remove student. Server responded with ${response.status}.` };
+    }
+    throw new Error(errorData.message || 'Failed to remove student from classroom.');
+  }
+
+  // For a DELETE request, the backend might return a 200 OK with a message,
+  // or a 204 No Content. Handle both.
+  if (response.status === 204) {
+    return { message: "Student removed successfully." }; // Or any other consistent success object/message
+  }
+  return await response.json(); // If backend sends a JSON body with success message
 };

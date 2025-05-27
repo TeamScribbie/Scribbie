@@ -23,10 +23,10 @@ const pulseAnimation = (isCorrect) => ({
 
 
 const ActivityGameLogic = ({
-    questions,
-    activityType,
-    onComplete
-}) => {
+                               questions,
+                               activityType,
+                               onComplete
+                           }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
@@ -106,14 +106,14 @@ const ActivityGameLogic = ({
     }
 
     return (
-        <Box sx={{ 
-        textAlign: 'center', 
-        p: [1, 2], 
-        width: '100%', 
-        bgcolor: '#FFFBE0', 
-        borderRadius: 2, 
-        boxShadow: 1 
-    }}>
+        <Box sx={{
+            textAlign: 'center',
+            p: [1, 2],
+            width: '100%',
+            bgcolor: '#FFFBE0',
+            borderRadius: 2,
+            boxShadow: 1
+        }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, p: 1, bgcolor: 'rgba(255, 255, 255, 0.7)', borderRadius: 1 }}>
                 <Typography variant="h6" sx={{ color: '#451513' }}>Score: {score.toLocaleString()}</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

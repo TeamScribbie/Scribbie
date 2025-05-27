@@ -104,7 +104,7 @@ const LessonManagementPage = () => {
     const [deleteNodeError, setDeleteNodeError] = useState(null);
 
     const [isEditNodeDetailsDialogOpen, setIsEditNodeDetailsDialogOpen] = useState(false);
-    const [editingNodeForDetails, setEditingNodeForDetails] = useState(null);
+    const [editingNodeForDetails, setEditingNodeForDetails] = useState(null); // Node object for the details dialog
     const [isSavingNodeDetails, setIsSavingNodeDetails] = useState(false);
     const [editNodeDetailsError, setEditNodeDetailsError] = useState(null);
 
@@ -152,18 +152,19 @@ const LessonManagementPage = () => {
         }
     }, [authState.token]);
 
+    // ✨ Handlers for the new Edit Activity Node Details Dialog ✨
     const handleOpenEditNodeDetailsDialog = (node) => {
-        setEditingNodeForDetails(node);
+        setEditingNodeForDetails(node); // Use the new state variable
         setEditNodeDetailsError(null);
         setIsEditNodeDetailsDialogOpen(true);
     };
 
     const handleCloseEditNodeDetailsDialog = () => {
         setIsEditNodeDetailsDialogOpen(false);
-        setEditingNodeForDetails(null);
+        setEditingNodeForDetails(null); // Use the new state variable
     };
 
-    const handleConfirmSaveNodeDetails = async (detailsData) => {
+    const handleConfirmSaveNodeDetails = async (detailsData) => { // detailsData will be { activityTitle, instructions }
         if (!editingNodeForDetails || !editingNodeForDetails.activityNodeTypeId || !authState.token) {
             setEditNodeDetailsError("Node data or authentication missing for details update.");
             return;
@@ -171,9 +172,16 @@ const LessonManagementPage = () => {
         setIsSavingNodeDetails(true);
         setEditNodeDetailsError(null);
         try {
+            // The payload for the backend. Backend DTO should expect these.
+            // If your backend DTO for PUT requires other fields like activityType or orderIndex,
+            // you'll need to include them, possibly with their existing values.
+            // For now, assuming the backend can handle an update with just title and instructions.
             const payload = {
                 activityTitle: detailsData.activityTitle,
                 instructions: detailsData.instructions
+                // If your DTO (`UpdateActivityNodeDetailsRequestDto` or `CreateActivityNodeTypeRequestDto`)
+                // strictly requires activityType, you'd send the existing one:
+                // activityType: editingNodeForDetails.activityType,
             };
 
             await updateActivityNodeTypeDetails(editingNodeForDetails.activityNodeTypeId, payload, authState.token);
@@ -182,19 +190,24 @@ const LessonManagementPage = () => {
             setSnackbarOpen(true);
             handleCloseEditNodeDetailsDialog();
 
+            // Refresh activity nodes for the current lesson to show updated details
+            // Make sure editingNodeForDetails contains lessonDefinitionId or similar context
             if (editingNodeForDetails.lessonDefinition && editingNodeForDetails.lessonDefinition.lessonDefinitionId) {
                 fetchActivityNodes(editingNodeForDetails.lessonDefinition.lessonDefinitionId);
             } else if (expandedLessonId) {
+                // Fallback if lessonDefinitionId is not directly on nodeToDelete
                 fetchActivityNodes(expandedLessonId);
             }
 
         } catch (err) {
             setEditNodeDetailsError(err.message || "Failed to save activity node details.");
+            // Dialog can remain open to show the error if needed
         } finally {
             setIsSavingNodeDetails(false);
         }
     };
 
+    // ... other handlers and useEffects ...
     useEffect(() => {
         if (authState.isAuthenticated && authState.token) {
             setAuthLoading(false);
@@ -214,24 +227,14 @@ const LessonManagementPage = () => {
         } finally { setIsLoadingCourse(false); }
     }, [courseId, authState.token]);
 
-    // ✨✨✨ THE FIX IS HERE ✨✨✨
     const fetchLessons = useCallback(async () => {
         if (!courseId || !authState.token) return;
-        setIsLoadingLessons(true);
-        setErrorLessons(null);
-        // The line `setChallengeConfigByLesson({})` was removed from here.
-        // It was incorrectly clearing the detailed challenge configurations
-        // every time the main lesson list was refreshed, causing the UI to "forget"
-        // that a challenge was just added.
+        setIsLoadingLessons(true); setErrorLessons(null); setLessons([]); setChallengeConfigByLesson({});
         try {
             const lessonDefs = await getLessonDefinitions(courseId, authState.token);
             setLessons(Array.isArray(lessonDefs) ? lessonDefs : []);
-        } catch (err) {
-            setErrorLessons(err.message || "Could not load lessons.");
-            setLessons([]); // On error, clear lessons to avoid showing stale data.
-        } finally {
-            setIsLoadingLessons(false);
-        }
+        } catch (err) { setErrorLessons(err.message || "Could not load lessons."); setLessons([]);
+        } finally { setIsLoadingLessons(false); }
     }, [courseId, authState.token]);
 
     useEffect(() => {
@@ -264,9 +267,7 @@ const LessonManagementPage = () => {
                 fetchActivityNodes(newExpandedLessonId);
             }
             const lesson = lessons.find(l => l.lessonDefinitionId === newExpandedLessonId);
-            // This logic now works reliably with the backend fix (sending challengeDefinitionId)
-            // and the frontend fix (not clearing challengeConfigByLesson).
-            if (lesson && lesson.challengeDefinitionId && !challengeConfigByLesson[newExpandedLessonId]) {
+            if (lesson && (lesson.hasChallenge || lesson.challengeDefinitionId) && !challengeConfigByLesson[newExpandedLessonId]) {
                 fetchChallengeConfig(newExpandedLessonId);
             }
         }
@@ -300,8 +301,7 @@ const LessonManagementPage = () => {
         setDeleteLessonError(null);
         try {
             await deleteLessonDefinition(courseId, lessonToDelete.lessonDefinitionId, authState.token);
-            // Instead of just filtering, re-fetch to ensure data consistency.
-            fetchLessons();
+            setLessons(prevLessons => prevLessons.filter(l => l.lessonDefinitionId !== lessonToDelete.lessonDefinitionId));
             setIsDeleteLessonDialogOpen(false);
             setSnackbarMessage("Lesson deleted successfully!");
             setSnackbarOpen(true);
@@ -326,14 +326,15 @@ const LessonManagementPage = () => {
         setIsUpdatingLesson(true);
         setUpdateLessonError(null);
         try {
-            await updateLessonDefinition(
+            const updatedLesson = await updateLessonDefinition(
                 courseId,
                 editingLesson.lessonDefinitionId,
                 lessonUpdateData,
                 authState.token
             );
-            // Re-fetch lessons to show updated data.
-            fetchLessons();
+            setLessons(prevLessons =>
+                prevLessons.map(l => l.lessonDefinitionId === updatedLesson.lessonDefinitionId ? updatedLesson : l)
+            );
             setIsEditLessonDialogOpen(false);
             setSnackbarMessage("Lesson updated successfully!");
             setSnackbarOpen(true);
@@ -377,11 +378,8 @@ const LessonManagementPage = () => {
         setIsSubmittingChallengeConfig(true); setConfigureChallengeError(null);
         try {
             await configureChallengeForLesson(currentLessonForChallenge.lessonDefinitionId, configData, authState.token);
-            // Fetch the details for the lesson we just configured.
-            await fetchChallengeConfig(currentLessonForChallenge.lessonDefinitionId);
-            // Then, fetch the main lesson list. This will now have the updated challengeDefinitionId from the backend
-            // and will NOT clear the challengeConfigByLesson state.
-            await fetchLessons();
+            fetchChallengeConfig(currentLessonForChallenge.lessonDefinitionId);
+            fetchLessons();
             setIsConfigureChallengeDialogOpen(false);
             setSnackbarMessage("Challenge configuration saved!"); setSnackbarOpen(true);
         } catch (err) {
@@ -404,10 +402,8 @@ const LessonManagementPage = () => {
         setIsDeletingChallenge(true); setDeleteChallengeError(null);
         try {
             await deleteChallengeConfiguration(lessonToDeleteChallengeFrom.lessonDefinitionId, authState.token);
-            // Explicitly set the config for this lesson to null.
             setChallengeConfigByLesson(prev => ({ ...prev, [lessonToDeleteChallengeFrom.lessonDefinitionId]: null }));
-            // Re-fetch lessons to update the list (the lesson's challengeDefinitionId will be null now).
-            await fetchLessons();
+            fetchLessons();
             setIsDeleteChallengeDialogOpen(false);
             setSnackbarMessage("Challenge configuration deleted."); setSnackbarOpen(true);
         } catch (err) {
@@ -418,7 +414,6 @@ const LessonManagementPage = () => {
     };
 
     const handleManageCustomChallengeQuestions = (lesson) => {
-        // This logic is more robust now with the backend DTO fix.
         const challengeDefId = lesson.challengeDefinitionId || challengeConfigByLesson[lesson.lessonDefinitionId]?.challengeDefinitionId;
         if (challengeDefId) {
             navigate(`/teacher/course/${courseId}/lesson/${lesson.lessonDefinitionId}/challenge/${challengeDefId}/edit-questions`);
@@ -437,6 +432,7 @@ const LessonManagementPage = () => {
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
                 <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
+                    {/* ... other JSX elements like BackButton, Paper for Course Title, Add Lesson button ... */}
                     <Button component={RouterLink} to="/teacher/manage-courses" startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">
                         Back to Courses
                     </Button>
@@ -461,26 +457,27 @@ const LessonManagementPage = () => {
                             <Typography color="text.secondary">No lessons defined. Click "Add Lesson".</Typography>
                         </Paper>
                     )}
-                    <List sx={{ width: '100%' }}>
-                        {lessons.map((lesson, index) => {
-                            const currentChallengeConfig = challengeConfigByLesson[lesson.lessonDefinitionId];
-                            // This check is now robust. It's true if we have detailed config.
-                            // The UI to show the 'Add' button vs 'Edit' button relies on this.
-                            const lessonHasChallengeConfigured = !!currentChallengeConfig;
 
-                            return (
+                    {!isLoadingLessons && !errorLessons && lessons.length > 0 && (
+                        <List sx={{ width: '100%' }}>
+                            {lessons.map((lesson, index) => (
                                 <Paper key={lesson.lessonDefinitionId} sx={{ mb: 2, borderRadius: '8px' }} elevation={3}>
-                                    <ListItem onClick={() => handleToggleLessonExpand(lesson.lessonDefinitionId)}
-                                              sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' }, py: 1.5, display: 'flex', justifyContent: 'space-between' }}>
+                                    <ListItem
+                                        onClick={() => handleToggleLessonExpand(lesson.lessonDefinitionId)}
+                                        sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' }, py: 1.5, display: 'flex', justifyContent: 'space-between' }}
+                                    >
                                         <ListItemText
                                             primary={`${index + 1}. ${lesson.lessonTitle || 'Untitled Lesson'}`}
                                             secondary={lesson.lessonDescription || 'No description available.'}
                                             primaryTypographyProps={{ fontWeight: 'medium', fontSize: '1.1rem', color: '#451513' }}
-                                            secondaryTypographyProps={{ noWrap: true, textOverflow: 'ellipsis', color: 'text.secondary' }} />
+                                            secondaryTypographyProps={{ noWrap: true, textOverflow: 'ellipsis', color: 'text.secondary' }}
+                                        />
                                         <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
                                             <IconButton onClick={(e) => { e.stopPropagation(); handleEditLesson(lesson); }} sx={{ mx: 0.5 }} size="small" title="Edit Lesson Details"><EditIcon fontSize="small"/></IconButton>
                                             <IconButton onClick={(e) => { e.stopPropagation(); handleDeleteLesson(lesson); }} sx={{ color: 'error.main', mx: 0.5 }} size="small" title="Delete Lesson"><DeleteIcon fontSize="small"/></IconButton>
-                                            <IconButton edge="end" aria-label="expand lesson" sx={{ mx: 0.5 }} size="small">{expandedLessonId === lesson.lessonDefinitionId ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
+                                            <IconButton edge="end" aria-label="expand lesson" sx={{ mx: 0.5 }} size="small">
+                                                {expandedLessonId === lesson.lessonDefinitionId ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                            </IconButton>
                                         </Box>
                                     </ListItem>
                                     <Collapse in={expandedLessonId === lesson.lessonDefinitionId} timeout="auto" unmountOnExit>
@@ -492,20 +489,45 @@ const LessonManagementPage = () => {
                                                 activityNodesByLesson[lesson.lessonDefinitionId]?.length > 0 ? (
                                                     <List dense component={Paper} variant="outlined" sx={{ bgcolor: 'background.paper', mt:1 }}>
                                                         {activityNodesByLesson[lesson.lessonDefinitionId]?.map(node => (
-                                                            <ListItem key={node.activityNodeTypeId} secondaryAction={
-                                                                <Box>
-                                                                    <IconButton edge="end" title="Edit Node Details" onClick={() => handleOpenEditNodeDetailsDialog(node)}>
-                                                                        <EditIcon fontSize="small" />
-                                                                    </IconButton>
-                                                                    <IconButton edge="end" title="Delete Activity Node" onClick={() => handleDeleteActivityNode(node, lesson.lessonDefinitionId)}>
-                                                                        <DeleteIcon color="error" />
-                                                                    </IconButton>
-                                                                    <IconButton edge="end" title="Manage Activity Content" onClick={() => handleManageActivityNode(node, lesson.lessonDefinitionId)}>
-                                                                        <SettingsIcon />
-                                                                    </IconButton>
-                                                                </Box>
-                                                            }>
-                                                                <ListItemText primary={`${node.orderIndex + 1}. ${node.activityTitle || 'Untitled Node'}`} secondary={`Type: ${node.activityType}`} />
+                                                            <ListItem
+                                                                key={node.activityNodeTypeId}
+                                                                secondaryAction={
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                                        {/* ✨ NEW "Edit Details" BUTTON ✨ */}
+
+                                                                        {/* Existing "Manage Content" button */}
+                                                                        <IconButton
+                                                                            edge="end"
+                                                                            title="Manage Content & Questions"
+                                                                            onClick={() => handleManageActivityNodeContent(node, lesson.lessonDefinitionId)}
+                                                                            sx={{ mr: 0.5 }}
+                                                                        >
+                                                                            <SettingsIcon fontSize="small" />
+                                                                        </IconButton>
+                                                                        {/* Existing "Delete Node" button */}
+                                                                        <IconButton
+                                                                            edge="end"
+                                                                            title="Delete Activity Node"
+                                                                            onClick={() => handleDeleteActivityNode(node, lesson.lessonDefinitionId)}
+                                                                        >
+                                                                            <DeleteIcon color="error" fontSize="small" />
+                                                                        </IconButton>
+                                                                    </Box>
+                                                                }
+                                                                sx={{ borderBottom: '1px solid #f0f0f0', '&:last-child': { borderBottom: 'none' } }}
+                                                            >
+                                                                <ListItemText
+                                                                    primary={`${node.orderIndex + 1}. ${node.activityTitle || 'Untitled Node'}`}
+                                                                    secondary={
+                                                                        <>
+                                                                            <Typography component="span" variant="body2" sx={{ display: 'block' }}>Type: {node.activityType}</Typography>
+                                                                            <Typography component="span" variant="caption" sx={{ display: 'block' }}>
+                                                                                Instructions: {(node.instructions || "N/A").substring(0,50)}
+                                                                                {(node.instructions?.length || 0) > 50 ? "..." : ""}
+                                                                            </Typography>
+                                                                        </>
+                                                                    }
+                                                                />
                                                             </ListItem>
                                                         ))}
                                                     </List>
@@ -514,18 +536,18 @@ const LessonManagementPage = () => {
                                             <Button size="small" startIcon={<AddIcon />} onClick={() => handleAddActivityNode(lesson.lessonDefinitionId)} sx={{ mt: 1.5 }} variant="outlined">Add Activity Node</Button>
                                         </Box>
                                         <Divider />
-                                        <Box sx={{ p: 2, bgcolor: lessonHasChallengeConfigured ? '#fffde7' : '#fdfcf7' }}>
+                                        <Box sx={{ p: 2, bgcolor: challengeConfigByLesson[lesson.lessonDefinitionId] ? '#fffde7' : '#fdfcf7' }}>
                                             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium', color: '#5d211f' }}>Challenge:</Typography>
                                             {isLoadingChallengeConfig[lesson.lessonDefinitionId] && <CircularProgress size={20} />}
                                             {!isLoadingChallengeConfig[lesson.lessonDefinitionId] && (
-                                                lessonHasChallengeConfigured ? (
+                                                challengeConfigByLesson[lesson.lessonDefinitionId] ? (
                                                     <Box>
                                                         <Typography variant="body2" component="div">
-                                                            Type: <Chip label={currentChallengeConfig.challengeType?.replace('_', ' ') || 'N/A'} size="small" /> <br />
-                                                            {currentChallengeConfig.challengeType === 'HEALTH_BASED' && `Health: ${currentChallengeConfig.initialHealth || 'N/A'}`}
-                                                            {currentChallengeConfig.challengeType === 'HEALTH_BASED' && <br />}
-                                                            Time/Q: {currentChallengeConfig.initialQuestionTimeSeconds || 'N/A'}s | Min Time: {currentChallengeConfig.minQuestionTimeSeconds || 'N/A'}s <br/>
-                                                            Reduction: {currentChallengeConfig.timeReductionPerCorrectSeconds || 0}s/correct
+                                                            Type: <Chip label={challengeConfigByLesson[lesson.lessonDefinitionId].challengeType?.replace('_', ' ') || 'N/A'} size="small" /> <br />
+                                                            {challengeConfigByLesson[lesson.lessonDefinitionId].challengeType === 'HEALTH_BASED' && `Health: ${challengeConfigByLesson[lesson.lessonDefinitionId].initialHealth || 'N/A'}`}
+                                                            {challengeConfigByLesson[lesson.lessonDefinitionId].challengeType === 'HEALTH_BASED' && <br />}
+                                                            Time/Q: {challengeConfigByLesson[lesson.lessonDefinitionId].initialQuestionTimeSeconds || 'N/A'}s | Min Time: {challengeConfigByLesson[lesson.lessonDefinitionId].minQuestionTimeSeconds || 'N/A'}s <br/>
+                                                            Reduction: {challengeConfigByLesson[lesson.lessonDefinitionId].timeReductionPerCorrectSeconds || 0}s/correct
                                                         </Typography>
                                                         <Button size="small" startIcon={<EditIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1, mr: 1 }} variant="outlined">Edit Settings</Button>
                                                         <Button size="small" startIcon={<DeleteIcon />} onClick={() => handleOpenDeleteChallengeDialog(lesson)} sx={{ mt: 1, mr: 1 }} color="error" variant="outlined">Delete Challenge</Button>
@@ -540,11 +562,11 @@ const LessonManagementPage = () => {
                                         </Box>
                                     </Collapse>
                                 </Paper>
-                            )
-                        })}
-                    </List>
-                </Box>
-            </Box>
+                            ))}
+                        </List>
+                    )}
+                </Box> {/* End teacher-main-content */}
+            </Box> {/* End teacher-content-area */}
 
             {/* Dialogs */}
             <AddLessonDialog
@@ -612,7 +634,7 @@ const LessonManagementPage = () => {
                     error={deleteNodeError}
                 />
             )}
-
+            {/* ✨ RENDER THE NEW DIALOG ✨ */}
             {editingNodeForDetails && (
                 <EditActivityNodeDetailsDialog
                     open={isEditNodeDetailsDialogOpen}
@@ -629,7 +651,7 @@ const LessonManagementPage = () => {
                 onClose={() => setSnackbarOpen(false)}
                 message={snackbarMessage}
             />
-        </Box>
+        </Box> // End teacher-homepage-container
     );
 };
 

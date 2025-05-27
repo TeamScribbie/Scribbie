@@ -1,6 +1,6 @@
 // src/services/authService.js
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
 
 /**
  * Logs in a student user.

@@ -1,6 +1,6 @@
-// src/services/challengeService.js
+// AI Context/Frontend/services/challengeService.js
 
-const API_BASE_URL = 'http://localhost:8080/api'; // Ensure this matches your backend URL
+const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
 
 /**
  * Fetches the questions for a specific challenge.
@@ -30,48 +30,64 @@ export const getChallengeQuestions = async (lessonDefinitionId, token) => {
 };
 
 /**
- * Starts a new challenge attempt for the student.
- * @param {string|number} lessonDefinitionId - The ID of the lesson definition for the challenge.
+ * Fetches the current student's challenge progress for a given lesson definition.
+ * Assumes a backend endpoint like GET /api/lesson-definitions/{lessonDefinitionId}/challenge/my-progress
+ * @param {string|number} lessonDefinitionId - The ID of the lesson definition.
  * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the challenge progress object (includes config).
+ * @returns {Promise<object|null>} - A promise that resolves to the challenge progress object or null if no progress exists.
  */
-// export const startChallengeAttempt = async (lessonDefinitionId, token) => {
-//     if (!lessonDefinitionId || !token) {
-//         throw new Error('Lesson Definition ID and auth token are required to start a challenge.');
-//     }
-//     console.log(`challengeService: Starting challenge for lessonDefinitionId: ${lessonDefinitionId}`);
-//     const response = await fetch(`${API_BASE_URL}/challenges/start`, {
-//         method: 'POST',
-//         headers: {
-//             'Authorization': `Bearer ${token}`,
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({ lessonDefinitionId }),
-//     });
+export const getCurrentChallengeProgressByLessonDef = async (lessonDefinitionId, token) => {
+    if (!lessonDefinitionId || !token) {
+        throw new Error('Lesson Definition ID and auth token are required to fetch current challenge progress.');
+    }
+    console.log(`challengeService: Fetching current challenge progress for lessonDefinitionId: ${lessonDefinitionId}`);
+    // This endpoint should be mapped in your ChallengeController to a service method
+    // that retrieves the current student's ChallengeProgress for the given lesson's challenge.
+    const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/challenge/my-progress`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
 
-//     if (!response.ok) {
-//         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-//         console.error(`Start Challenge API Error (LessonDef ${lessonDefinitionId}):`, errorData);
-//         throw new Error(errorData.message || `Failed to start challenge. Status: ${response.status}`);
-//     }
-//     return response.json(); // Returns ChallengeProgressDto with config
-// };
+    if (response.status === 404) {
+        console.log(`challengeService: No existing challenge progress found for lessonDefinitionId: ${lessonDefinitionId}`);
+        return null; // Explicitly return null for "not found"
+    }
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        console.error(`Get Current Challenge Progress API Error (LessonDef ${lessonDefinitionId}):`, errorData);
+        throw new Error(errorData.message || `Failed to fetch current challenge progress. Status: ${response.status}`);
+    }
+    return response.json(); // Expects ChallengeProgressDto or similar
+};
+
+
+/**
+ * Starts a new challenge attempt for the student. (COMMENTED OUT AS PER USER REQUEST)
+ */
+// export const startChallengeAttempt = async (lessonDefinitionId, token) => { ... };
 
 /**
  * Submits the final results of a challenge attempt.
+ * The backend will handle creating new progress or updating existing based on student and challenge definition.
  * @param {object} submissionData - The data to submit.
- * @param {string|number} submissionData.challengeProgressId
+ * @param {string|number} submissionData.lessonDefinitionId - ID of the lesson definition for the challenge.
  * @param {number} submissionData.totalScore
  * @param {number} submissionData.highestStreak
  * @param {number} submissionData.questionsAnswered
  * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the updated challenge progress object.
+ * @returns {Promise<object>} - A promise that resolves to the updated/created challenge progress object.
  */
 export const submitChallengeAttempt = async (submissionData, token) => {
-    if (!submissionData || !submissionData.challengeProgressId || !token) {
-        throw new Error('Submission data (including challengeProgressId) and auth token are required.');
+    if (!submissionData || submissionData.lessonDefinitionId == null || submissionData.totalScore == null || !token) {
+        throw new Error('Submission data (including lessonDefinitionId, totalScore) and auth token are required.');
     }
-    console.log(`challengeService: Submitting challenge attempt for progressId: ${submissionData.challengeProgressId}`);
+    // The DTO for this request on the backend (`SubmitChallengeAttemptRequestDto`)
+    // should now expect `lessonDefinitionId` (or `challengeDefinitionId`)
+    // instead of `challengeProgressId`.
+    console.log(`challengeService: Submitting challenge attempt for lessonDefinitionId: ${submissionData.lessonDefinitionId}`);
     const response = await fetch(`${API_BASE_URL}/challenges/submit`, {
         method: 'POST',
         headers: {
@@ -83,11 +99,14 @@ export const submitChallengeAttempt = async (submissionData, token) => {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        console.error(`Submit Challenge API Error (ProgressID ${submissionData.challengeProgressId}):`, errorData);
+        console.error(`Submit Challenge API Error (LessonDef ${submissionData.lessonDefinitionId}):`, errorData);
         throw new Error(errorData.message || `Failed to submit challenge attempt. Status: ${response.status}`);
     }
     return response.json();
 };
+
+// ... (getLeaderboardSnapshot, configureChallengeForLesson, getChallengeConfigurationForLesson, etc., remain the same for now)
+// ... (CRUD for custom questions and choices also remain the same for now)
 
 /**
  * Fetches the leaderboard snapshot for a challenge.
@@ -165,7 +184,7 @@ export const getChallengeConfigurationForLesson = async (lessonDefinitionId, tok
     });
     if (response.status === 404) {
         console.log(`challengeService: No challenge configuration found for lessonDefinitionId: ${lessonDefinitionId}`);
-        return null; // Or handle as an error if a config is always expected
+        return null;
     }
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
@@ -175,12 +194,6 @@ export const getChallengeConfigurationForLesson = async (lessonDefinitionId, tok
     return response.json();
 };
 
-/**
- * Deletes the challenge configuration for a lesson definition.
- * @param {string|number} lessonDefinitionId - The ID of the lesson definition.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the success message.
- */
 export const deleteChallengeConfiguration = async (lessonDefinitionId, token) => {
     if (!lessonDefinitionId || !token) {
         throw new Error('Lesson Definition ID and auth token are required.');
@@ -197,21 +210,12 @@ export const deleteChallengeConfiguration = async (lessonDefinitionId, token) =>
         console.error(`Delete Challenge Config API Error (LessonDef ${lessonDefinitionId}):`, errorData);
         throw new Error(errorData.message || `Failed to delete challenge configuration. Status: ${response.status}`);
     }
-    // For DELETE, backend might return 200 with message or 204 No Content.
     if (response.status === 204) {
         return { message: "Challenge configuration deleted successfully." };
     }
     return response.json();
 };
 
-/**
- * Adds a custom question to a specific challenge definition.
- * POST /api/challenge-definitions/{challengeDefinitionId}/questions
- * @param {string|number} challengeDefinitionId - The ID of the challenge definition.
- * @param {object} questionData - The question data (matching CreateQuestionRequestDto backend).
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the created ChallengeQuestion object (as QuestionDto).
- */
 export const addCustomQuestionToChallenge = async (challengeDefinitionId, questionData, token) => {
     if (!challengeDefinitionId || !questionData || !token) {
         throw new Error('Challenge Definition ID, question data, and auth token are required.');
@@ -220,23 +224,16 @@ export const addCustomQuestionToChallenge = async (challengeDefinitionId, questi
     const response = await fetch(`${API_BASE_URL}/challenge-definitions/${challengeDefinitionId}/questions`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData), // questionData should include choices array
+        body: JSON.stringify(questionData),
     });
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         console.error(`Add Custom Question API Error (ChallengeDef ${challengeDefinitionId}):`, errorData);
         throw new Error(errorData.message || `Failed to add custom question. Status: ${response.status}`);
     }
-    return response.json(); // Expected: QuestionDto
+    return response.json();
 };
 
-/**
- * Fetches all custom questions for a specific challenge definition.
- * GET /api/challenge-definitions/{challengeDefinitionId}/questions
- * @param {string|number} challengeDefinitionId - The ID of the challenge definition.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<Array<object>>} - A promise that resolves to an array of QuestionDto objects.
- */
 export const getCustomQuestionsForChallengeDefinition = async (challengeDefinitionId, token) => {
     if (!challengeDefinitionId || !token) {
         throw new Error('Challenge Definition ID and auth token are required.');
@@ -251,18 +248,9 @@ export const getCustomQuestionsForChallengeDefinition = async (challengeDefiniti
         console.error(`Get Custom Questions API Error (ChallengeDef ${challengeDefinitionId}):`, errorData);
         throw new Error(errorData.message || `Failed to fetch custom questions. Status: ${response.status}`);
     }
-    return response.json(); // Expected: List<QuestionDto>
+    return response.json();
 };
 
-/**
- * Updates an existing custom question for a challenge.
- * PUT /api/challenge-definitions/{challengeDefinitionId}/questions/{challengeQuestionId}
- * @param {string|number} challengeDefinitionId - The ID of the challenge definition.
- * @param {string|number} challengeQuestionId - The ID of the custom question to update.
- * @param {object} questionData - The updated question data (matching CreateQuestionRequestDto backend, including choices).
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the updated QuestionDto.
- */
 export const updateCustomChallengeQuestion = async (challengeDefinitionId, challengeQuestionId, questionData, token) => {
     if (!challengeDefinitionId || !challengeQuestionId || !questionData || !token) {
         throw new Error('Challenge Definition ID, Question ID, question data, and auth token are required.');
@@ -271,24 +259,16 @@ export const updateCustomChallengeQuestion = async (challengeDefinitionId, chall
     const response = await fetch(`${API_BASE_URL}/challenge-definitions/${challengeDefinitionId}/questions/${challengeQuestionId}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData), // questionData should include choices array with choiceId for existing, and isDeleted flags
+        body: JSON.stringify(questionData),
     });
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         console.error(`Update Custom Question API Error (QID ${challengeQuestionId}):`, errorData);
         throw new Error(errorData.message || `Failed to update custom question. Status: ${response.status}`);
     }
-    return response.json(); // Expected: QuestionDto
+    return response.json();
 };
 
-/**
- * Deletes a custom question from a challenge.
- * DELETE /api/challenge-definitions/{challengeDefinitionId}/questions/{challengeQuestionId}
- * @param {string|number} challengeDefinitionId - The ID of the challenge definition.
- * @param {string|number} challengeQuestionId - The ID of the custom question to delete.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the API response.
- */
 export const deleteCustomChallengeQuestion = async (challengeDefinitionId, challengeQuestionId, token) => {
     if (!challengeDefinitionId || !challengeQuestionId || !token) {
         throw new Error('Challenge Definition ID, Question ID, and auth token are required.');
@@ -307,18 +287,6 @@ export const deleteCustomChallengeQuestion = async (challengeDefinitionId, chall
     return response.json();
 };
 
-
-// Choice management for CUSTOM CHALLENGE QUESTIONS
-// These will be called by the adapted AddEditQuestionDialog when saving a custom challenge question
-
-/**
- * Adds a choice to a specific custom challenge question.
- * POST /api/challenge-questions/{challengeQuestionId}/choices
- * @param {string|number} challengeQuestionId - The ID of the custom challenge question.
- * @param {object} choiceData - The choice data (e.g., { choiceText, isCorrect }).
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the created choice object (as ChoiceDto).
- */
 export const addChoiceToChallengeQuestion = async (challengeQuestionId, choiceData, token) => {
     if (!challengeQuestionId || !choiceData || !token) {
         throw new Error('Challenge Question ID, choice data, and auth token are required.');
@@ -332,18 +300,9 @@ export const addChoiceToChallengeQuestion = async (challengeQuestionId, choiceDa
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         throw new Error(errorData.message || `Failed to add choice to challenge question. Status: ${response.status}`);
     }
-    return response.json(); // Expected: ChoiceDto
+    return response.json();
 };
 
-/**
- * Updates an existing choice for a custom challenge question.
- * PUT /api/challenge-questions/{challengeQuestionId}/choices/{choiceId}
- * @param {string|number} challengeQuestionId - The ID of the parent custom challenge question.
- * @param {string|number} choiceId - The ID of the choice to update.
- * @param {object} choiceData - The updated choice data (e.g., { choiceText, isCorrect }).
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the updated choice object (as ChoiceDto).
- */
 export const updateChallengeChoice = async (challengeQuestionId, choiceId, choiceData, token) => {
     if (!challengeQuestionId || !choiceId || !choiceData || !token) {
         throw new Error('Challenge Question ID, Choice ID, choice data, and auth token are required.');
@@ -357,17 +316,9 @@ export const updateChallengeChoice = async (challengeQuestionId, choiceId, choic
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         throw new Error(errorData.message || `Failed to update challenge choice. Status: ${response.status}`);
     }
-    return response.json(); // Expected: ChoiceDto
+    return response.json();
 };
 
-/**
- * Deletes a choice from a custom challenge question.
- * DELETE /api/challenge-questions/{challengeQuestionId}/choices/{choiceId}
- * @param {string|number} challengeQuestionId - The ID of the parent custom challenge question.
- * @param {string|number} choiceId - The ID of the choice to delete.
- * @param {string} token - The JWT authentication token.
- * @returns {Promise<object>} - A promise that resolves to the API response.
- */
 export const deleteChallengeChoice = async (challengeQuestionId, choiceId, token) => {
     if (!challengeQuestionId || !choiceId || !token) {
         throw new Error('Challenge Question ID, Choice ID, and auth token are required.');

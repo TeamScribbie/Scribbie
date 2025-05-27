@@ -9,11 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import '../../styles/Navbar.css';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth hook
 
-// Remove userType prop, get from context instead
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
-  const { authState, logout } = useAuth(); // Get state and logout from context
+  const { authState, logout } = useAuth(); 
   const openMenu = Boolean(anchorEl);
 
   const handleProfileClick = (event) => {
