@@ -1,4 +1,3 @@
-// AI Context/Frontend/page/teacher/ActivityNodeEditorPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';

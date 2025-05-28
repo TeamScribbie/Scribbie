@@ -1,52 +1,52 @@
-// AI Context/Frontend/components/dialogs/AddEditQuestionDialog.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
     Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
     CircularProgress, Typography, Box, Checkbox, FormControlLabel, IconButton, Link as MuiLink,
-    List, Divider
+    List, Divider, Alert
 } from '@mui/material';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import AudiotrackIcon from '@mui/icons-material/Audiotrack';
-import ClearIcon from '@mui/icons-material/Clear';
+// import PhotoCamera from '@mui/icons-material/PhotoCamera';
+// import AudiotrackIcon from '@mui/icons-material/Audiotrack';
+// import ClearIcon from '@mui/icons-material/Clear';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import { useAuth } from '../../context/AuthContext';
-import { uploadMediaFile } from '../../services/mediaService';
+// import { uploadMediaFile } from '../../services/mediaService';
 import InlineChoiceForm from '../teacher/editor/InlineChoiceForm';
 
 const AddEditQuestionDialog = ({
-    open,
-    onClose,
-    onSave,
-    existingQuestion,
-    activityNodeTypeId,
-    isLoading: isParentLoading,
-    orderIndexForNewQuestion // This will be set by the parent
-}) => {
+                                   open,
+                                   onClose,
+                                   onSave,
+                                   existingQuestion,
+                                   activityNodeTypeId,
+                                   isLoading: isParentLoading,
+                                   orderIndexForNewQuestion
+                               }) => {
     const { authState } = useAuth();
     const backendBaseUrl = 'http://localhost:8080';
     const publicPrefix = authState.config?.uploadPublicPathPrefix || '/media-content';
 
     const [questionText, setQuestionText] = useState('');
     const [isInstructional, setIsInstructional] = useState(false);
-    // currentOrderIndex state is removed from dialog's direct management
-    // It will be passed in via existingQuestion.orderIndex or orderIndexForNewQuestion
 
-    const [imageFile, setImageFile] = useState(null);
-    const [soundFile, setSoundFile] = useState(null);
-    const [existingImageUrl, setExistingImageUrl] = useState(null);
-    const [existingSoundUrl, setExistingSoundUrl] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    // --- Start of Commented Out Block ---
+    // const [imageFile, setImageFile] = useState(null);
+    // const [soundFile, setSoundFile] = useState(null);
+    // const [existingImageUrl, setExistingImageUrl] = useState(null);
+    // const [existingSoundUrl, setExistingSoundUrl] = useState(null);
+    // const [imagePreview, setImagePreview] = useState(null);
+    // --- End of Commented Out Block ---
+
     const [choices, setChoices] = useState([]);
 
-    const imageInputRef = useRef(null);
-    const soundInputRef = useRef(null);
+    // const imageInputRef = useRef(null);
+    // const soundInputRef = useRef(null);
 
-    const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+    // const [isUploadingMedia, setIsUploadingMedia] = useState(false);
     const [dialogError, setDialogError] = useState(null);
 
-    const isLoading = isParentLoading || isUploadingMedia;
+    const isLoading = isParentLoading; // Removed isUploadingMedia
 
     useEffect(() => {
         if (open) {
@@ -54,10 +54,9 @@ const AddEditQuestionDialog = ({
             if (existingQuestion) {
                 setQuestionText(existingQuestion.questionText || '');
                 setIsInstructional(existingQuestion.instructional || false);
-                // orderIndex is now part of existingQuestion, no need to set it in dialog state
-                setExistingImageUrl(existingQuestion.questionImageUrl || null);
-                setExistingSoundUrl(existingQuestion.questionSoundUrl || null);
-                setImagePreview(existingQuestion.questionImageUrl ? `${backendBaseUrl}${publicPrefix}/${existingQuestion.questionImageUrl}` : null);
+                // setExistingImageUrl(existingQuestion.questionImageUrl || null);
+                // setExistingSoundUrl(existingQuestion.questionSoundUrl || null);
+                // setImagePreview(existingQuestion.questionImageUrl ? `${backendBaseUrl}${publicPrefix}/${existingQuestion.questionImageUrl}` : null);
                 setChoices((existingQuestion.choices || []).map(c => ({
                     ...c,
                     tempChoiceId: c.choiceId || `temp-c-${Date.now()}-${Math.random()}`,
@@ -65,20 +64,21 @@ const AddEditQuestionDialog = ({
                     isModified: false,
                     isDeleted: false
                 })));
-            } else { // New question
+            } else {
                 setQuestionText('');
                 setIsInstructional(false);
-                setExistingImageUrl(null);
-                setExistingSoundUrl(null);
-                setImagePreview(null);
+                // setExistingImageUrl(null);
+                // setExistingSoundUrl(null);
+                // setImagePreview(null);
                 setChoices([]);
             }
-            setImageFile(null);
-            setSoundFile(null);
+            // setImageFile(null);
+            // setSoundFile(null);
         }
     }, [open, existingQuestion, backendBaseUrl, publicPrefix]);
 
-    // ... (media handling, choice management handlers remain the same) ...
+    // --- Start of Commented Out Block ---
+    /*
     const handleImageFileChange = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -104,6 +104,9 @@ const AddEditQuestionDialog = ({
         setSoundFile(null); setExistingSoundUrl(null);
         if (soundInputRef.current) soundInputRef.current.value = "";
     };
+    */
+    // --- End of Commented Out Block ---
+
     const handleAddChoice = () => {
         setChoices(prev => [
             ...prev,
@@ -138,7 +141,19 @@ const AddEditQuestionDialog = ({
             setDialogError("Question text is required.");
             return;
         }
+
+        const hasBlankChoice = choices.some(
+            choice => !choice.isDeleted && choice.choiceText.trim() === ''
+        );
+        if (hasBlankChoice) {
+            setDialogError("All active choices must have text. Please remove or fill in any blank choices.");
+            return;
+        }
+
         setDialogError(null);
+
+        // --- Start of Commented Out Block ---
+        /*
         setIsUploadingMedia(true);
 
         let finalImageUrl = existingImageUrl;
@@ -159,14 +174,15 @@ const AddEditQuestionDialog = ({
             return;
         }
         setIsUploadingMedia(false);
+        */
+        // --- End of Commented Out Block ---
 
         const questionPayload = {
             ...(existingQuestion && { questionId: existingQuestion.questionId }),
             questionText: questionText.trim(),
             instructional: isInstructional,
-            questionImageUrl: finalImageUrl,
-            questionSoundUrl: finalSoundUrl,
-            // Use orderIndex from existingQuestion if editing, or from prop if new
+            // questionImageUrl: finalImageUrl, // Commented out
+            // questionSoundUrl: finalSoundUrl, // Commented out
             orderIndex: existingQuestion ? existingQuestion.orderIndex : orderIndexForNewQuestion,
             choices: choices.map(c => ({
                 choiceId: c.isNew ? null : c.choiceId,
@@ -187,13 +203,12 @@ const AddEditQuestionDialog = ({
             </DialogTitle>
             <DialogContent sx={{ paddingTop: '20px !important' }}>
                 <TextField autoFocus margin="dense" label="Question Text" type="text" fullWidth multiline rows={3}
-                    value={questionText} onChange={(e) => setQuestionText(e.target.value)} disabled={isLoading} required sx={{ mb: 2 }} />
-                {/* TextField for orderIndex REMOVED */}
+                           value={questionText} onChange={(e) => setQuestionText(e.target.value)} disabled={isLoading} required sx={{ mb: 2 }} />
                 <FormControlLabel control={<Checkbox checked={isInstructional} onChange={(e) => setIsInstructional(e.target.checked)} disabled={isLoading} />}
-                    label="Instructional (exclude from Challenges, but can still have choices)" sx={{ mb: 2 }} />
+                                  label="Instructional (exclude from Challenges, but can still have choices)" sx={{ mb: 2 }} />
 
-                {/* Image Upload UI (as before) */}
-                <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
+                {/* --- Start of Commented Out Block --- */}
+                {/* <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
                     <Typography variant="subtitle2" gutterBottom>Question Image</Typography>
                     <input accept="image/*" style={{ display: 'none' }} id={`dialog-image-upload-${existingQuestion?.questionId || 'new'}`} type="file" onChange={handleImageFileChange} ref={imageInputRef} disabled={isLoading} />
                     <label htmlFor={`dialog-image-upload-${existingQuestion?.questionId || 'new'}`}>
@@ -204,7 +219,6 @@ const AddEditQuestionDialog = ({
                     {!imageFile && existingImageUrl && !imagePreview && (<Box sx={{ mt: 1 }}><MuiLink href={`${backendBaseUrl}${publicPrefix}/${existingImageUrl}`} target="_blank">Current: {existingImageUrl.split('/').pop()}</MuiLink><IconButton onClick={clearImage} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
                 </Box>
 
-                {/* Sound Upload UI (as before) */}
                 <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
                     <Typography variant="subtitle2" gutterBottom>Question Sound</Typography>
                     <input accept="audio/*" style={{ display: 'none' }} id={`dialog-sound-upload-${existingQuestion?.questionId || 'new'}`} type="file" onChange={handleSoundFileChange} ref={soundInputRef} disabled={isLoading} />
@@ -214,8 +228,9 @@ const AddEditQuestionDialog = ({
                     {soundFile && (<Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}><Typography variant="caption">New: {soundFile.name}</Typography><IconButton onClick={clearSound} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
                     {!soundFile && existingSoundUrl && (<Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}><MuiLink href={`${backendBaseUrl}${publicPrefix}/${existingSoundUrl}`} target="_blank">Current: {existingSoundUrl.split('/').pop()}</MuiLink><IconButton onClick={clearSound} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
                 </Box>
+                */}
+                {/* --- End of Commented Out Block --- */}
 
-                {/* Choices Management Section (as before) */}
                 <>
                     <Divider sx={{ my: 2 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -245,7 +260,7 @@ const AddEditQuestionDialog = ({
             <DialogActions sx={{ p: 2 }}>
                 <Button onClick={() => { if (!isLoading) onClose(); }} disabled={isLoading} color="primary">Cancel</Button>
                 <Button onClick={handleSubmitDialog} variant="contained" disabled={isLoading || !questionText.trim()}
-                    sx={{ bgcolor: '#451513', '&:hover': { bgcolor: '#5d211f' }, position: 'relative' }}>
+                        sx={{ bgcolor: '#451513', '&:hover': { bgcolor: '#5d211f' }, position: 'relative' }}>
                     {isLoading ? <CircularProgress size={24} color="inherit" sx={{ position: 'absolute' }} /> : (existingQuestion ? 'Save Changes' : 'Add Question')}
                 </Button>
             </DialogActions>
@@ -260,7 +275,7 @@ AddEditQuestionDialog.propTypes = {
     existingQuestion: PropTypes.object,
     activityNodeTypeId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     isLoading: PropTypes.bool,
-    orderIndexForNewQuestion: PropTypes.number, // Ensure this prop is received
+    orderIndexForNewQuestion: PropTypes.number,
 };
 
 export default AddEditQuestionDialog;

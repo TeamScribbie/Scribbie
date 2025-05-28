@@ -36,25 +36,6 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     return data;
 };
 
-export const updateActivityNodeTypeDetails = async (activityNodeTypeId, detailsData, token) => {
-    if (!activityNodeTypeId || !detailsData || !token) {
-        throw new Error('Activity Node ID, details data, and auth token are required.');
-    }
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
-        method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(detailsData),
-    });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
-        throw new Error(errorData.message || `Failed to update activity node details. Status: ${response.status}`);
-    }
-    return response.json();
-};
-
 export const getActivityDetails = async (activityId, token) => {
     if (!activityId || !token) {
         throw new Error('Activity ID and auth token are required.');
@@ -93,4 +74,26 @@ export const getActivityDetails = async (activityId, token) => {
         ...data,
         gameMode: data.gameMode || data.activityType || 'READING', // Default to READING if not specified
     };
+};
+
+// ✨ THIS FUNCTION WILL SEND THE FOCUSED PAYLOAD FOR DETAILS UPDATE ✨
+export const updateActivityNodeTypeDetails = async (activityNodeTypeId, detailsData, token) => {
+    if (!activityNodeTypeId || !detailsData || !token) {
+        throw new Error('Activity Node ID, details data, and auth token are required.');
+    }
+    // Ensure detailsData only contains what the backend DTO expects for this specific update
+    // e.g., { activityTitle, instructions }
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(detailsData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error ${response.status}` }));
+        throw new Error(errorData.message || `Failed to update activity node details. Status: ${response.status}`);
+    }
+    return response.json();
 };
