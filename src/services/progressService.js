@@ -1,8 +1,5 @@
-// No import for axios needed
+import { API_BASE_URL } from '../config/apiConfig';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://152.42.254.129:8080/api';
-
-// Function to get the auth token
 const getAuthToken = () => {
     const user = JSON.parse(localStorage.getItem('user')); // Adjust if your storage key is different
     return user?.token;
@@ -47,7 +44,7 @@ const handleResponse = async (response) => {
  */
 export const getClassroomCourseProgressOverview = async (classroomId) => {
     try {
-        const response = await fetch(`${API_URL}/classrooms/${classroomId}/course-progress-overview`, {
+        const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/course-progress-overview`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
@@ -64,7 +61,7 @@ export const getClassroomCourseProgressOverview = async (classroomId) => {
  */
 export const getStudentDetailedLessonProgress = async (studentId, courseId) => {
     try {
-        const response = await fetch(`${API_URL}/students/${studentId}/courses/${courseId}/detailed-lesson-progress`, {
+        const response = await fetch(`${API_BASE_URL}/students/${studentId}/courses/${courseId}/detailed-lesson-progress`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
+import { API_BASE_URL } from '../config/apiConfig';
 
 export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     if (!activityNodeTypeId || !token) {
@@ -6,24 +6,21 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     }
     console.log(`activityService: Fetching details for ActivityNodeType ID: ${activityNodeTypeId}`);
 
-    // Make sure this line uses template literals correctly:
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, { // <<<< CHECK THIS LINE CAREFULLY
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/json', // Good practice to add this
+            'Accept': 'application/json',
         },
     });
 
     if (!response.ok) {
-        // Handle non-JSON error responses more gracefully
         let errorMessage;
         try {
             const errorData = await response.json();
             errorMessage = errorData.message || `Failed to fetch activity details. Status: ${response.status}`;
         } catch (e) {
-            // If response is not JSON, use the status text or a generic message
             errorMessage = response.statusText || `HTTP error! Status: ${response.status}`;
         }
         
@@ -36,17 +33,13 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     }
 
     const data = await response.json();
-    // ... (rest of your existing logic for handling data) ...
     return data;
 };
 
-// ✨ THIS FUNCTION WILL SEND THE FOCUSED PAYLOAD FOR DETAILS UPDATE ✨
 export const updateActivityNodeTypeDetails = async (activityNodeTypeId, detailsData, token) => {
     if (!activityNodeTypeId || !detailsData || !token) {
         throw new Error('Activity Node ID, details data, and auth token are required.');
     }
-    // Ensure detailsData only contains what the backend DTO expects for this specific update
-    // e.g., { activityTitle, instructions }
     const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
         method: 'PUT',
         headers: {
