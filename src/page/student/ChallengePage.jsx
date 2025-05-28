@@ -116,10 +116,6 @@ const ChallengePage = () => {
             </Box>
         );
     }
-
-
-    // Render the specific game component based on challengeConfig.challengeType
-    // For now, only HEALTH_BASED is implemented
     return (
         <> 
             {/* Navbar is intentionally omitted here for a more immersive game experience as requested */}
