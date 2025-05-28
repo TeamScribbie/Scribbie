@@ -68,11 +68,13 @@ const LessonProgressDisplayCard = ({
     };
 
     const scoreDisplay = lessonScore !== null && lessonScore !== undefined ?
-        `${lessonScore.toFixed(1)}%` : 'N/A';
+        lessonScore : 'N/A';
 
     // MODIFIED: Changed act.isCompleted to act.completed
     const completedActivities = activityNodeProgressesList.filter(act => act.completed).length;
     const totalActivities = activityNodeProgressesList.length;
+    console.log('sigma')
+    console.log(activityNodeProgressesList);
     // MODIFIED: Also ensure lessonProgressValue considers the correct field if logic depends on it,
     // though this specific calculation primarily uses `completedActivities` count and `lessonStatus`.
     const lessonProgressValue = totalActivities > 0 ? (completedActivities / totalActivities) * 100 : (lessonStatus === 'COMPLETED' ? 100 : 0);

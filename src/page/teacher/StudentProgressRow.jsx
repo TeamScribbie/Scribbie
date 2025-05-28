@@ -4,10 +4,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 const StudentProgressRow = ({
                                 studentName,
-                                completedLessons,
-                                totalLessonsInCourse,
-                                averageScore,
-                                totalTimeSpent,
+                                lessonsCompleted,
+                                totalLessons,
+                                totalScore, // This now receives the total score
+                                totalTimeSpentSeconds,
                                 onViewDetails,
                                 yellowAccent,
                                 // highlight-start
@@ -16,14 +16,36 @@ const StudentProgressRow = ({
                                 // highlight-end
                                 ...props
                             }) => {
+
+    const formatTime = (totalSeconds) => {
+        // Handle null, undefined, or 0 seconds case
+        if (!totalSeconds) {
+            return "0s";
+        }
+
+        // If the total time is less than a minute, display in seconds.
+        if (totalSeconds < 60) {
+            return `${totalSeconds}s`;
+        }
+
+        // If the total time is a minute or more, display in hours and minutes.
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        }
+        return `${minutes}m`;
+    };
+
     return (
         <TableRow {...props}>
             <TableCell component="th" scope="row">
                 <Typography variant="body1" fontWeight="500">{studentName}</Typography>
             </TableCell>
-            <TableCell align="center">{`${completedLessons} / ${totalLessonsInCourse}`}</TableCell>
-            <TableCell align="center">{averageScore?.toFixed(2) ?? 'N/A'}</TableCell>
-            <TableCell align="center">{totalTimeSpent}</TableCell>
+            <TableCell align="center">{`${lessonsCompleted} / ${totalLessons}`}</TableCell>
+            <TableCell align="center">{totalScore}</TableCell>
+            <TableCell align="center">{formatTime(totalTimeSpentSeconds)}</TableCell>
             <TableCell align="center">
                 <Button
                     variant="contained"

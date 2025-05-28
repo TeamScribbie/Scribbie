@@ -1,21 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getClassroomCourseProgressOverview } from '../../services/progressService';
+// We only need getClassroomById from this service
 import { getClassroomById, removeStudentFromClassroom } from '../../services/classroomService';
 import { useAuth } from '../../context/AuthContext';
 import {
     Box, Typography, Paper, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert, Button, Tooltip,
     Breadcrumbs, Link as MuiLink, useTheme, CssBaseline,
-    Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar, IconButton
+    Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar
 } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-// highlight-start
-// Import the component from its own file
 import StudentProgressRow from './StudentProgressRow';
-// highlight-end
 import Navbar from '../../components/layout/navbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import '../../styles/TeacherHomepage.css';
@@ -40,7 +38,7 @@ const ClassroomStudentProgressOverviewPage = () => {
 
     const [progressData, setProgressData] = useState([]);
     const [classroomName, setClassroomName] = useState('');
-    const [courseName, setCourseName] = useState('');
+    const [classCode, setClassCode] = useState(''); // State for the class code
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -60,7 +58,11 @@ const ClassroomStudentProgressOverviewPage = () => {
         try {
             const classroomDetails = await getClassroomById(classroomId, authState.token);
             setClassroomName(classroomDetails.classroomName);
-            setCourseName(classroomDetails.assignedCourse?.courseName || 'N/A');
+
+            // --- THE ONLY CHANGE IS HERE ---
+            // Use the correct property name from the API response
+            setClassCode(classroomDetails.classroomCode);
+            // --- END OF CHANGE ---
 
             const overview = await getClassroomCourseProgressOverview(classroomId);
             setProgressData(Array.isArray(overview) ? overview : []);
@@ -76,11 +78,13 @@ const ClassroomStudentProgressOverviewPage = () => {
         fetchData();
     }, [fetchData]);
 
+
     const handleStudentClick = (student) => {
         navigate(`/teacher/classroom/${classroomId}/student/${student.studentId}/progress`, {
             state: {
                 courseId: student.courseId,
-                courseName: courseName,
+                // We'll keep this as classCode for consistency within the frontend
+                classCode: classCode,
                 studentName: student.studentName
             }
         });
@@ -130,8 +134,6 @@ const ClassroomStudentProgressOverviewPage = () => {
                 <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
                 <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: theme.palette.background.default, minHeight: 'calc(100vh - 64px)'}}>
-                    {/* Breadcrumbs and Header */}
-                    {/* ... (This part remains the same) ... */}
                     <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb" sx={{ mb: 2.5 }}>
                         <MuiLink component="button" onClick={() => navigate('/teacher-homepage')} sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline', color: yellowAccent.main }}}>
                             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
@@ -148,7 +150,7 @@ const ClassroomStudentProgressOverviewPage = () => {
                                 Classroom: {classroomName}
                             </Typography>
                             <Typography variant="subtitle1" color="text.secondary" sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
-                                Course: {courseName || 'Not specified'}
+                                Class Code: {classCode || 'Not specified'}
                             </Typography>
                         </Box>
                         <Tooltip title="Back to Teacher Homepage">
@@ -157,16 +159,15 @@ const ClassroomStudentProgressOverviewPage = () => {
                             </Button>
                         </Tooltip>
                     </Box>
-                    {/* End Breadcrumbs and Header */}
 
                     <Paper elevation={2} sx={{ mt: 2, overflowX: 'auto', borderRadius: 2 }}>
                         <TableContainer>
                             <Table stickyHeader aria-label="student progress table">
                                 <TableHead>
-                                    <TableRow sx={{"& th": {backgroundColor: brownAccent.main, color: brownAccent.contrastText, fontWeight: '600', py: 1.2, fontSize: '0.875rem', borderBottom: `1px solid ${theme.palette.grey[400]}`}}}>
+                                    <TableRow sx={{/*...*/}}>
                                         <TableCell>Student Name</TableCell>
                                         <TableCell align="center">Lessons Completed</TableCell>
-                                        <TableCell align="center">Avg. Score (%)</TableCell>
+                                        <TableCell align="center">Total Score</TableCell>
                                         <TableCell align="center">Total Time Spent</TableCell>
                                         <TableCell align="center">View Details</TableCell>
                                         <TableCell align="center">Actions</TableCell>
