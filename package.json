@@ -22,7 +22,12 @@
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+<<<<<<< HEAD
+    "react-router-dom": "^7.5.0",
+    "scribbie": "file:"
+=======
     "react-router-dom": "^7.6.1"
+>>>>>>> 68561ea59b34e13c1e1753caf810161a6882bc90
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
