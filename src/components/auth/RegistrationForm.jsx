@@ -3,11 +3,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, TextField } from '@mui/material';
 
-// Helper function to format field names for labels
 const formatLabel = (fieldName) => {
   return fieldName
-    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-    .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
+    .replace(/([A-Z])/g, ' $1') 
+    .replace(/^./, (str) => str.toUpperCase()); 
 };
 
 const RegistrationForm = ({ formData, onChange, onSubmit }) => {
@@ -16,20 +15,20 @@ const RegistrationForm = ({ formData, onChange, onSubmit }) => {
   return (
     <form className="registration-form-container" onSubmit={onSubmit}>
       {fields.map((field) => (
-        <TextField
-          key={field}
-          name={field} // Name matches the key in formData
-          label={formatLabel(field)}
-          type={field.includes('password') ? 'password' : 'text'} // Set type for password fields
-          size="small" // As per original
-          value={formData[field]}
-          onChange={onChange} // Use the single handler passed from parent
-          fullWidth
-          margin="dense" // As per original
-          variant="outlined"
-          className="registration-input-field"
-          InputLabelProps={{ shrink: true }} // Keep label floated
-        />
+<TextField
+  key={field}
+  name={field}
+  label={formData[field] ? '' : formatLabel(field)}  // Hide label if value exists
+  type={field.includes('password') ? 'password' : 'text'}
+  size="small"
+  value={formData[field]}
+  onChange={onChange}
+  fullWidth
+  margin="dense"
+  variant="outlined"
+  className={`registration-input-field ${formData[field] ? 'hide-label' : ''}`} // Add class to hide label
+  InputLabelProps={{ shrink: false }} // Disable default label shrink to avoid label overlap
+/>
       ))}
       <Button
         type="submit"
