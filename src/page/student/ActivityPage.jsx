@@ -120,10 +120,16 @@ const ActivityPage = () => {
                             classroomId={classroomId}
                             lessonDefinitionId={lessonDefinitionId}
                         />
-                    );
-                case 'FILL_BLANKS':
+                    );                case 'FILL_BLANKS':
                     return (
-                        <FillBlanksGameComponent activityData={activityDetails} />
+                        <FillBlanksGameComponent 
+                            activityData={activityDetails}
+                            onGameComplete={handleGameComplete}
+                            activityTitle={gameTitle}
+                            activityInstructions={gameInstructions}
+                            classroomId={classroomId}
+                            lessonDefinitionId={lessonDefinitionId}
+                        />
                     );
                 default:
                     return (
