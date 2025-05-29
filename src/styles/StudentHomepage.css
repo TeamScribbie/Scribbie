@@ -75,7 +75,7 @@
   .student-main-content {
     flex-grow: 1;
     padding: 40px; /* Match teacher */
-    /* background-color: #FFFBE0; */ /* Already set on container */
+    /* background-color: #f9b121; */ /* Already set on container */
     margin-top: 60px; /* Account for fixed Navbar */
   }
   
@@ -122,17 +122,17 @@
   
   /* Dialog Styles (Adapt from Teacher) */
   .join-dialog-title {
-    background-color: #FFE8A3 !important;
+    background-color: #ffffff !important;
     color: #451513 !important;
   }
   
   .join-dialog-content {
-     background-color: #FFE8A3 !important;
+     background-color: #ffffff !important;
      padding-top: 20px !important;
   }
   
   .join-dialog-actions {
-     background-color: #FFE8A3 !important;
+     background-color: #ffffff !important;
   }
   
   .join-dialog-button {

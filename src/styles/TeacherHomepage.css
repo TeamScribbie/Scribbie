@@ -7,19 +7,19 @@
   }
   
   .teacher-sidebar {
-    background-color: #FFE8A3;
+    background-color: #f9b121; /* Yellow sidebar */
+    color: #451513; /* Deep maroon text */
+    position: fixed;
+    top: 60px; /* Offset to match top navbar */
+    left: 0;
+    bottom: 0;
+    width: 220px; /* Slightly wider for better spacing */
+    padding: 30px 20px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    color: #451513;
-    padding: 20px;
-    box-sizing: border-box;
-    position: fixed;
-    top: 60px;
-    bottom: 0;
-    z-index: 1;
-    overflow-x: hidden;
-    transition: width 0.3s ease, padding 0.3s ease;
-    width: 200px;
+    border-right: 2px solid #FFE8A3; /* Sharper border for definition */
+    z-index: 1000;
   }
   
   .teacher-sidebar.closed {
@@ -46,7 +46,7 @@
   }
   
   .sidebar-item:hover {
-    background-color: #FFEDB6;
+    background-color: #f9b121;
   }
   
   .sidebar-item.active {
@@ -68,7 +68,7 @@
   .teacher-main-content {
     flex-grow: 1;
     padding: 40px;
-    background-color: #FFFBE0;
+    background-color: #ffffff;
     margin-top: 60px;
   }
   
@@ -135,17 +135,17 @@
   
   /* Dialog Styles */
   .dialog-title {
-    background-color: #FFE8A3 !important;
+    background-color: #ffffff !important;
     color: #451513 !important;
   }
   
   .dialog-content {
-     background-color: #FFE8A3 !important;
+     background-color: #ffffff !important;
      padding-top: 20px !important;
   }
   
   .dialog-actions {
-     background-color: #FFE8A3 !important;
+     background-color: #ffffff !important;
   }
   
   .dialog-create-button {
