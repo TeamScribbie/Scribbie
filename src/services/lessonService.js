@@ -1,5 +1,6 @@
-import { API_BASE_URL } from '../config/apiConfig';
+// AI Context/Frontend/services/lessonService.js
 
+import { API_BASE_URL } from '../config/apiConfig';
 // ... (getLessonDefinitions, getActivityNodeTypesForLesson, createLessonDefinition, createActivityNodeTypeForLesson remain THE SAME)
 // ... (getStudentLessonProgress, startLessonProgress, submitActivityProgress remain THE SAME)
 
@@ -389,5 +390,4 @@ export const updateQuestionOrderForActivityNode = async (activityNodeTypeId, que
 
     return await response.json();
 };
-
 

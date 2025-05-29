@@ -4,6 +4,8 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 // Navbar import is removed
 import QuizMcqGame from '../../components/student/QuizMcqGame';
+import ReadingGameComponent from '../../components/student/ReadingGameComponent';
+import FillBlanksGameComponent from '../../components/student/FillBlanksGameComponent';
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
 
@@ -32,11 +34,11 @@ const ActivityPage = () => {
              setIsLoading(false); return;
         }
         setIsLoading(true); setError(null);
-        try {
-            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
-            if (!data || !data.activityType || typeof data.questions === 'undefined') {
+        try {            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
+            if (!data || !data.activityType) {
                 throw new Error("Invalid activity data structure received from server.");
             }
+            console.log('Activity Details:', data); // Add logging to debug
             setActivityDetails(data);
         } catch (err) {
             setError(err.message || "An error occurred while fetching activity details.");
@@ -108,6 +110,20 @@ const ActivityPage = () => {
                             classroomId={classroomId}
                             lessonDefinitionId={lessonDefinitionId}
                         />
+                    );                case 'READING':
+                    return (
+                        <ReadingGameComponent
+                            activityData={activityDetails}
+                            onGameComplete={handleGameComplete}
+                            activityTitle={gameTitle}
+                            activityInstructions={gameInstructions}
+                            classroomId={classroomId}
+                            lessonDefinitionId={lessonDefinitionId}
+                        />
+                    );
+                case 'FILL_BLANKS':
+                    return (
+                        <FillBlanksGameComponent activityData={activityDetails} />
                     );
                 default:
                     return (
