@@ -1,6 +1,6 @@
 // AI Context/Frontend/services/mediaService.js
 // Make sure API_BASE_URL is defined or imported if not already
-const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
+import { API_BASE_URL } from '../config/apiConfig';
 
 export const uploadMediaFile = async (file, mediaType, token) => {
     if (!file || !mediaType || !token) {

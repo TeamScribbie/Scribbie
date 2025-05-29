@@ -1,6 +1,6 @@
 // src/services/classroomService.js
 
-const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
+import { API_BASE_URL } from '../config/apiConfig';
 
 /**
  * Fetches the classrooms handled by a specific teacher.

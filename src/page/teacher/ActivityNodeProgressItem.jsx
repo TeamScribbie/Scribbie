@@ -40,8 +40,7 @@ const ActivityNodeProgressItem = ({
                                   }) => {
     const { icon: NodeTypeIcon, label: nodeTypeLabel } = getActivityTypeDetails(nodeType);
 
-    const scoreDisplay = nodeScore !== null && nodeScore !== undefined ?
-        `${nodeScore.toFixed(0)}%` : 'N/A'; // Assuming score is a percentage, show as integer
+    const scoreDisplay = nodeScore !== null && nodeScore !== undefined ? nodeScore : 'N/A';
 
     return (
         <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1, backgroundColor: 'background.default' }}>

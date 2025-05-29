@@ -1,11 +1,17 @@
-// No import for axios needed
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://152.42.254.129:8080/api';
+// Import API_BASE_URL from your config file
+import { API_BASE_URL } from '../config/apiConfig'; // Corrected import
 
 // Function to get the auth token
 const getAuthToken = () => {
-    const user = JSON.parse(localStorage.getItem('user')); // Adjust if your storage key is different
-    return user?.token;
+    // MODIFIED: Check if localStorage is available
+    if (typeof localStorage !== 'undefined') {
+        // highlight-start
+        // Retrieve the token directly from 'authToken' key
+        const token = localStorage.getItem('authToken');
+        return token;
+        // highlight-end
+    }
+    return null;
 };
 
 const getAuthHeaders = () => {
@@ -22,24 +28,20 @@ const getAuthHeaders = () => {
 // Helper function to handle fetch responses
 const handleResponse = async (response) => {
     if (!response.ok) {
-        // Try to parse error response from backend if available
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
             const errorData = await response.json();
             errorMessage = errorData.message || errorData.error || errorMessage;
-            // eslint-disable-next-line no-unused-vars
         } catch (e) {
-            // If response is not JSON, use the status text
             errorMessage = response.statusText || errorMessage;
         }
         throw new Error(errorMessage);
     }
-    // Check if response has content before trying to parse as JSON
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json();
     }
-    return null; // Or response.text() if you expect text for some non-JSON responses
+    return null;
 };
 
 /**
@@ -47,14 +49,14 @@ const handleResponse = async (response) => {
  */
 export const getClassroomCourseProgressOverview = async (classroomId) => {
     try {
-        const response = await fetch(`${API_URL}/classrooms/${classroomId}/course-progress-overview`, {
+        // Use the imported API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/classrooms/${classroomId}/course-progress-overview`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
         return handleResponse(response);
     } catch (error) {
         console.error('Error fetching classroom course progress overview:', error.message);
-        // Re-throw the error so the component can catch it
         throw new Error(error.message || 'Failed to fetch classroom progress overview');
     }
 };
@@ -64,7 +66,8 @@ export const getClassroomCourseProgressOverview = async (classroomId) => {
  */
 export const getStudentDetailedLessonProgress = async (studentId, courseId) => {
     try {
-        const response = await fetch(`${API_URL}/students/${studentId}/courses/${courseId}/detailed-lesson-progress`, {
+        // Use the imported API_BASE_URL
+        const response = await fetch(`${API_BASE_URL}/students/${studentId}/courses/${courseId}/detailed-lesson-progress`, {
             method: 'GET',
             headers: getAuthHeaders(),
         });
