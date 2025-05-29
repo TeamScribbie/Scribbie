@@ -98,7 +98,6 @@ TeacherRegistrationForm.propTypes = {
   }).isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
-  // isLoading: PropTypes.bool,
 };
 
 export default TeacherRegistrationForm;
