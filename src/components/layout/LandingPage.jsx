@@ -41,9 +41,6 @@ const LandingPage = () => {
 
       <section className="started">
         <p className="started-boldtext">Getting started</p>
-        <p className="started-slimtext">
-          Eu, molestie commodo, enim pellentesque turpis integer sagittis
-        </p>
         <div className="started-items">
           <div className="itemwrapper">
             <div className="started-items-item">
