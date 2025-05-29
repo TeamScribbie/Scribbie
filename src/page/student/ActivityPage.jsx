@@ -1,11 +1,13 @@
-// src/page/student/ActivityPage.jsx
+// Path: AI Context/Frontend/page/student/ActivityPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-// Navbar import is removed
 import QuizMcqGame from '../../components/student/QuizMcqGame';
 import ReadingGameComponent from '../../components/student/ReadingGameComponent';
 import FillBlanksGameComponent from '../../components/student/FillBlanksGameComponent';
+// highlight-start
+import Matching2GameComponent from '../../components/student/Matching2GameComponent'; // Import the new game
+// highlight-end
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
 
@@ -34,11 +36,11 @@ const ActivityPage = () => {
              setIsLoading(false); return;
         }
         setIsLoading(true); setError(null);
-        try {            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
+        try {
+            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
             if (!data || !data.activityType) {
                 throw new Error("Invalid activity data structure received from server.");
             }
-            console.log('Activity Details:', data); // Add logging to debug
             setActivityDetails(data);
         } catch (err) {
             setError(err.message || "An error occurred while fetching activity details.");
@@ -66,7 +68,6 @@ const ActivityPage = () => {
     };
     
     const handleBackNavigation = () => {
-        // This function is now primarily for error states or if QuizMcqGame needs an exit prop
         navigate(classroomId && lessonDefinitionId ? `/student/classroom/${classroomId}/lessons` : '/student-homepage');
     };
 
@@ -99,18 +100,18 @@ const ActivityPage = () => {
             const gameInstructions = activityDetails.instructions || activityInstructionsFromState;
 
             switch (activityDetails.activityType) {
-                case 'MATCHING': // Your MCQ game
+                case 'MATCHING':
                     return (
                         <QuizMcqGame
                             questions={activityDetails.questions || []}
                             onGameComplete={handleGameComplete}
                             activityTitle={gameTitle}
                             activityInstructions={gameInstructions}
-                            // Pass classroomId and lessonDefinitionId for the game's internal back button
                             classroomId={classroomId}
                             lessonDefinitionId={lessonDefinitionId}
                         />
-                    );                case 'READING':
+                    );
+                case 'READING':
                     return (
                         <ReadingGameComponent
                             activityData={activityDetails}
@@ -120,7 +121,8 @@ const ActivityPage = () => {
                             classroomId={classroomId}
                             lessonDefinitionId={lessonDefinitionId}
                         />
-                    );                case 'FILL_BLANKS':
+                    );
+                case 'FILL_BLANKS':
                     return (
                         <FillBlanksGameComponent 
                             activityData={activityDetails}
@@ -131,6 +133,19 @@ const ActivityPage = () => {
                             lessonDefinitionId={lessonDefinitionId}
                         />
                     );
+                // highlight-start
+                case 'MATCHING2':
+                    return (
+                        <Matching2GameComponent
+                            questions={activityDetails.questions || []} // Or specific data structure for MATCHING2
+                            onGameComplete={handleGameComplete}
+                            activityTitle={gameTitle}
+                            activityInstructions={gameInstructions}
+                            classroomId={classroomId}
+                            lessonDefinitionId={lessonDefinitionId}
+                        />
+                    );
+                // highlight-end
                 default:
                     return (
                         <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100%', height: '100%', p:2 }}>
@@ -155,19 +170,16 @@ const ActivityPage = () => {
     };
 
     return (
-        // This Box now takes the full viewport height and width, and hides overflow.
         <Box 
             sx={{ 
                 width: '100vw', 
                 height: '100vh', 
-                bgcolor: '#FFFBE0', // Background for the whole page
-                display: 'flex',      // Use flex to make its child (the game area) fill it
+                bgcolor: '#FFFBE0',
+                display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden',   // Prevent scrollbars on the page itself
+                overflow: 'hidden',
             }}
         >
-            {/* Navbar is removed */}
-            {/* The game area will stretch to fill this Box */}
             {renderGameArea()} 
         </Box>
     );

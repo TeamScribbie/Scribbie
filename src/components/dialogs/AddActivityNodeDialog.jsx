@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 
 const ACTIVITY_TYPES = [
-    "MATCHING", "FILL_BLANKS", "READING",
+    "MATCHING", "FILL_BLANKS", "READING", "MATCHING2"
 ];
 
 const AddActivityNodeDialog = ({ open, onClose, onConfirm, isLoading, error }) => {
