@@ -4,7 +4,7 @@ import { Box, Typography, Paper, TextField, Button, IconButton, Grid, Chip } fro
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { evaluateAnswer as aiEvaluate } from '../../services/aiService';
 
 import correctSound1 from '../../assets/sounds/correct1.ogg';
@@ -118,12 +118,12 @@ const FillBlanksGameComponent = ({
                     isHoverSoundPlaying.current = false;
                 });
         }
-    };
-
-    const handleAnswerChange = (e) => {
+    };    const handleAnswerChange = (e) => {
         if (showFeedback || isProcessing) return;
         setCurrentAnswer(e.target.value);
-    };    const { authState } = useContext(AuthContext);
+    };
+    
+    const { authState } = useAuth();
 
     const evaluateAnswer = async (userAnswer, question) => {
         try {
