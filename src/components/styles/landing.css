@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    background-color: #252954;
+    background-color: #FFD966;
   }
   
   .hidden {
@@ -14,7 +14,7 @@ body {
     max-width: 1100px;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: #1F1D2B;
+    background-color: #FFD966;
   }
   .landingpage::before {
     content: "";
@@ -133,7 +133,7 @@ body {
   .box .infobox-boldtext {
     margin: 0;
     font-family: Poppins;
-    color: #FFFFFF;
+    color: #451513;
     font-size: 65px;
     font-weight: 600;
     line-height: 60px;
@@ -143,7 +143,7 @@ body {
   .box .infobox-slimtext {
     margin: 24px 0;
     font-family: Poppins;
-    color: #FFFFFF;
+    color: #451513;
     font-size: 16px;
     font-weight: 400;
     line-height: 18px;
@@ -166,7 +166,7 @@ body {
     font-weight: 600;
     font-size: 13px;
     letter-spacing: -1px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .box .infobox-createbtn {
     cursor: pointer;

@@ -1,50 +1,37 @@
 import React from "react";
-import '../styles/landing.css';
+import { useNavigate } from "react-router-dom";
+import "../styles/landing.css";
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
+  const goToLogin = () => {
+    navigate("/teacher-login");
+  };
+
   return (
     <div className="landingpage">
       <nav className="navbar">
-        <a href="#" className="navlogo">Scribbie</a>
-        <button className="hamburger" aria-label="Toggle menu">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="feather feather-menu"
-          >
-            <path d="M3 12h18M3 6h18M3 18h18" />
-          </svg>
-        </button>
-        <div className="navlinkwrap">
-          <span className="navlink selectedlink">Home</span>
-          <span className="navlink">My Profile</span>
-          <span className="navlink">Activity</span>
-          <span className="navlink">How It Works</span>
-        </div>
+        <a href="#" className="navlogo">
+          <img
+            src="/src/assets/ScribbieLogoV2.png"
+            alt="Scribbie Logo"
+            style={{ height: '60px', marginRight: '30px', cursor: 'pointer' }}
+            className="navlogo-img"
+          />
+        </a>
+        
         <div className="buttonwrap">
-          <button className="createbtn selectedbtn">CREATE</button>
-          <button className="createbtn">SIGN IN</button>
+          <button className="createbtn selectedbtn" onClick={goToLogin}>SIGN IN</button>
         </div>
       </nav>
 
       <main className="box">
         <section className="infobox">
-          <p className="infobox-boldtext">
-            Discover, collect, and charity in extraordinary NFT marketplace
-          </p>
-          <p className="infobox-slimtext">
-            In aenean posuere lorem risus nec. Tempor tincidunt aenean purus
-            purus vestibulum nibh mi venenatis
-          </p>
+          <p className="infobox-boldtext">Have fun to learn!</p>
+          <p className="infobox-slimtext">An English Learning App</p>
           <div className="infobox-btnwrapper">
-            <button className="infobox-explorebtn selected">Explore</button>
-            <button className="infobox-createbtn">Create</button>
+            <button className="infobox-explorebtn selected">Register</button>
           </div>
         </section>
 
@@ -91,28 +78,6 @@ const LandingPage = () => {
         </section>
       </main>
 
-      <section className="auction">
-        <div className="title">
-          <p className="titlebold">Hot auctions</p>
-          <p className="titleslim">View all</p>
-        </div>
-        <div className="nft">
-          {[1, 2, 3, 4].map((item) => (
-            <div key={item} className="item">
-              <img
-                className="item-img"
-                src="https://images.unsplash.com/photo-1666032250188-b6797784b249"
-                alt={`NFT Auction ${item}`}
-              />
-              <div className="item-title">
-                <p>Lorem Ipsum</p>
-                <p>1.20 Weth</p>
-              </div>
-              <p className="item-date">Ends in 01.34.45</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <section className="started">
         <p className="started-boldtext">Getting started</p>
@@ -122,20 +87,9 @@ const LandingPage = () => {
         <div className="started-items">
           <div className="itemwrapper">
             <div className="started-items-item">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="36"
-                height="36"
-                aria-hidden="true"
-              >
-                <path
-                  style={{ stroke: "none", fillRule: "nonzero", fill: "#e0e0e0" }}
-                  d="M12 12v18h4v-7h4v7h4V12h-12z"
-                />
-                <path
-                  style={{ stroke: "none", fillRule: "nonzero", fill: "#e0e0e0" }}
-                  d="M12 8h12v4H12z"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" aria-hidden="true">
+                <path style={{ stroke: "none", fillRule: "nonzero", fill: "#e0e0e0" }} d="M12 12v18h4v-7h4v7h4V12h-12z" />
+                <path style={{ stroke: "none", fillRule: "nonzero", fill: "#e0e0e0" }} d="M12 8h12v4H12z" />
               </svg>
               <p className="itembold">Create your wallet</p>
               <p className="itemslim">Molestie commodo enim pellentesque</p>
@@ -144,22 +98,9 @@ const LandingPage = () => {
 
           <div className="itemwrapper">
             <div className="started-items-item">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="36"
-                height="36"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="16"
-                  style={{ stroke: "none", fill: "#e0e0e0" }}
-                />
-                <path
-                  d="M9 21h18v3H9zM13.5 15v3H16v-3z"
-                  style={{ stroke: "none", fill: "#b0b0b0" }}
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" aria-hidden="true">
+                <circle cx="18" cy="18" r="16" style={{ stroke: "none", fill: "#e0e0e0" }} />
+                <path d="M9 21h18v3H9zM13.5 15v3H16v-3z" style={{ stroke: "none", fill: "#b0b0b0" }} />
               </svg>
               <p className="itembold">Connect your wallet</p>
               <p className="itemslim">Molestie commodo enim pellentesque</p>
@@ -168,22 +109,9 @@ const LandingPage = () => {
 
           <div className="itemwrapper">
             <div className="started-items-item">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="36"
-                height="36"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="16"
-                  style={{ stroke: "none", fill: "#e0e0e0" }}
-                />
-                <path
-                  d="M12 12h12v3H12zM12 18h12v3H12z"
-                  style={{ stroke: "none", fill: "#b0b0b0" }}
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" aria-hidden="true">
+                <circle cx="18" cy="18" r="16" style={{ stroke: "none", fill: "#e0e0e0" }} />
+                <path d="M12 12h12v3H12zM12 18h12v3H12z" style={{ stroke: "none", fill: "#b0b0b0" }} />
               </svg>
               <p className="itembold">Start trading</p>
               <p className="itemslim">Molestie commodo enim pellentesque</p>
@@ -193,7 +121,7 @@ const LandingPage = () => {
       </section>
 
       <footer>
-        <p>© 2025 Gaslur. All rights reserved.</p>
+        <p>© 2025 Scribbie. All rights reserved.</p>
       </footer>
     </div>
   );
