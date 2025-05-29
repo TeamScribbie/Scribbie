@@ -11,10 +11,10 @@ body {
     margin: 0 auto;
     padding: 0 80px;
     position: relative;
-    max-width: 10px;
+    max-width: 1100px;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: #1F1D2B;
+    background-color: #FFD966;
   }
   .landingpage::before {
     content: "";
@@ -24,7 +24,7 @@ body {
     left: 60%;
     top: 138px;
     filter: blur(90px);
-    background-color: rgb(248, 247, 245);
+    background-color: #FB37FF;
   }
   .landingpage::after {
     content: "";
@@ -33,21 +33,21 @@ body {
     height: 123px;
     left: 80%;
     top: 550px;
-    background-color: #c95c3b;
+    background-color: #18B2DE;
     filter: blur(80px);
   }
   .landingpage .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 30px 0;
+    padding: 20px 0;
     width: 100%;
   }
   .landingpage .box {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 100px;
+    margin-top: 80px;
   }
   .landingpage .auction {
     margin-top: 100px;
@@ -66,7 +66,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding-bottom: 30px;
-    border-top: 1px solid #0e0d0d;
+    border-top: 1px solid #451513;
   }
   
   .navbar .hamburgerlogowrap {
@@ -166,7 +166,7 @@ body {
     font-weight: 600;
     font-size: 13px;
     letter-spacing: -1px;
-    color: #451513;
+    color: #FFFFFF;
   }
   .box .infobox-createbtn {
     cursor: pointer;
@@ -218,7 +218,7 @@ body {
     align-items: center;
     font-family: "Poppins";
     font-style: normal;
-    color: #FFFFFF;
+    color: #451513;
     font-weight: 600;
     font-size: 12px;
   }
@@ -238,7 +238,7 @@ body {
     flex-direction: column;
     align-items: flex-end;
     font-family: "Poppins";
-    color: #FFFFFF;
+    color: #451513;
     font-style: normal;
     font-weight: 600;
     font-size: 12px;
@@ -264,7 +264,7 @@ body {
     margin: 0;
     font-family: "Poppins";
     font-style: normal;
-    color: #FFFFFF;
+    color: #451513;
     font-weight: 500;
     font-size: 48px;
     line-height: 72px;
@@ -297,7 +297,7 @@ body {
     align-self: center;
     font-family: "Poppins";
     font-style: normal;
-    color: #FFFFFF;
+    color: #451513;
     font-weight: 500;
     font-size: 40px;
     line-height: 72px;
@@ -311,7 +311,7 @@ body {
     font-size: 20px;
     line-height: 36px;
     letter-spacing: 0.5px;
-    color: #E2E2E2;
+    color: #451513;
   }
   .started-items {
     padding: 60px 80px;
@@ -340,7 +340,7 @@ body {
     font-style: normal;
     font-weight: 400;
     font-size: 12px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .started-items-item {
     display: flex;
@@ -366,7 +366,7 @@ body {
     font-weight: 500;
     font-size: 36px;
     letter-spacing: -1px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .discover-items {
     display: grid;
@@ -381,7 +381,7 @@ body {
     align-self: center;
     width: 161px;
     height: 40px;
-    border: 1px solid #D7D7D7;
+    border: 1px solid #451513;
     border-radius: 10px;
     background-color: transparent;
     font-family: "Poppins";
@@ -389,7 +389,7 @@ body {
     font-weight: 500;
     font-size: 12px;
     letter-spacing: 1.5px;
-    color: #BCBCBC;
+    color: #451513;
   }
   
   .footer-main {
@@ -399,7 +399,7 @@ body {
     font-weight: 500;
     font-size: 30px;
     line-height: 40px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .footer-navigate {
     display: flex;
@@ -414,7 +414,7 @@ body {
     font-weight: 400;
     font-size: 20px;
     line-height: 30px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .footer-navigate .nav p {
     font-family: "Poppins";
@@ -423,7 +423,7 @@ body {
     font-size: 12px;
     line-height: 18px;
     letter-spacing: 0.03em;
-    color: #D7D7D7;
+    color: #451513;
   }
   
   .footer2 p {
@@ -432,7 +432,7 @@ body {
     font-weight: 400;
     font-size: 12px;
     line-height: 36px;
-    color: #828282;
+    color: #451513;
   }
   
   .item {
@@ -462,7 +462,7 @@ body {
     font-weight: 600;
     font-size: 12px;
     line-height: 24px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .item-date {
     font-family: "Poppins";
@@ -470,7 +470,7 @@ body {
     font-weight: 400;
     font-size: 12px;
     line-height: 24px;
-    color: #BCBCBC;
+    color: #451513;
   }
   
   .filters {
@@ -485,7 +485,7 @@ body {
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .filters .filter svg {
     margin-right: 5px;
@@ -504,7 +504,7 @@ body {
     font-style: normal;
     font-weight: 500;
     font-size: 12px;
-    color: #FFFFFF;
+    color: #451513;
   }
   .filters .filterbtn svg {
     margin-right: 5px;
@@ -542,6 +542,7 @@ body {
   
     .footer {
       flex-direction: column;
+      text-align: center;
     }
     .footer-main {
       max-width: 80%;
