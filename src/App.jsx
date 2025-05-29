@@ -33,6 +33,8 @@ import ActivityNodeEditorPage from './page/teacher/ActivityNodeEditorPage.jsx'; 
 import ChallengeQuestionsEditorPage from './page/teacher/ChallengeQuestionsEditorPage.jsx';
 import LessonManagementPage from "./page/teacher/LessonManagementPage.jsx"; // New Page
 
+import ReadingGameComponent from './components/student/ReadingGameComponent';
+import FillBlanksGameComponent from './components/student/FillBlanksGameComponent';
 
 // ProtectedRoute component (ensure this is defined as you had it)
 const ProtectedRoute = ({ allowedRoles, children }) => {
@@ -63,13 +65,14 @@ const App = () => {
   return (
     <AuthProvider>
       <Routes>
-        {/* ... (Public Routes and Student Protected Routes remain the same) ... */}
+
         <Route path="/" element={<LandingPage />} />
         <Route path="/student-login" element={<StudentLogin />} />
         <Route path="/student-register" element={<StudentRegistration />} />
         <Route path="/teacher-login" element={<TeacherLogin />} />
         <Route path="/teacher-register" element={<TeacherRegistration />} />
 
+        {/* Student Protected Routes */}
         <Route path="/student-homepage" element={
             <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
                 <StudentHomepage />
@@ -111,6 +114,18 @@ const App = () => {
             path="/student/lesson/:lessonDefinitionId/activity-node/:activityNodeTypeId/play" 
             element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivityPage /></ProtectedRoute>} 
         />
+
+        {/* Activity Routes */}
+        <Route path="/student/activity/reading/:activityId" element={
+          <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
+            <ReadingGameComponent />
+          </ProtectedRoute>
+        } />
+        <Route path="/student/activity/fill-blanks/:activityId" element={
+          <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
+            <FillBlanksGameComponent />
+          </ProtectedRoute>
+        } />
 
         {/* Teacher Protected Routes */}
         <Route path="/teacher-homepage" element={

@@ -11,7 +11,15 @@ import LiveLeaderboard from './LiveLeaderboard';
 import anubisImage from '../../assets/anubis.png';
 import mascotImage from '../../assets/duh.png';
 import backgroundImage from '../../assets/background.png';
-import correctSound from '../../assets/sounds/correct.ogg';
+import correctSound1 from '../../assets/sounds/correct1.ogg';
+import correctSound2 from '../../assets/sounds/correct2.ogg';
+import correctSound3 from '../../assets/sounds/correct3.ogg';
+import correctSound4 from '../../assets/sounds/correct4.ogg';
+import correctSound5 from '../../assets/sounds/correct5.ogg';
+import correctSound6 from '../../assets/sounds/correct6.ogg';
+import correctSound7 from '../../assets/sounds/correct7.ogg';
+import correctSound8 from '../../assets/sounds/correct8.ogg';
+import correctSound9 from '../../assets/sounds/correct9.ogg';
 import wrongSound from '../../assets/sounds/wrong.ogg';
 import winSound from '../../assets/sounds/win.ogg';
 import loseSound from '../../assets/sounds/lose.ogg';
@@ -58,7 +66,17 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
     const feedbackTimeoutRef = useRef(null);
     const startTimeRef = useRef(Date.now());
     const bgMusicRef = useRef(null);
-    const correctSoundRef = useRef(null);
+    const correctAudioRefs = useRef({
+        1: new Audio(correctSound1),
+        2: new Audio(correctSound2),
+        3: new Audio(correctSound3),
+        4: new Audio(correctSound4),
+        5: new Audio(correctSound5),
+        6: new Audio(correctSound6),
+        7: new Audio(correctSound7),
+        8: new Audio(correctSound8),
+        9: new Audio(correctSound9),
+    });
     const wrongSoundRef = useRef(null);
     const winSoundRef = useRef(null);
     const loseSoundRef = useRef(null);
@@ -251,15 +269,13 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
         if (!isAnswerSubmitted || !selectedChoiceId) return;
         const selected = displayedChoices.find(c => c.choiceId === selectedChoiceId);
         if (selected && selected.isCorrect) {
-            if (!correctSoundRef.current) correctSoundRef.current = new Audio(correctSound);
-            correctSoundRef.current.currentTime = 0;
-            correctSoundRef.current.play().catch(() => {});
+            playCorrectSound(streak);
         } else {
             if (!wrongSoundRef.current) wrongSoundRef.current = new Audio(wrongSound);
             wrongSoundRef.current.currentTime = 0;
             wrongSoundRef.current.play().catch(() => {});
         }
-    }, [isAnswerSubmitted, selectedChoiceId, displayedChoices]);
+    }, [isAnswerSubmitted, selectedChoiceId, displayedChoices, streak]);
 
     // Play wrong sound if time runs out (no choice selected)
     useEffect(() => {
@@ -283,6 +299,44 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
             loseSoundRef.current.play().catch(() => {});
         }
     }, [gameOver, health]);
+
+    // Initialize audio settings
+    useEffect(() => {
+        Object.values(correctAudioRefs.current).forEach(audio => {
+            audio.volume = 0.5;
+        });
+        return () => {
+            Object.values(correctAudioRefs.current).forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        };
+    }, []);
+
+    const playCorrectSound = async (currentStreak) => {
+        // Use the next streak number since we're playing after incrementing
+        const nextStreak = currentStreak + 1;
+        const soundIndex = Math.min(nextStreak, 9);
+        const audio = correctAudioRefs.current[soundIndex];
+        
+        if (!audio) {
+            console.error(`No audio found for streak ${nextStreak}`);
+            return;
+        }
+
+        // Stop any currently playing correct sounds
+        Object.values(correctAudioRefs.current).forEach(sound => {
+            sound.pause();
+            sound.currentTime = 0;
+        });
+        
+        try {
+            audio.currentTime = 0;
+            await audio.play();
+        } catch (error) {
+            console.error('Error playing streak sound:', error);
+        }
+    };
 
     if (questions.length === 0 && !gameOver) {
         return <Typography sx={{textAlign: 'center', color: 'white', p:3, fontSize: '1.5rem'}}>Loading questions, please wait...</Typography>;

@@ -1,6 +1,5 @@
 // src/services/authService.js
-
-const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
+import { API_BASE_URL } from '../config/apiConfig';
 
 /**
  * Logs in a student user.
@@ -113,6 +112,6 @@ export const registerTeacher = async (teacherData) => {
     const resultData = await response.json();
     return resultData;
   };
-  
+
 
 

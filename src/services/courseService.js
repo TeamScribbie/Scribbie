@@ -1,5 +1,4 @@
-// src/services/courseService.js
-const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
+import { API_BASE_URL } from '../config/apiConfig';
 
 /**
  * Fetches a list of all available courses for assignment by a teacher/admin.

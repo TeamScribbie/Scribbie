@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://152.42.254.129:8080/api'; // Ensure this is defined correctly
+import { API_BASE_URL } from '../config/apiConfig';
 
 export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     if (!activityNodeTypeId || !token) {
@@ -6,24 +6,21 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     }
     console.log(`activityService: Fetching details for ActivityNodeType ID: ${activityNodeTypeId}`);
 
-    // Make sure this line uses template literals correctly:
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, { // <<<< CHECK THIS LINE CAREFULLY
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/json', // Good practice to add this
+            'Accept': 'application/json',
         },
     });
 
     if (!response.ok) {
-        // Handle non-JSON error responses more gracefully
         let errorMessage;
         try {
             const errorData = await response.json();
             errorMessage = errorData.message || `Failed to fetch activity details. Status: ${response.status}`;
         } catch (e) {
-            // If response is not JSON, use the status text or a generic message
             errorMessage = response.statusText || `HTTP error! Status: ${response.status}`;
         }
         
@@ -36,8 +33,47 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     }
 
     const data = await response.json();
-    // ... (rest of your existing logic for handling data) ...
     return data;
+};
+
+export const getActivityDetails = async (activityId, token) => {
+    if (!activityId || !token) {
+        throw new Error('Activity ID and auth token are required.');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/activities/${activityId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        let errorMessage;
+        try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || `Failed to fetch activity details. Status: ${response.status}`;
+        } catch (e) {
+            errorMessage = response.statusText || `HTTP error! Status: ${response.status}`;
+        }
+        
+        console.error(`Get Activity Details API Error (ID ${activityId}):`, errorMessage);
+
+        if (response.status === 404) {
+            throw new Error(`Activity not found (ID: ${activityId}). Server says: ${errorMessage}`);
+        }
+        throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    
+    // Transform the data to include gameMode if it's not already present
+    return {
+        ...data,
+        gameMode: data.gameMode || data.activityType || 'READING', // Default to READING if not specified
+    };
 };
 
 // ✨ THIS FUNCTION WILL SEND THE FOCUSED PAYLOAD FOR DETAILS UPDATE ✨

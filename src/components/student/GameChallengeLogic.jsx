@@ -3,6 +3,20 @@ import { useNavigate } from "react-router-dom";
 import mascot from "../../assets/duh.png"; 
 import confetti from "canvas-confetti";
 
+// Import sound files
+import correctSound1 from "../../assets/sounds/correct1.ogg";
+import correctSound2 from "../../assets/sounds/correct2.ogg";
+import correctSound3 from "../../assets/sounds/correct3.ogg";
+import correctSound4 from "../../assets/sounds/correct4.ogg";
+import correctSound5 from "../../assets/sounds/correct5.ogg";
+import correctSound6 from "../../assets/sounds/correct6.ogg";
+import correctSound7 from "../../assets/sounds/correct7.ogg";
+import correctSound8 from "../../assets/sounds/correct8.ogg";
+import correctSound9 from "../../assets/sounds/correct9.ogg";
+import wrongSound from "../../assets/sounds/wrong.ogg";
+import winSound from "../../assets/sounds/win.ogg";
+import loseSound from "../../assets/sounds/lose.ogg";
+
 // Assuming GameChallengeLogic receives full question objects including choices
 // where each choice is an object like: { choiceId: '...', choiceText: '...', isCorrect: true/false }
 
@@ -37,6 +51,12 @@ const GameChallengeLogic = ({ questions, challengeConfig, onChallengeComplete, o
   useEffect(() => {
     if (gameOver) {
         const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
+        
+        // Play the appropriate sound
+        const soundToPlay = challengeStatus === 'COMPLETED' ? winAudioRef.current : loseAudioRef.current;
+        soundToPlay.currentTime = 0;
+        soundToPlay.play().catch(error => console.error('Error playing game end sound:', error));
+        
         onChallengeComplete(localScore, highestStreak, totalQuestionsAnswered, challengeStatus, timeTaken);
     }
   }, [gameOver, localScore, highestStreak, totalQuestionsAnswered, challengeStatus, onChallengeComplete]);
@@ -80,30 +100,38 @@ const GameChallengeLogic = ({ questions, challengeConfig, onChallengeComplete, o
     }
   };
   
-  const handleAnswer = (choiceObj) => { // choiceObj is the full choice object or null
+  const handleAnswer = (choiceObj) => {
     if (isAnswerSubmitted) return;
 
     if (timerIdRef.current) clearInterval(timerIdRef.current);
     setIsAnswerSubmitted(true);
-    setSelectedChoice(choiceObj); // Store the selected choice object
+    setSelectedChoice(choiceObj);
     setTotalQuestionsAnswered(prev => prev + 1);
 
     let currentStreak = streak;
 
-    if (choiceObj && choiceObj.isCorrect) { // Check the isCorrect property of the choice object
+    if (choiceObj && choiceObj.isCorrect) {
         const newScore = localScore + 1000 + (currentStreak * 100); 
         setLocalScore(newScore);
         if(onScoreUpdate) onScoreUpdate(newScore); 
 
+        // Increment streak before playing sound
         currentStreak++;
         setStreak(currentStreak);
         setTotalCorrectAnswers(prev => prev + 1);
+        
+        // Play the streak-specific sound with the new streak value
+        playCorrectSound(currentStreak);
     } else {
         // Incorrect answer or timer ran out
         setLives(prev => prev - 1);
         setStreak(0); 
-        currentStreak = 0; 
+        currentStreak = 0;
         if(onScoreUpdate) onScoreUpdate(localScore);
+        
+        // Play wrong sound
+        wrongAudioRef.current.currentTime = 0;
+        wrongAudioRef.current.play().catch(error => console.error('Error playing wrong sound:', error));
     }
     
     setTimeout(() => {
@@ -111,6 +139,69 @@ const GameChallengeLogic = ({ questions, challengeConfig, onChallengeComplete, o
     }, 1500); 
   };
 
+  // Add audio refs
+  const correctAudioRefs = useRef({
+    1: new Audio(correctSound1),
+    2: new Audio(correctSound2),
+    3: new Audio(correctSound3),
+    4: new Audio(correctSound4),
+    5: new Audio(correctSound5),
+    6: new Audio(correctSound6),
+    7: new Audio(correctSound7),
+    8: new Audio(correctSound8),
+    9: new Audio(correctSound9),
+  });
+  const wrongAudioRef = useRef(new Audio(wrongSound));
+  const winAudioRef = useRef(new Audio(winSound));
+  const loseAudioRef = useRef(new Audio(loseSound));
+
+  // Initialize audio settings
+  useEffect(() => {
+    Object.values(correctAudioRefs.current).forEach(audio => {
+      audio.volume = 0.5;
+    });
+    wrongAudioRef.current.volume = 0.5;
+    winAudioRef.current.volume = 0.5;
+    loseAudioRef.current.volume = 0.5;
+
+    return () => {
+      Object.values(correctAudioRefs.current).forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+      wrongAudioRef.current.pause();
+      wrongAudioRef.current.currentTime = 0;
+      winAudioRef.current.pause();
+      winAudioRef.current.currentTime = 0;
+      loseAudioRef.current.pause();
+      loseAudioRef.current.currentTime = 0;
+    };
+  }, []);
+
+  // Add playCorrectSound function
+  const playCorrectSound = async (currentStreak) => {
+    // Use exactly the streak number to get the corresponding sound (capped at 9)
+    const soundIndex = Math.min(currentStreak, 9);
+    const audio = correctAudioRefs.current[soundIndex];
+    
+    if (!audio) {
+      console.error(`No audio found for streak ${currentStreak}`);
+      return;
+    }
+
+    // Stop any currently playing correct sounds
+    Object.values(correctAudioRefs.current).forEach(sound => {
+      sound.pause();
+      sound.currentTime = 0;
+    });
+    
+    try {
+      audio.currentTime = 0;
+      await audio.play();
+    } catch (error) {
+      console.error('Error playing streak sound:', error);
+    }
+  };
 
   if (questions.length === 0) {
     return <Typography sx={{textAlign: 'center', mt: 3}}>No questions loaded for this challenge.</Typography>;
