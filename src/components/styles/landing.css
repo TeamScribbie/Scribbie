@@ -11,10 +11,10 @@ body {
     margin: 0 auto;
     padding: 0 80px;
     position: relative;
-    max-width: 1100px;
+    max-width: 10px;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: #1F1D2B;
+    background-color: rgb(255, 231, 186);
   }
   .landingpage::before {
     content: "";
@@ -24,7 +24,7 @@ body {
     left: 60%;
     top: 138px;
     filter: blur(90px);
-    background-color: #FB37FF;
+    background-color: rgb(248, 247, 245);
   }
   .landingpage::after {
     content: "";
@@ -33,21 +33,21 @@ body {
     height: 123px;
     left: 80%;
     top: 550px;
-    background-color: #18B2DE;
+    background-color: #c95c3b;
     filter: blur(80px);
   }
   .landingpage .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 0;
+    padding: 30px 0;
     width: 100%;
   }
   .landingpage .box {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 80px;
+    margin-top: 100px;
   }
   .landingpage .auction {
     margin-top: 100px;
@@ -66,7 +66,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding-bottom: 30px;
-    border-top: 1px solid #F2F2F2;
+    border-top: 1px solid #0e0d0d;
   }
   
   .navbar .hamburgerlogowrap {
