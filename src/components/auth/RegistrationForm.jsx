@@ -1,40 +1,76 @@
 // src/components/auth/RegistrationForm.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, IconButton, InputAdornment } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const formatLabel = (fieldName) => {
   return fieldName
-    .replace(/([A-Z])/g, ' $1') 
-    .replace(/^./, (str) => str.toUpperCase()); 
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase());
 };
 
 const RegistrationForm = ({ formData, onChange, onSubmit }) => {
   const fields = ['studentId', 'firstName', 'lastName', 'password', 'verifyPassword'];
 
+  // State to track password visibility per field
+  const [showPasswordFields, setShowPasswordFields] = useState({});
+
+  const handleClickShowPassword = (field) => {
+    setShowPasswordFields((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <form className="registration-form-container" onSubmit={onSubmit}>
-      {fields.map((field) => (
-<TextField
-  key={field}
-  name={field}
-  label={formData[field] ? '' : formatLabel(field)}  // Hide label if value exists
-  type={field.includes('password') ? 'password' : 'text'}
-  size="small"
-  value={formData[field]}
-  onChange={onChange}
-  fullWidth
-  margin="dense"
-  variant="outlined"
-  className={`registration-input-field ${formData[field] ? 'hide-label' : ''}`} // Add class to hide label
-  InputLabelProps={{ shrink: false }} // Disable default label shrink to avoid label overlap
-/>
-      ))}
-      <Button
-        type="submit"
-        variant="contained"
-        className="registration-button"
-      >
+      {fields.map((field) => {
+        const isPasswordField = field.toLowerCase().includes('password');
+
+        return (
+          <TextField
+            key={field}
+            name={field}
+            label={formData[field] ? '' : formatLabel(field)} // Hide label if value exists
+            type={isPasswordField ? (showPasswordFields[field] ? 'text' : 'password') : 'text'}
+            size="small"
+            value={formData[field]}
+            onChange={onChange}
+            fullWidth
+            margin="dense"
+            variant="outlined"
+            className={`registration-input-field ${formData[field] ? 'hide-label' : ''}`}
+            InputLabelProps={{ shrink: false }}
+            InputProps={
+              isPasswordField
+                ? {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => handleClickShowPassword(field)}
+                          onMouseDown={handleMouseDownPassword}
+                          edge="end"
+                          aria-label={
+                            showPasswordFields[field] ? 'Hide password' : 'Show password'
+                          }
+                        >
+                          {showPasswordFields[field] ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }
+                : undefined
+            }
+          />
+        );
+      })}
+      <Button type="submit" variant="contained" className="registration-button">
         Register
       </Button>
     </form>

@@ -1,7 +1,9 @@
 // src/components/auth/LoginForm.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, IconButton, InputAdornment } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginForm = ({
   idNumber,
@@ -10,6 +12,16 @@ const LoginForm = ({
   onPasswordChange,
   onSubmit,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword((show) => !show);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   return (
     <form className="login-form-container" onSubmit={onSubmit}>
       <TextField
@@ -17,14 +29,15 @@ const LoginForm = ({
         value={idNumber}
         onChange={onIdChange}
         fullWidth
-        margin="normal" // Keep MUI margin for spacing consistency
+        margin="normal"
         variant="outlined"
-        className="login-input-field" // Apply custom background/border styles
-        InputLabelProps={{ shrink: false }}// Keep label floated
+        className="login-input-field"
+        InputLabelProps={{ shrink: false }}
       />
 
       <TextField
         label={password ? '' : 'Password'}
+        type={showPassword ? 'text' : 'password'}
         value={password}
         onChange={onPasswordChange}
         fullWidth
@@ -32,11 +45,25 @@ const LoginForm = ({
         variant="outlined"
         className="login-input-field"
         InputLabelProps={{ shrink: false }}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={handleClickShowPassword}
+                onMouseDown={handleMouseDownPassword}
+                edge="end"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
       />
 
       <Button
-        type="submit" // Make button submit the form
-        variant="contained" // Use MUI variant for consistency
+        type="submit"
+        variant="contained"
         className="login-button"
       >
         Login
