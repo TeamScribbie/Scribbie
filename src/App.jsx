@@ -1,6 +1,7 @@
 // AI Context/Frontend/App.jsx
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import LandingPage from "./components/layout/LandingPage";
 
 // Import Authentication Context Provider
 // Ensure useAuth is also exported from AuthContext if ProtectedRoute is in the same file or imported separately
@@ -64,7 +65,8 @@ const App = () => {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public Routes */}
+
+        <Route path="/" element={<LandingPage />} />
         <Route path="/student-login" element={<StudentLogin />} />
         <Route path="/student-register" element={<StudentRegistration />} />
         <Route path="/teacher-login" element={<TeacherLogin />} />

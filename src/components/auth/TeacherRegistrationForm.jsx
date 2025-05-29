@@ -18,21 +18,27 @@ const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */
     // Add disabling logic if needed based on isLoading prop
     <form className="teacher-registration-form-container" onSubmit={onSubmit}>
       {fields.map((field) => (
-        <TextField
-          key={field}
-          name={field}
-          label={formatLabel(field)}
-          type={field.includes('password') ? 'password' : (field === 'email' ? 'email' : 'text')}
-          size="small"
-          value={formData[field]}
-          onChange={onChange}
-          fullWidth
-          margin="dense"
-          variant="outlined"
-          className="registration-input-field"
-          InputLabelProps={{ shrink: true }}
-          // disabled={isLoading} // Disable field if loading
-        />
+<TextField
+  key={field}
+  name={field}
+  label={formData[field] ? '' : formatLabel(field)}  // Hide label if input has value
+  type={
+    field.includes('password')
+      ? 'password'
+      : field === 'email'
+      ? 'email'
+      : 'text'
+  }
+  size="small"
+  value={formData[field]}
+  onChange={onChange}
+  fullWidth
+  margin="dense"
+  variant="outlined"
+  className={`registration-input-field ${formData[field] ? 'hide-label' : ''}`}  // Add class to hide label
+  InputLabelProps={{ shrink: false }}
+  // disabled={isLoading} // Disable field if loading
+/>
       ))}
       <Button
         type="submit"

@@ -13,26 +13,25 @@ const LoginForm = ({
   return (
     <form className="login-form-container" onSubmit={onSubmit}>
       <TextField
-        label="ID Number"
+        label={idNumber ? '' : 'ID Number'}
         value={idNumber}
         onChange={onIdChange}
         fullWidth
         margin="normal" // Keep MUI margin for spacing consistency
         variant="outlined"
         className="login-input-field" // Apply custom background/border styles
-        InputLabelProps={{ shrink: true }} // Keep label floated
+        InputLabelProps={{ shrink: false }}// Keep label floated
       />
 
       <TextField
-        label="Password"
-        type="password"
+        label={password ? '' : 'Password'}
         value={password}
         onChange={onPasswordChange}
         fullWidth
         margin="normal"
         variant="outlined"
         className="login-input-field"
-        InputLabelProps={{ shrink: true }}
+        InputLabelProps={{ shrink: false }}
       />
 
       <Button
