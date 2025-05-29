@@ -348,14 +348,12 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
         return <Typography sx={{ textAlign: 'center', color: 'white', p:3, fontSize: '1.5rem' }}>Preparing challenge...</Typography>;
     }
     
-    const timerProgress = (timeLeft / (challengeConfig?.initialQuestionTimeSeconds || 15)) * 100;
-
-    return (
-        <Box sx={{
+    const timerProgress = (timeLeft / (challengeConfig?.initialQuestionTimeSeconds || 15)) * 100;    return (        <Box sx={{
             width: '100vw', height: '100vh', backgroundImage: `url(${backgroundImage})`,
             backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex',
             alignItems: 'center', justifyContent: 'center',
-            p: 2, overflow: 'hidden', position: 'relative'
+            overflow: 'hidden', position: 'relative',
+            py: 2 // Add vertical padding (top and bottom margin)
         }}>
             {comboMessage && (
                 <Typography sx={{
@@ -372,12 +370,10 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
                 }}>
                     {comboMessage}
                 </Typography>
-            )}
-
-            <Grid container spacing={2} sx={{ height: '100%', maxHeight: '900px', maxWidth: '1600px' }} alignItems="center">
+            )}            <Grid container sx={{ height: '96vh', width: '100%', overflow: 'hidden', pl: 2 }} alignItems="center" wrap="nowrap">
                 
                 {/* Left Timer Bar and Anubis */}
-                <Grid item xs={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                <Grid item sx={{ width: '5%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', overflow: 'hidden' }}>
                     <Box sx={{
                         width: '30px', height: '70%', 
                         maxHeight: '500px',
@@ -404,8 +400,7 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
                     </Box>
                 </Grid>
 
-                {/* Center Content */}
-                <Grid item xs={8} sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                {/* Center Content */}                <Grid item sx={{ width: '80%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%', overflow: 'hidden' }}>
                     <Paper elevation={3} sx={{
                         display: 'flex', justifyContent: 'space-around', alignItems: 'center',
                         p: {xs: 0.5, sm:1}, borderRadius: '15px', backgroundColor: 'rgba(255, 224, 130, 0.8)',
@@ -446,14 +441,12 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
                                 style={{ maxWidth: '80%', maxHeight: '100px', borderRadius: '8px', objectFit: 'contain' }}
                             />
                         </Box>
-                    )}
-
-                    <Box sx={{
+                    )}                    <Box sx={{
                         width: '100%', maxWidth: '700px', p: {xs:0.5, sm:1}, backgroundColor: 'rgba(121, 85, 72, 0.75)',
                         borderRadius: '10px', overflowY: 'auto',
-                        maxHeight: {xs: '200px', sm: '250px', md: '300px'}, flexGrow: 1, mb: 1
+                        maxHeight: '40vh', flexGrow: 0, mb: 1
                     }}>
-                        <Grid container spacing={{xs:0.5, sm:1}} justifyContent="center">
+                        <Grid container spacing={1} justifyContent="center">
                             {displayedChoices.map((choice) => (
                                 <Grid item xs={12} sm={displayedChoices.length > 4 ? 6 : (12 / Math.max(1, displayedChoices.length))} key={choice.choiceId}>
                                     <StyledButton
@@ -471,17 +464,34 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
                         </Grid>
                     </Box>
                 </Grid>
-
-                {/* Right Leaderboard */}
-                <Grid item xs={2} sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {lessonDefinitionId && (
-                        <LiveLeaderboard
-                            lessonDefinitionId={lessonDefinitionId}
-                            currentPlayerLocalScore={score}
-                        />
-                    )}
-                </Grid>
             </Grid>
+
+            {/* Floating Leaderboard */}
+            <Box sx={{
+                position: 'fixed',
+                right: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: '15%',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
+                {lessonDefinitionId && (
+                    <LiveLeaderboard
+                        lessonDefinitionId={lessonDefinitionId}
+                        currentPlayerLocalScore={score}
+                    />
+                )}
+            </Box>
         </Box>
     );
 };

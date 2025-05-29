@@ -380,18 +380,18 @@ const QuizMcqGame = ({
                     maxWidth: '100%'
                 }}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {Array.from({ length: 3 }).map((_, i) => (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>                    {Array.from({ length: 3 }).map((_, i) => (
                         <span key={`life-${i}`} style={{
-                            color: i < lives ? 'red' : '#D0D0D0',
+                            opacity: i < lives ? 1 : 0.3,
                             margin: '0 3px',
                             fontSize: 'clamp(2rem, 7vh, 3rem)',
-                            textShadow: i < lives ? '0 0 6px rgba(0,0,0,0.5)' : 'none'
+                            filter: i < lives ? 'none' : 'grayscale(100%)',
+                            transition: 'all 0.3s ease',
+                            textShadow: i < lives ? '0 0 6px rgba(255,0,0,0.5)' : 'none'
                         }}>❤️</span>
                     ))}
                 </Box>
 
-                {/* Score and Streak - Right Side */}
                 <Box sx={{ 
                     display: 'flex',
                     alignItems: 'center',
