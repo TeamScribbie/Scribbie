@@ -109,6 +109,33 @@ export const submitChallengeAttempt = async (submissionData, token) => {
 // ... (CRUD for custom questions and choices also remain the same for now)
 
 /**
+ * Fetches the leaderboard data for a challenge in a lesson.
+ * @param {string|number} lessonDefinitionId - The ID of the lesson definition.
+ * @param {string} token - The JWT authentication token.
+ * @returns {Promise<Array<object>>} - A promise that resolves to an array of leaderboard entry objects.
+ */
+export const getLeaderboardByLessonDef = async (lessonDefinitionId, token) => {
+    if (!lessonDefinitionId || !token) {
+        throw new Error('Lesson Definition ID and auth token are required.');
+    }
+    console.log(`challengeService: Fetching leaderboard for lessonDefId: ${lessonDefinitionId}`);
+    const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/challenge/leaderboard-snapshot`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        console.error(`Get Leaderboard API Error (LessonDef ${lessonDefinitionId}):`, errorData);
+        throw new Error(errorData.message || `Failed to fetch leaderboard. Status: ${response.status}`);
+    }
+    return response.json();
+};
+
+/**
  * Fetches the leaderboard snapshot for a challenge.
  * @param {string|number} lessonDefinitionId - The ID of the lesson definition.
  * @param {number} topN - The number of top entries to fetch.

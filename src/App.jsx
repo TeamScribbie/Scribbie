@@ -17,6 +17,7 @@ import ActivityPage from './page/student/ActivityPage';
 import ActivitySummaryPage from './page/student/ActivitySummaryPage';
 import ChallengePage from './page/student/ChallengePage';
 import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
+import ViewLeaderboardPage from './page/student/ViewLeaderboardPage';
 
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
@@ -106,6 +107,11 @@ const App = () => {
         <Route path="/student/challenge-summary" element={
             <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
                 <ChallengeSummaryPage />
+            </ProtectedRoute>
+        } />
+        <Route path="/student/leaderboard/:lessonDefinitionId" element={
+            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
+                <ViewLeaderboardPage />
             </ProtectedRoute>
         } />
 

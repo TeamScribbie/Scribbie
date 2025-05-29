@@ -19,7 +19,7 @@ import { getClassroomDetails } from '../../services/classroomService';
 // Icons
 import ClassIcon from '@mui/icons-material/School';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-// import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'; // Not used in this version
+import ChallengeConfirmDialog from '../../components/dialogs/ChallengeConfirmDialog';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ActivityIcon from '@mui/icons-material/Extension';
@@ -206,20 +206,37 @@ const LessonPage = () => {
         }
     };
 
-    
+      const [challengeDialogOpen, setChallengeDialogOpen] = useState(false);
+    const [selectedChallenge, setSelectedChallenge] = useState(null);
+
     const handleChallengeClick = (lesson, isReplay = false) => {
         console.log(`Clicked Challenge for Lesson ID: ${lesson.lessonDefinitionId} (Replay: ${isReplay})`);
         if (!lesson.challengeDefinitionId) {
             setError("This lesson does not have a challenge configured.");
             return;
         }
-        navigate(`/student/lesson/${lesson.lessonDefinitionId}/challenge`, {
+        setSelectedChallenge({ ...lesson, isReplay });
+        setChallengeDialogOpen(true);
+    };
+
+    const handlePlayChallenge = () => {
+        if (!selectedChallenge) return;
+        
+        navigate(`/student/lesson/${selectedChallenge.lessonDefinitionId}/challenge`, {
             state: { 
                 classroomId: classroomId, 
-                lessonTitle: lesson.lessonTitle,
-                isReplay 
+                lessonTitle: selectedChallenge.lessonTitle,
+                isReplay: selectedChallenge.isReplay 
             }
         });
+        setChallengeDialogOpen(false);
+    };
+
+    const handleViewLeaderboard = () => {
+        if (!selectedChallenge) return;
+        
+        navigate(`/student/leaderboard/${selectedChallenge.lessonDefinitionId}`);
+        setChallengeDialogOpen(false);
     };
 
     if (isLoading) { 
@@ -358,6 +375,17 @@ const LessonPage = () => {
                     </List>
                 </Box>
             </Box>
+            {/* Challenge confirmation dialog */}
+            {selectedChallenge && (
+                <ChallengeConfirmDialog
+                    open={challengeDialogOpen}
+                    onClose={() => setChallengeDialogOpen(false)}
+                    onPlayChallenge={handlePlayChallenge}
+                    onViewLeaderboard={handleViewLeaderboard}
+                    challengeTitle={selectedChallenge.lessonTitle}
+                    isReplay={selectedChallenge.isReplay}
+                />
+            )}
         </Box>
     );
 };
