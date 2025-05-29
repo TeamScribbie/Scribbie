@@ -14,6 +14,7 @@ const formatLabel = (fieldName) => {
 const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */ }) => {
   const fields = ['email', 'firstName', 'lastName', 'teacherId', 'password', 'verifyPassword', 'businessCode'];
 
+  // Track show/hide password state per field, including businessCode
   const [showPasswordFields, setShowPasswordFields] = useState({});
 
   const handleClickShowPassword = (field) => {
@@ -28,10 +29,10 @@ const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */
   };
 
   return (
-    // You can enable disabling logic based on isLoading prop if needed
     <form className="teacher-registration-form-container" onSubmit={onSubmit}>
       {fields.map((field) => {
-        const isPasswordField = field.toLowerCase().includes('password');
+        const isPasswordField = field.toLowerCase().includes('password') || field === 'businessCode'; // businessCode secured too
+
         const inputType = isPasswordField
           ? (showPasswordFields[field] ? 'text' : 'password')
           : field === 'email'
@@ -42,7 +43,7 @@ const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */
           <TextField
             key={field}
             name={field}
-            label={formData[field] ? '' : formatLabel(field)} // Hide label if input has value
+            label={formData[field] ? '' : formatLabel(field)} // hide label if filled
             type={inputType}
             size="small"
             value={formData[field]}
@@ -52,7 +53,6 @@ const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */
             variant="outlined"
             className={`registration-input-field ${formData[field] ? 'hide-label' : ''}`}
             InputLabelProps={{ shrink: false }}
-            // disabled={isLoading} // Uncomment if using isLoading prop
             InputProps={
               isPasswordField
                 ? {
@@ -98,7 +98,7 @@ TeacherRegistrationForm.propTypes = {
   }).isRequired,
   onChange: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
-  // isLoading: PropTypes.bool, // Add if passing isLoading prop
+  // isLoading: PropTypes.bool,
 };
 
 export default TeacherRegistrationForm;
