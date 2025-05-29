@@ -29,13 +29,21 @@ const LandingPage = () => {
       <main className="box">
         <section className="infobox">
           <p className="infobox-boldtext">Have fun to learn!</p>
-          <p className="infobox-slimtext">An English Learning App</p>
+          <p className="infobox-slimtext">Feels like real classroom</p>
           <div className="infobox-btnwrapper">
-            <button className="infobox-explorebtn selected" onClick={goToLogin}>Register</button>
+            <button className="infobox-explorebtn selected" onClick={goToLogin}>Explore</button>
           </div>
         </section>
 
-        
+        <section className="infobox">
+          <div className="infobox-content">
+            <img
+              src="/src/assets/landingface.png"
+              alt="Scribbie Character"
+              className="infobox-image"
+            />
+          </div>
+        </section>
       </main>
 
 
@@ -44,30 +52,18 @@ const LandingPage = () => {
         <div className="started-items">
           <div className="itemwrapper">
             <div className="started-items-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" aria-hidden="true">
-                <path style={{ stroke: "none", fillRule: "nonzero", fill: "#e0e0e0" }} d="M12 12v18h4v-7h4v7h4V12h-12z" />
-                <path style={{ stroke: "none", fillRule: "nonzero", fill: "#e0e0e0" }} d="M12 8h12v4H12z" />
-              </svg>
               <p className="itembold">Interactive reading and writing lessons</p>
             </div>
           </div>
 
           <div className="itemwrapper">
             <div className="started-items-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" aria-hidden="true">
-                <circle cx="18" cy="18" r="16" style={{ stroke: "none", fill: "#e0e0e0" }} />
-                <path d="M9 21h18v3H9zM13.5 15v3H16v-3z" style={{ stroke: "none", fill: "#b0b0b0" }} />
-              </svg>
               <p className="itembold">User-friendly interface</p>
             </div>
           </div>
 
           <div className="itemwrapper">
             <div className="started-items-item">
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" aria-hidden="true">
-                <circle cx="18" cy="18" r="16" style={{ stroke: "none", fill: "#e0e0e0" }} />
-                <path d="M12 12h12v3H12zM12 18h12v3H12z" style={{ stroke: "none", fill: "#b0b0b0" }} />
-              </svg>
               <p className="itembold"> Scalable and secure platform</p>
             </div>
           </div>

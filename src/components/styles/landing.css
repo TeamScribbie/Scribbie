@@ -695,3 +695,20 @@ body {
       transform: translateX(0px);
     }
   }
+  .infobox-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.infobox-text {
+  max-width: 50%;
+}
+
+.infobox-image {
+  max-width: 300px;
+  width: 100%;
+  height: auto;
+}
