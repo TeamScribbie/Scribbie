@@ -74,20 +74,44 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         setTarget(targetWord);
 
         const width = containerRef.current?.getBoundingClientRect().width || 1200;
-        const totalCount = 12 + Math.floor(Math.random() * 3);
 
-        const wordQueue = [];
+        const totalCount = 20;
+        const minTargetWords = 3;
+        const maxTargetWords = 5;
 
-        for (let i = 0; i < totalCount; i++) {
-            const word = getRandom(wordBank);
-            wordQueue.push({
+        const numTargetWords = getRandom([3, 4, 5]);
+        const numDistractors = totalCount - numTargetWords;
+
+        const wordQueue = new Array(totalCount);
+
+        // Evenly distribute target words
+        const spacing = Math.floor(totalCount / numTargetWords);
+        for (let i = 0; i < numTargetWords; i++) {
+            const pos = i * spacing;
+            wordQueue[pos] = {
                 id: crypto.randomUUID(),
-                text: word,
-                speed: 1 + waveNum * 0.7,
-            });
+                text: targetWord,
+                speed: 1 + waveNum * 0.5,
+            };
         }
 
-        wordQueue.sort(() => Math.random() - 0.5);
+        // Fill in distractors in empty slots
+        for (let i = 0; i < totalCount; i++) {
+            if (!wordQueue[i]) {
+                const distractor = getRandom(wordBank.filter(w => w !== targetWord));
+                wordQueue[i] = {
+                    id: crypto.randomUUID(),
+                    text: distractor,
+                    speed: 1 + waveNum * 0.7,
+                };
+            }
+        }
+
+        // Shuffle lightly to break strict pattern
+        for (let i = wordQueue.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [wordQueue[i], wordQueue[j]] = [wordQueue[j], wordQueue[i]];
+        }
 
         let index = 0;
         const spawnNext = () => {
@@ -102,9 +126,9 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 if (lane !== null) {
                     const x = width + 50;
                     setWords(prev => [...prev, { ...nextWord, x, y: lane }]);
-                    setTimeout(spawnNext, 4000);
+                    setTimeout(spawnNext, 3000);
                 } else {
-                    setTimeout(trySpawn, 2000);
+                    setTimeout(trySpawn, 1000);
                 }
             };
 
@@ -172,6 +196,20 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             spawnWave(wave);
             animRef.current = requestAnimationFrame(step);
             return () => cancelAnimationFrame(animRef.current);
+        }
+    }, [gameState]);
+
+    useEffect(() => {
+        if (gameState === 'gameOver') {
+            const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
+            onGameComplete?.({
+                score,
+                highestScore,
+                status: score >= 10 ? 'COMPLETED' : 'FAILED',
+                timeTaken,
+                accuracy: 100,
+                questionsAttempted: score,
+            });
         }
     }, [gameState]);
 
@@ -243,21 +281,6 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 <div className="overlay">
                     <h2>Game Over</h2>
                     <p>Your score: {score}</p>
-                    <button
-                        onClick={() => {
-                            const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
-                            onGameComplete?.({
-                                score,
-                                highestScore,
-                                status: score >= 10 ? 'COMPLETED' : 'FAILED',
-                                timeTaken,
-                                accuracy: 100,
-                                questionsAttempted: score,
-                            });
-                        }}
-                    >
-                        Submit & Continue
-                    </button>
                     <button onClick={startGame} style={{ marginLeft: '1rem' }}>
                         Play Again
                     </button>
