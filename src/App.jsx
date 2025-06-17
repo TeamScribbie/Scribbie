@@ -36,6 +36,7 @@ import LessonManagementPage from "./page/teacher/LessonManagementPage.jsx"; // N
 
 import ReadingGameComponent from './components/student/ReadingGameComponent';
 import FillBlanksGameComponent from './components/student/FillBlanksGameComponent';
+import ReadingDefenderComponent from "./components/student/ReadingDefenderComponent.jsx";
 
 // ProtectedRoute component (ensure this is defined as you had it)
 const ProtectedRoute = ({ allowedRoles, children }) => {
@@ -127,6 +128,11 @@ const App = () => {
             <ReadingGameComponent />
           </ProtectedRoute>
         } />
+          <Route path="/student/activity/BALLOONGAME/:activityId" element={
+              <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
+                  <ReadingDefenderComponent />
+              </ProtectedRoute>
+          } />
         <Route path="/student/activity/fill-blanks/:activityId" element={
           <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
             <FillBlanksGameComponent />
