@@ -6,68 +6,14 @@
     font-family: Arial, sans-serif; /* Match teacher */
     background-color: #ffffff; /* Base background for the whole page */
   }
-  
-  /* Sidebar Styles (Adapted from Teacher) */
-  .student-sidebar {
-    background-color: #ffaa00; /* Match original student sidebar */
-    display: flex;
-    flex-direction: column;
-    color: #451513; /* Match teacher */
-    padding: 20px;
-    box-sizing: border-box;
-    position: fixed; /* Keep fixed positioning relative to viewport */
-    top: 60px; /* Account for Navbar height */
-    bottom: 0;
-    z-index: 1;
-    /* Add width transition if sidebarOpen state is used */
-    /* transition: width 0.3s ease, padding 0.3s ease; */
-    width: 200px; /* Default width - adjust as needed */
-    border-right: 1px solid #FFE8A3; /* Optional border */
-  }
-  
-  /* Styles for sidebar items */
-  .student-sidebar {
-  background-color: #f9b121; /* Yellow sidebar */
-  color: #451513; /* Deep maroon text */
-  position: fixed;
-  top: 60px; /* Offset to match top navbar */
-  left: 0;
-  bottom: 0;
-  width: 220px; /* Slightly wider for better spacing */
-  padding: 30px 20px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  border-right: 2px solid #FFE8A3; /* Sharper border for definition */
-  z-index: 1000;
-}
+    
 
-.student-sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 25px;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #451513;
-  padding: 10px 15px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.student-sidebar-item:hover {
-  background-color: #f9b121;
-  color: #000;
-}
-
-  
   /* Main Content Area (Adapted from Teacher) */
   .student-content-area {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    margin-left: 200px; /* Default margin when sidebar is open (adjust if sidebar width changes) */
+    margin-left: 90px; /* Default margin when sidebar is open (adjust if sidebar width changes) */
     /* Add transition if sidebarOpen state is used */
     /* transition: margin-left 0.3s ease; */
   }
