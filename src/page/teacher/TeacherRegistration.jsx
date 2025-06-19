@@ -55,7 +55,7 @@ const TeacherRegistration = () => {
         email: formData.email,
         password: formData.password,
         businessCode: formData.businessCode,
-      } 
+        } 
 
     // API Call
     try {

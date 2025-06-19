@@ -13,21 +13,21 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    margin-left: 90px; /* Default margin when sidebar is open (adjust if sidebar width changes) */
+    margin-left: 70px; /* Default margin when sidebar is open (adjust if sidebar width changes) */
     /* Add transition if sidebarOpen state is used */
     /* transition: margin-left 0.3s ease; */
   }
   
   .student-main-content {
     flex-grow: 1;
-    padding: 40px; /* Match teacher */
+    padding: 80px; /* Match teacher */
     /* background-color: #f9b121; */ /* Already set on container */
     margin-top: 60px; /* Account for fixed Navbar */
   }
   
   .student-main-content-heading {
     font-weight: bold; /* Match original */
-    margin-bottom: 20px;
+    margin-bottom: 50px;
     color: #333; /* Match teacher */
     font-size: 1.5rem; /* Match original h5 */
   }

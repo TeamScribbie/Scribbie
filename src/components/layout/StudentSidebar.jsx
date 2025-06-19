@@ -40,7 +40,7 @@ const StudentSidebar = ({ isOpen = true }) => {
       sx={{
         position: 'fixed',
         top: 0,
-        left: 0,
+        left: 0, // ✅ Align to the very left
         height: '100vh',
         width: '80px',
         backgroundColor: '#f9b121',
@@ -48,8 +48,8 @@ const StudentSidebar = ({ isOpen = true }) => {
         flexDirection: 'column',
         alignItems: 'center',
         paddingTop: '80px',
-        zIndex: 10,
-        boxShadow: '2px 0 8px rgba(0, 0, 0, 0.15)',
+        zIndex: 10, // optional for stacking order
+        // Removed boxShadow to eliminate the border look
       }}
     >
       {menuItems.map((item) => {
