@@ -8,6 +8,7 @@ import FillBlanksGameComponent from '../../components/student/FillBlanksGameComp
 // highlight-start
 import Matching2GameComponent from '../../components/student/Matching2GameComponent'; // Import the new game
 import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
+import FlipMatchingGame from '../../components/student/FlipMatchingGame';
 // highlight-end
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
@@ -152,6 +153,17 @@ const ActivityPage = () => {
                     return (
                         <ReadingDefenderComponent
                             questions={activityDetails.questions || []}
+                            onGameComplete={handleGameComplete}
+                            activityTitle={gameTitle}
+                            activityInstructions={gameInstructions}
+                            classroomId={classroomId}
+                            lessonDefinitionId={lessonDefinitionId}
+                        />
+                    );
+                case 'MEMORYGAME':
+                    return (
+                        <FlipMatchingGame
+                            questions={activityDetails.questions}
                             onGameComplete={handleGameComplete}
                             activityTitle={gameTitle}
                             activityInstructions={gameInstructions}

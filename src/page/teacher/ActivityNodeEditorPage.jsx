@@ -128,7 +128,6 @@ const ActivityNodeEditorPage = () => {
     };
 
     const handleSaveQuestionFromDialog = async (payloadFromDialog) => {
-        // This function remains the same as it handles full updates from the dialog correctly.
         if (!authState || !authState.token) {
             setDialogError("Authentication missing. Please log in again.");
             setIsDialogSaving(false);
@@ -145,18 +144,28 @@ const ActivityNodeEditorPage = () => {
         setDialogError(null);
 
         try {
+            const { choices = [], ...questionDataForApi } = payloadFromDialog;
+
             if (payloadFromDialog.isNew || !payloadFromDialog.questionId) {
-                const { choices, ...questionDataForApi } = payloadFromDialog;
-                const savedOrUpdatedQuestion = await createQuestionForActivityNode( //
+                const savedOrUpdatedQuestion = await createQuestionForActivityNode(
                     activityNodeTypeId,
                     questionDataForApi,
                     authState.token
                 );
 
-                if (savedOrUpdatedQuestion && savedOrUpdatedQuestion.questionId && choices && choices.length > 0) {
+                if (savedOrUpdatedQuestion?.questionId && choices.length > 0) {
                     for (const choice of choices) {
-                        const choicePayload = { choiceText: choice.choiceText, isCorrect: !!choice.isCorrect };
-                        await createChoiceForQuestion( //
+                        const hasFiles = choice.imageFile || choice.audioFile;
+                        const choicePayload = {
+                            choiceText: choice.choiceText,
+                            isCorrect: !!choice.isCorrect,
+                            ...(hasFiles && {
+                                imageFile: choice.imageFile || null,
+                                audioFile: choice.audioFile || null
+                            })
+                        };
+
+                        await createChoiceForQuestion(
                             activityNodeTypeId,
                             savedOrUpdatedQuestion.questionId,
                             choicePayload,
@@ -169,7 +178,7 @@ const ActivityNodeEditorPage = () => {
                 }
 
             } else {
-                await updateQuestion( //
+                await updateQuestion(
                     activityNodeTypeId,
                     payloadFromDialog.questionId,
                     payloadFromDialog,
@@ -177,6 +186,7 @@ const ActivityNodeEditorPage = () => {
                 );
                 setSnackbarMessage("Question updated successfully!");
             }
+
             setIsQuestionDialogOpen(false);
             setEditingQuestion(null);
             fetchActivityNodeData();

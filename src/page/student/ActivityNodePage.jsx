@@ -8,6 +8,7 @@ const GAME_MODES = {
     READING: 'READING',
     FILL_BLANKS: 'FILL_BLANKS',
     BALLOONGAME: 'BALLOON_GAME',
+    MEMORYGAME: "MEMORY_GAME"
 };
 
 const ActivityNodePage = () => {
@@ -46,6 +47,14 @@ const ActivityNodePage = () => {
                         break;
                     case GAME_MODES.BALLOONGAME:
                         navigate(`/student/activity/BALLOONGAME/${activityId}`, {
+                            state: {
+                                ...location.state,
+                                activityData: data
+                            }
+                        });
+                        break;
+                    case GAME_MODES.MEMORYGAME:
+                        navigate(`/student/activity/MEMORYGAME/${activityId}`, {
                             state: {
                                 ...location.state,
                                 activityData: data

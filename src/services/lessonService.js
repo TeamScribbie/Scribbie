@@ -111,21 +111,41 @@ export const getChoicesForQuestion = async (activityNodeTypeId, questionId, toke
  * Creates a choice for a specific question.
  * POST /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices
  */
-export const createChoiceForQuestion = async (activityNodeTypeId, questionId, choiceData, token) => {
-    if (!activityNodeTypeId || !questionId || !choiceData || !token) {
-        throw new Error('ActivityNodeType ID, Question ID, choice data, and auth token are required.');
+export const createChoiceForQuestion = async (actId, qId, choiceData, token) => {
+    const url = `${API_BASE_URL}/activity-node-types/${actId}/questions/${qId}/choices`;
+
+    const hasFiles = choiceData.imageFile || choiceData.audioFile;
+
+    if (hasFiles) {
+        console.log("Sending FormData with files:", choiceData);
+        const form = new FormData();
+        form.append("choiceText", choiceData.choiceText);
+        form.append("isCorrect", choiceData.isCorrect);
+        if (choiceData.imageFile) form.append("imageFile", choiceData.imageFile);
+        if (choiceData.audioFile) form.append("audioFile", choiceData.audioFile);
+
+        const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: form
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        return resp.json();
+    } else {
+        console.log("Sending JSON without files:", choiceData);
+        const resp = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(choiceData)
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        return resp.json();
     }
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(choiceData),
-    });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        throw new Error(errorData.message || `Failed to create choice. Status: ${response.status}`);
-    }
-    return response.json();
 };
+
 
 /**
  * Updates an existing choice.

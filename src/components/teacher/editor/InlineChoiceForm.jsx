@@ -1,10 +1,10 @@
 // src/components/teacher/editor/InlineChoiceForm.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import { TextField, Checkbox, IconButton, Box, FormControlLabel } from '@mui/material';
+import { TextField, Checkbox, IconButton, Box, FormControlLabel,Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const InlineChoiceForm = ({ choice, choiceIndex, onChoiceChange, onDeleteChoice, isQuestionInstructional, isLoading }) => {
+const InlineChoiceForm = ({ choice, choiceIndex, onChoiceChange, onDeleteChoice, isQuestionInstructional, isLoading,onFileChange }) => {
     if (isQuestionInstructional) {
         return null; // Do not render choices for instructional questions
     }
@@ -41,10 +41,30 @@ const InlineChoiceForm = ({ choice, choiceIndex, onChoiceChange, onDeleteChoice,
                 label="Correct"
                 sx={{ mr: 1, whiteSpace: 'nowrap' }}
             />
+            <Box sx={{ mt: 1 }}>
+                <Typography variant="caption">Upload Image</Typography>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => onFileChange(choiceIndex, 'imageFile', e.target.files?.[0])}
+                    disabled={isLoading}
+                />
+            </Box>
+
+            <Box sx={{ mt: 1 }}>
+                <Typography variant="caption">Upload Audio</Typography>
+                <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={(e) => onFileChange(choiceIndex, 'audioFile', e.target.files?.[0])}
+                    disabled={isLoading}
+                />
+            </Box>
             <IconButton onClick={() => onDeleteChoice(choiceIndex)} color="error" size="small" disabled={isLoading} title="Delete Choice">
                 <DeleteIcon />
             </IconButton>
         </Box>
+
     );
 };
 
@@ -56,6 +76,7 @@ InlineChoiceForm.propTypes = {
         isNew: PropTypes.bool, // Flag for new choices not yet saved to backend
         isModified: PropTypes.bool, // Flag for existing choices that are modified
     }).isRequired,
+    onFileChange: PropTypes.func,
     choiceIndex: PropTypes.number.isRequired,
     onChoiceChange: PropTypes.func.isRequired,
     onDeleteChoice: PropTypes.func.isRequired,
