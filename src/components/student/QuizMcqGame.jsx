@@ -349,7 +349,7 @@ const QuizMcqGame = ({
                 left: {xs:10, sm:16}, 
                 zIndex: 10 
             }}>
-                <IconButton 
+                {/* <IconButton 
                     onClick={handleExitGame} 
                     aria-label="back" 
                     sx={{ 
@@ -362,7 +362,7 @@ const QuizMcqGame = ({
                     }}
                 >
                     <ArrowBackIcon fontSize="medium" />
-                </IconButton>
+                </IconButton> */}
             </Box>
 
             {/* Top Stats Section - More Prominent */}

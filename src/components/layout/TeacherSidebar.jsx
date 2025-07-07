@@ -42,7 +42,7 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes' }) => {
         </div>
       )}
       
-      {/* Example: Grades - visible to all teacher types */}
+      {/* Example: Grades - visible to all teacher types
       {(hasRole("ROLE_TEACHER") || hasRole("ROLE_ADMIN") || hasRole("ROLE_SUPERADMIN")) && (
         <div
             className={`sidebar-item ${activeItem === 'Grades' ? 'active' : ''}`}
@@ -50,7 +50,7 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes' }) => {
         >
             Grades
         </div>
-      )}
+      )} */}
 
 
       {/* ✨ Admin Specific Items ✨ */}

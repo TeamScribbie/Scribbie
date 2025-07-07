@@ -50,7 +50,7 @@ const StudentSidebar = ({ isOpen = true }) => {
         <ClassIcon sx={{ mr: 1, verticalAlign: 'middle' }} fontSize="small" />
         My Classes
       </Box>
-      <Box
+      {/* <Box
         className={`sidebar-item ${activeItem === 'Challenges' ? 'active' : ''}`}
         onClick={() => {
             alert("Student Challenges Overview - To Be Implemented");
@@ -59,8 +59,8 @@ const StudentSidebar = ({ isOpen = true }) => {
       >
         <ChallengesIcon sx={{ mr: 1, verticalAlign: 'middle' }} fontSize="small" />
         Challenges
-      </Box>
-      <Box
+      </Box> */}
+      {/* <Box
         className={`sidebar-item ${activeItem === 'Grades' ? 'active' : ''}`}
         onClick={() => {
             alert("Student Grades - To Be Implemented");
@@ -69,7 +69,7 @@ const StudentSidebar = ({ isOpen = true }) => {
       >
         <GradesIcon sx={{ mr: 1, verticalAlign: 'middle' }} fontSize="small" />
         My Grades
-      </Box>
+      </Box> */}
     </>
   );
 };

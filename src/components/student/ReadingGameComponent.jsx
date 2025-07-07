@@ -250,7 +250,7 @@ const ReadingGameComponent = ({
                 left: {xs:10, sm:16}, 
                 zIndex: 10 
             }}>
-                <IconButton 
+                {/* <IconButton 
                     onClick={handleExitGame} 
                     aria-label="back" 
                     sx={{ 
@@ -263,8 +263,8 @@ const ReadingGameComponent = ({
                     }}
                 >
                     <ArrowBackIcon fontSize="medium" />
-                </IconButton>
-            </Box>            {/* Reading Button - Floating Action Button */}
+                </IconButton> */}
+            </Box>            Reading Button - Floating Action Button
             <Box sx={{ 
                 position: 'fixed',
                 bottom: {xs: 20, sm:30}, 
