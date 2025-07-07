@@ -79,6 +79,19 @@ const App = () => {
                 <StudentHomepage />
             </ProtectedRoute>
         } />
+
+        <Route path="/student-challenges" element={
+            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
+                <ChallengePage />
+            </ProtectedRoute>
+        } />
+
+        <Route path="/student-grades" element={
+            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
+                <StudentHomepage />
+            </ProtectedRoute>
+        } />
+        
         <Route path="/student-profile" element={
             <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
                 <StudentProfile />
