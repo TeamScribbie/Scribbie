@@ -6,6 +6,8 @@ import QuizMcqGame from '../../components/student/QuizMcqGame';
 import ReadingGameComponent from '../../components/student/ReadingGameComponent';
 import FillBlanksGameComponent from '../../components/student/FillBlanksGameComponent';
 import Matching2GameComponent from '../../components/student/Matching2GameComponent'; // Import the new game
+import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
+import FlipMatchingGame from '../../components/student/FlipMatchingGame';
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
 
@@ -155,6 +157,30 @@ const ActivityPage = () => {
                     return (
                         <Matching2GameComponent
                             questions={activityDetails.questions || []} // Or specific data structure for MATCHING2
+                            onGameComplete={handleGameComplete}
+                            activityTitle={gameTitle}
+                            activityInstructions={gameInstructions}
+                            classroomId={classroomId}
+                            lessonDefinitionId={lessonDefinitionId}
+                        />
+                    );
+                case 'BALLOONGAME':
+                    console.log("🔍 Activity Details:", activityDetails);
+                    console.log("📦 Questions:", activityDetails?.questions);
+                    return (
+                        <ReadingDefenderComponent
+                            questions={activityDetails.questions || []}
+                            onGameComplete={handleGameComplete}
+                            activityTitle={gameTitle}
+                            activityInstructions={gameInstructions}
+                            classroomId={classroomId}
+                            lessonDefinitionId={lessonDefinitionId}
+                        />
+                    );
+                case 'MEMORYGAME':
+                    return (
+                        <FlipMatchingGame
+                            questions={activityDetails.questions}
                             onGameComplete={handleGameComplete}
                             activityTitle={gameTitle}
                             activityInstructions={gameInstructions}

@@ -62,7 +62,9 @@ const AddEditQuestionDialog = ({
                     tempChoiceId: c.choiceId || `temp-c-${Date.now()}-${Math.random()}`,
                     isNew: !c.choiceId,
                     isModified: false,
-                    isDeleted: false
+                    isDeleted: false,
+                    imageFile: null,
+                    audioFile: null
                 })));
             } else {
                 setQuestionText('');
@@ -106,7 +108,13 @@ const AddEditQuestionDialog = ({
     };
     */
     // --- End of Commented Out Block ---
-
+    const handleChoiceFileChange = (index, field, file) => {
+        setChoices(prev =>
+            prev.map((choice, idx) =>
+                idx === index ? { ...choice, [field]: file, isModified: true } : choice
+            )
+        );
+    };
     const handleAddChoice = () => {
         setChoices(prev => [
             ...prev,
@@ -189,6 +197,8 @@ const AddEditQuestionDialog = ({
                 choiceText: c.choiceText,
                 isCorrect: c.isCorrect,
                 isDeleted: c.isDeleted,
+                imageFile: c.imageFile || undefined,
+                audioFile: c.audioFile || undefined,
             })),
             isNew: !existingQuestion,
             isModified: !!existingQuestion,
@@ -241,6 +251,7 @@ const AddEditQuestionDialog = ({
                         {choices.filter(c => !c.isDeleted).map((choice, choiceIdx) => (
                             <InlineChoiceForm
                                 key={choice.choiceId || choice.tempChoiceId}
+                                onFileChange={handleChoiceFileChange}
                                 choice={choice}
                                 choiceIndex={choiceIdx}
                                 onChoiceChange={handleChoiceChange}

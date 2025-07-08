@@ -1,0 +1,127 @@
+:root {
+    --blimp-img: url('/Blimp.png'); /* Path to your blimp image */
+}
+
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #111;
+}
+
+.game-screen {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background: #f0f8ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    z-index: 1;
+    overflow: hidden;
+    background: linear-gradient(to bottom, #0a0e23, #1a213b);
+}
+
+.sidebar {
+    position: absolute;
+    left: 0;
+    width: 80px;
+    height: 100%;
+    background: #446;
+    color: #fff;
+    writing-mode: vertical-rl;
+    text-align: center;
+    padding-top: 10px;
+    font-weight: bold;
+}
+
+.hud {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,255,255,0.8);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.target {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    color: #222;
+    padding: 6px 20px;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.word {
+    position: absolute;
+    background-image: var(--blimp-img);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 200px; /* scaled down proportionally */
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.4rem;
+    user-select: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.word:hover {
+    transform: scale(1.1);
+}
+
+.feedback {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.overlay {
+    position: absolute;
+    top: 120px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+.word-label {
+    padding: 6px 10px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.6); /* semi-dark overlay for contrast */
+    color: white;
+    font-size: 1.3rem;
+}
+
+.word-label.correct {
+    background-color: rgba(60, 180, 90, 0.8); /* green for correct */
+}
+
+.word-label.wrong {
+    background-color: rgba(230, 80, 80, 0.8); /* red for incorrect */
+}

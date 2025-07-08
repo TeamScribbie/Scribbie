@@ -1,0 +1,85 @@
+.flip-game-container {
+    background: #fdf6dc;
+    padding: 2rem;
+    min-height: 100vh;
+    font-family: sans-serif;
+}
+
+.score-panel {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}
+
+.card {
+    width: 100px;
+    height: 130px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #333;
+    border-radius: 8px;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.card-front {
+    background: #e2e2e2;
+}
+
+.card-back {
+    background: #fff8d1;
+    transform: rotateY(180deg);
+    padding: 0.5rem;
+    text-align: center;
+}
+.card-image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
+.card-audio {
+    width: 100%;
+    margin-top: 6px;
+}
+
+.card-grid.four-by-four {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.card-img {
+    max-width: 100%;
+    max-height: 100px;
+    display: block;
+    margin: 0 auto 8px;
+}
