@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
     Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
-    CircularProgress, Typography, Box, Checkbox, FormControlLabel, IconButton, Link as MuiLink,
-    List, Divider, Alert
+    CircularProgress, Typography, Box, Checkbox, FormControlLabel, IconButton,
+    List, Divider, Alert, Link as MuiLink
 } from '@mui/material';
-// import PhotoCamera from '@mui/icons-material/PhotoCamera';
-// import AudiotrackIcon from '@mui/icons-material/Audiotrack';
-// import ClearIcon from '@mui/icons-material/Clear';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-
+import DeleteIcon from '@mui/icons-material/Delete';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import Audiotrack from '@mui/icons-material/Audiotrack';
+import ClearIcon from '@mui/icons-material/Clear';
 import { useAuth } from '../../context/AuthContext';
-// import { uploadMediaFile } from '../../services/mediaService';
 import InlineChoiceForm from '../teacher/editor/InlineChoiceForm';
 
 const AddEditQuestionDialog = ({
@@ -19,260 +18,229 @@ const AddEditQuestionDialog = ({
                                    onClose,
                                    onSave,
                                    existingQuestion,
-                                   activityNodeTypeId,
                                    isLoading: isParentLoading,
                                    orderIndexForNewQuestion
                                }) => {
     const { authState } = useAuth();
     const backendBaseUrl = 'http://localhost:8080';
-    const publicPrefix = authState.config?.uploadPublicPathPrefix || '/media-content';
 
-    const [questionText, setQuestionText] = useState('');
-    const [isInstructional, setIsInstructional] = useState(false);
-
-    // --- Start of Commented Out Block ---
-    // const [imageFile, setImageFile] = useState(null);
-    // const [soundFile, setSoundFile] = useState(null);
-    // const [existingImageUrl, setExistingImageUrl] = useState(null);
-    // const [existingSoundUrl, setExistingSoundUrl] = useState(null);
-    // const [imagePreview, setImagePreview] = useState(null);
-    // --- End of Commented Out Block ---
-
-    const [choices, setChoices] = useState([]);
-
-    // const imageInputRef = useRef(null);
-    // const soundInputRef = useRef(null);
-
-    // const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+    const [questionData, setQuestionData] = useState(null);
     const [dialogError, setDialogError] = useState(null);
 
-    const isLoading = isParentLoading; // Removed isUploadingMedia
-
+    // Effect to initialize state when the dialog opens
     useEffect(() => {
         if (open) {
             setDialogError(null);
             if (existingQuestion) {
-                setQuestionText(existingQuestion.questionText || '');
-                setIsInstructional(existingQuestion.instructional || false);
-                // setExistingImageUrl(existingQuestion.questionImageUrl || null);
-                // setExistingSoundUrl(existingQuestion.questionSoundUrl || null);
-                // setImagePreview(existingQuestion.questionImageUrl ? `${backendBaseUrl}${publicPrefix}/${existingQuestion.questionImageUrl}` : null);
-                setChoices((existingQuestion.choices || []).map(c => ({
-                    ...c,
-                    tempChoiceId: c.choiceId || `temp-c-${Date.now()}-${Math.random()}`,
-                    isNew: !c.choiceId,
-                    isModified: false,
-                    isDeleted: false,
+                setQuestionData({
+                    ...JSON.parse(JSON.stringify(existingQuestion)),
                     imageFile: null,
-                    audioFile: null
-                })));
+                    audioFile: null,
+                    removeImage: false,
+                    removeAudio: false,
+                    imagePreview: existingQuestion.questionImageUrl ? `${backendBaseUrl}${existingQuestion.questionImageUrl}` : null,
+                    choices: (existingQuestion.choices || []).map(c => ({
+                        ...c,
+                        tempId: c.choiceId || `temp-${Date.now()}-${Math.random()}`,
+                        imageFile: null,
+                        audioFile: null,
+                        removeImage: false,
+                        removeAudio: false
+                    }))
+                });
             } else {
-                setQuestionText('');
-                setIsInstructional(false);
-                // setExistingImageUrl(null);
-                // setExistingSoundUrl(null);
-                // setImagePreview(null);
-                setChoices([]);
+                setQuestionData({
+                    isNew: true,
+                    questionText: '',
+                    instructional: false,
+                    orderIndex: orderIndexForNewQuestion,
+                    choices: [],
+                });
             }
-            // setImageFile(null);
-            // setSoundFile(null);
         }
-    }, [open, existingQuestion, backendBaseUrl, publicPrefix]);
+    }, [open, existingQuestion, backendBaseUrl, orderIndexForNewQuestion]);
 
-    // --- Start of Commented Out Block ---
-    /*
-    const handleImageFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result);
-            reader.readAsDataURL(file);
-            setExistingImageUrl(null);
-        }
-    };
-    const clearImage = () => {
-        setImageFile(null); setImagePreview(null); setExistingImageUrl(null);
-        if (imageInputRef.current) imageInputRef.current.value = "";
-    };
-    const handleSoundFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setSoundFile(file);
-            setExistingSoundUrl(null);
-        }
-    };
-    const clearSound = () => {
-        setSoundFile(null); setExistingSoundUrl(null);
-        if (soundInputRef.current) soundInputRef.current.value = "";
-    };
-    */
-    // --- End of Commented Out Block ---
-    const handleChoiceFileChange = (index, field, file) => {
-        setChoices(prev =>
-            prev.map((choice, idx) =>
-                idx === index ? { ...choice, [field]: file, isModified: true } : choice
-            )
-        );
-    };
-    const handleAddChoice = () => {
-        setChoices(prev => [
-            ...prev,
-            {
-                tempChoiceId: `new-dialog-c-${Date.now()}`,
-                choiceText: '',
-                isCorrect: false,
-                isNew: true,
-                isModified: false,
-                isDeleted: false,
+    // Effect to clean up temporary preview URLs
+    useEffect(() => {
+        const previewUrl = questionData?.imagePreview;
+        const isBlob = previewUrl && previewUrl.startsWith('blob:');
+        return () => {
+            if (isBlob) {
+                URL.revokeObjectURL(previewUrl);
             }
-        ]);
+        };
+    }, [questionData?.imagePreview]);
+
+    const handleChange = (field, value) => {
+        setQuestionData(prev => ({ ...prev, [field]: value }));
     };
-    const handleChoiceChange = (index, updatedChoiceData) => {
-        setChoices(prev => prev.map((c, idx) =>
-            idx === index ? { ...c, ...updatedChoiceData, isModified: !c.isNew || c.isModified } : c
-        ));
-    };
-    const handleDeleteChoice = (index) => {
-        setChoices(prev => {
-            const choice = prev[index];
-            if (choice.isNew) {
-                return prev.filter((_, idx) => idx !== index);
+
+    // --- Question-Level File Handlers ---
+    const handleQuestionFileChange = (event, fileType) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        setQuestionData(prev => {
+            const newState = { ...prev };
+            if (fileType === 'image') {
+                if (newState.imagePreview?.startsWith('blob:')) URL.revokeObjectURL(newState.imagePreview);
+                newState.imageFile = file;
+                newState.imagePreview = URL.createObjectURL(file);
+                newState.removeImage = false;
             } else {
-                return prev.map((c, idx) => idx === index ? { ...c, isDeleted: true, isModified: true } : c);
+                newState.audioFile = file;
+                newState.removeAudio = false;
             }
+            return newState;
         });
     };
 
-    const handleSubmitDialog = async () => {
-        if (!questionText.trim()) {
+    const handleQuestionFileRemove = (fileType) => {
+        setQuestionData(prev => {
+            const newState = { ...prev };
+            if (fileType === 'image') {
+                if (newState.imagePreview?.startsWith('blob:')) URL.revokeObjectURL(newState.imagePreview);
+                newState.imageFile = null;
+                newState.imagePreview = null;
+                newState.questionImageUrl = null; // Also clear the backend path
+                newState.removeImage = true;
+            } else {
+                newState.audioFile = null;
+                newState.questionSoundUrl = null; // Also clear the backend path
+                newState.removeAudio = true;
+            }
+            return newState;
+        });
+    };
+
+    // --- Choice-Level Handlers ---
+    const handleAddChoice = () => {
+        const newChoice = { tempId: `new-c-${Date.now()}`, choiceText: '', isCorrect: false, isNew: true };
+        setQuestionData(prev => ({ ...prev, choices: [...(prev.choices || []), newChoice] }));
+    };
+
+    const handleChoiceChange = (index, updatedData) => {
+        setQuestionData(prev => ({
+            ...prev,
+            choices: prev.choices.map((c, i) => i === index ? { ...c, ...updatedData, isModified: !c.isNew } : c)
+        }));
+    };
+
+    const handleDeleteChoice = (index) => {
+        setQuestionData(prev => {
+            const updatedChoices = prev.choices.filter((c, i) => i !== index);
+            return { ...prev, choices: updatedChoices };
+        });
+    };
+
+    const handleChoiceFileChange = (index, field, file) => {
+        setQuestionData(prev => ({
+            ...prev,
+            choices: prev.choices.map((c, i) => {
+                if (i === index) {
+                    const updatedChoice = { ...c, [field]: file, isModified: true };
+                    if (field === 'imageFile') updatedChoice.removeImage = false;
+                    if (field === 'audioFile') updatedChoice.removeAudio = false;
+                    return updatedChoice;
+                }
+                return c;
+            })
+        }));
+    };
+
+    const handleChoiceFileRemove = (index, fileType) => {
+        setQuestionData(prev => ({
+            ...prev,
+            choices: prev.choices.map((c, i) => {
+                if (i === index) {
+                    const updated = { ...c, isModified: true };
+                    if (fileType === 'image') {
+                        updated.imagePath = null;
+                        updated.imageFile = null;
+                        updated.removeImage = true;
+                    } else {
+                        updated.audioPath = null;
+                        updated.audioFile = null;
+                        updated.removeAudio = true;
+                    }
+                    return updated;
+                }
+                return c;
+            })
+        }));
+    };
+
+    const handleSubmitDialog = () => {
+        if (!questionData.questionText.trim()) {
             setDialogError("Question text is required.");
             return;
         }
-
-        const hasBlankChoice = choices.some(
-            choice => !choice.isDeleted && choice.choiceText.trim() === ''
-        );
-        if (hasBlankChoice) {
-            setDialogError("All active choices must have text. Please remove or fill in any blank choices.");
-            return;
-        }
-
         setDialogError(null);
-
-        // --- Start of Commented Out Block ---
-        /*
-        setIsUploadingMedia(true);
-
-        let finalImageUrl = existingImageUrl;
-        let finalSoundUrl = existingSoundUrl;
-
-        try {
-            if (imageFile) {
-                const imgRes = await uploadMediaFile(imageFile, 'image', authState.token);
-                finalImageUrl = imgRes.filePath;
-            }
-            if (soundFile) {
-                const soundRes = await uploadMediaFile(soundFile, 'sound', authState.token);
-                finalSoundUrl = soundRes.filePath;
-            }
-        } catch (err) {
-            setDialogError(`Media upload failed: ${err.message}`);
-            setIsUploadingMedia(false);
-            return;
-        }
-        setIsUploadingMedia(false);
-        */
-        // --- End of Commented Out Block ---
-
-        const questionPayload = {
-            ...(existingQuestion && { questionId: existingQuestion.questionId }),
-            questionText: questionText.trim(),
-            instructional: isInstructional,
-            // questionImageUrl: finalImageUrl, // Commented out
-            // questionSoundUrl: finalSoundUrl, // Commented out
-            orderIndex: existingQuestion ? existingQuestion.orderIndex : orderIndexForNewQuestion,
-            choices: choices.map(c => ({
-                choiceId: c.isNew ? null : c.choiceId,
-                choiceText: c.choiceText,
-                isCorrect: c.isCorrect,
-                isDeleted: c.isDeleted,
-                imageFile: c.imageFile || undefined,
-                audioFile: c.audioFile || undefined,
-            })),
-            isNew: !existingQuestion,
-            isModified: !!existingQuestion,
-        };
-        onSave(questionPayload);
+        onSave(questionData);
     };
 
+    if (!questionData) return null;
+
     return (
-        <Dialog open={open} onClose={() => !isLoading && onClose()} maxWidth="md" fullWidth>
+        <Dialog open={open} onClose={() => !isParentLoading && onClose()} maxWidth="md" fullWidth>
             <DialogTitle sx={{ backgroundColor: '#FFE8A3', color: '#451513' }}>
-                {existingQuestion ? 'Edit Question' : 'Add New Question'}
+                {questionData.isNew ? 'Add New Question' : 'Edit Question'}
             </DialogTitle>
             <DialogContent sx={{ paddingTop: '20px !important' }}>
-                <TextField autoFocus margin="dense" label="Question Text" type="text" fullWidth multiline rows={3}
-                           value={questionText} onChange={(e) => setQuestionText(e.target.value)} disabled={isLoading} required sx={{ mb: 2 }} />
-                <FormControlLabel control={<Checkbox checked={isInstructional} onChange={(e) => setIsInstructional(e.target.checked)} disabled={isLoading} />}
-                                  label="Instructional (exclude from Challenges, but can still have choices)" sx={{ mb: 2 }} />
+                <TextField autoFocus fullWidth multiline rows={3} margin="dense" label="Question Text"
+                           value={questionData.questionText} onChange={(e) => handleChange('questionText', e.target.value)} disabled={isParentLoading} />
+                <FormControlLabel control={<Checkbox checked={questionData.instructional} onChange={(e) => handleChange('instructional', e.target.checked)} />}
+                                  label="Instructional" />
 
-                {/* --- Start of Commented Out Block --- */}
-                {/* <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
-                    <Typography variant="subtitle2" gutterBottom>Question Image</Typography>
-                    <input accept="image/*" style={{ display: 'none' }} id={`dialog-image-upload-${existingQuestion?.questionId || 'new'}`} type="file" onChange={handleImageFileChange} ref={imageInputRef} disabled={isLoading} />
-                    <label htmlFor={`dialog-image-upload-${existingQuestion?.questionId || 'new'}`}>
-                        <Button variant="outlined" component="span" startIcon={<PhotoCamera />} size="small" disabled={isLoading}>Upload Image</Button>
-                    </label>
-                    {imagePreview && (<Box sx={{ mt: 1, position: 'relative', maxWidth: '150px' }}><img src={imagePreview} alt="Preview" style={{ width: '100%' }} /><IconButton onClick={clearImage} size="small" sx={{ position: 'absolute', top: 0, right: 0 }} disabled={isLoading}><ClearIcon fontSize="small" /></IconButton></Box>)}
-                    {imageFile && <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>New: {imageFile.name}</Typography>}
-                    {!imageFile && existingImageUrl && !imagePreview && (<Box sx={{ mt: 1 }}><MuiLink href={`${backendBaseUrl}${publicPrefix}/${existingImageUrl}`} target="_blank">Current: {existingImageUrl.split('/').pop()}</MuiLink><IconButton onClick={clearImage} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
-                </Box>
-
-                <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
-                    <Typography variant="subtitle2" gutterBottom>Question Sound</Typography>
-                    <input accept="audio/*" style={{ display: 'none' }} id={`dialog-sound-upload-${existingQuestion?.questionId || 'new'}`} type="file" onChange={handleSoundFileChange} ref={soundInputRef} disabled={isLoading} />
-                    <label htmlFor={`dialog-sound-upload-${existingQuestion?.questionId || 'new'}`}>
-                        <Button variant="outlined" component="span" startIcon={<AudiotrackIcon />} size="small" disabled={isLoading}>Upload Sound</Button>
-                    </label>
-                    {soundFile && (<Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}><Typography variant="caption">New: {soundFile.name}</Typography><IconButton onClick={clearSound} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
-                    {!soundFile && existingSoundUrl && (<Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}><MuiLink href={`${backendBaseUrl}${publicPrefix}/${existingSoundUrl}`} target="_blank">Current: {existingSoundUrl.split('/').pop()}</MuiLink><IconButton onClick={clearSound} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
-                </Box>
-                */}
-                {/* --- End of Commented Out Block --- */}
-
-                <>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="subtitle1" sx={{ color: '#451513' }}>Choices</Typography>
-                        <Button variant="outlined" size="small" startIcon={<AddCircleOutlineIcon />} onClick={handleAddChoice} disabled={isLoading}>Add Choice</Button>
+                <Divider sx={{ my: 2 }}>Question Media</Divider>
+                <Box sx={{ display: 'flex', gap: 4, mb: 2 }}>
+                    <Box>
+                        <Button component="label" startIcon={<PhotoCamera />} disabled={isParentLoading}>Question Image</Button>
+                        <input type="file" hidden accept="image/*" onChange={(e) => handleQuestionFileChange(e, 'image')} />
+                        {questionData.imagePreview && (
+                            <Box sx={{ mt: 1, position: 'relative', width: 120 }}>
+                                <img src={questionData.imagePreview} alt="Preview" style={{ width: '100%', borderRadius: 4 }} />
+                                <IconButton onClick={() => handleQuestionFileRemove('image')} size="small" sx={{ position: 'absolute', top: -10, right: -10 }}><ClearIcon fontSize="small" /></IconButton>
+                            </Box>
+                        )}
                     </Box>
-                    <List>
-                        {choices.filter(c => !c.isDeleted).map((choice, choiceIdx) => (
-                            <InlineChoiceForm
-                                key={choice.choiceId || choice.tempChoiceId}
-                                onFileChange={handleChoiceFileChange}
-                                choice={choice}
-                                choiceIndex={choiceIdx}
-                                onChoiceChange={handleChoiceChange}
-                                onDeleteChoice={handleDeleteChoice}
-                                isQuestionInstructional={false}
-                                isLoading={isLoading}
-                            />
-                        ))}
-                    </List>
-                    {choices.filter(c => !c.isDeleted).length === 0 && (
-                        <Typography variant="body2" color="textSecondary" sx={{ textAlign: 'center', my: 1 }}>No choices yet. Click "Add Choice".</Typography>
-                    )}
-                </>
+                    <Box>
+                        <Button component="label" startIcon={<Audiotrack />} disabled={isParentLoading}>Question Audio</Button>
+                        <input type="file" hidden accept="audio/*" onChange={(e) => handleQuestionFileChange(e, 'audio')} />
+                        {questionData.audioFile && <Typography variant="caption" display="block">New: {questionData.audioFile.name}</Typography>}
+                        {!questionData.audioFile && questionData.questionSoundUrl && !questionData.removeAudio && (
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <MuiLink href={`${backendBaseUrl}${questionData.questionSoundUrl}`} target="_blank">Current Audio</MuiLink>
+                                <IconButton onClick={() => handleQuestionFileRemove('audio')} size="small"><ClearIcon fontSize="inherit" /></IconButton>
+                            </Box>
+                        )}
+                    </Box>
+                </Box>
 
-                {dialogError && <Alert severity="error" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>{dialogError}</Alert>}
+                <Divider sx={{ my: 2 }}>Choices</Divider>
+                <Button startIcon={<AddCircleOutlineIcon />} onClick={handleAddChoice} disabled={isParentLoading}>Add Choice</Button>
+                <List>
+                    {questionData.choices.filter(c => !c.isDeleted).map((choice, index) => (
+                        <InlineChoiceForm
+                            key={choice.tempId || choice.choiceId}
+                            choice={choice}
+                            choiceIndex={index}
+                            onChoiceChange={handleChoiceChange}
+                            onDeleteChoice={handleDeleteChoice}
+                            onFileChange={handleChoiceFileChange}
+                            onFileRemove={handleChoiceFileRemove}
+                            isLoading={isParentLoading}
+                            backendUrl={backendBaseUrl}
+                        />
+                    ))}
+                </List>
+
+                {dialogError && <Alert severity="error" sx={{ mt: 2 }}>{dialogError}</Alert>}
             </DialogContent>
-            <DialogActions sx={{ p: 2 }}>
-                <Button onClick={() => { if (!isLoading) onClose(); }} disabled={isLoading} color="primary">Cancel</Button>
-                <Button onClick={handleSubmitDialog} variant="contained" disabled={isLoading || !questionText.trim()}
-                        sx={{ bgcolor: '#451513', '&:hover': { bgcolor: '#5d211f' }, position: 'relative' }}>
-                    {isLoading ? <CircularProgress size={24} color="inherit" sx={{ position: 'absolute' }} /> : (existingQuestion ? 'Save Changes' : 'Add Question')}
+            <DialogActions>
+                <Button onClick={onClose} disabled={isParentLoading}>Cancel</Button>
+                <Button onClick={handleSubmitDialog} variant="contained" disabled={isParentLoading}>
+                    {isParentLoading ? <CircularProgress size={24} /> : 'Save'}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -284,7 +252,6 @@ AddEditQuestionDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
     existingQuestion: PropTypes.object,
-    activityNodeTypeId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     isLoading: PropTypes.bool,
     orderIndexForNewQuestion: PropTypes.number,
 };
