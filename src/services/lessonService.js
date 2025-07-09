@@ -2,21 +2,53 @@ import { API_BASE_URL } from '../config/apiConfig';
 
 // --- Question Management ---
 
-export const createQuestionForActivityNode = async (activityNodeTypeId, questionData, token) => {
-    // This function can remain simple if new questions don't have files immediately.
-    // If they can, it needs the same multipart logic as updateQuestion.
-    if (!activityNodeTypeId || !questionData || !token) {
-        throw new Error('ActivityNodeType ID, question data, and auth token are required.');
+export const createQuestionForActivityNode = async (activityNodeTypeId, questionPayload, token) => {
+    if (!activityNodeTypeId || !token) {
+        throw new Error('ActivityNodeType ID and auth token are required.');
     }
+
+    const formData = new FormData();
+
+    const files = [];
+    if (questionPayload.imageFile) {
+        files.push(questionPayload.imageFile);
+        questionPayload.questionImageUrl = questionPayload.imageFile.name;
+    }
+    if (questionPayload.audioFile) {
+        files.push(questionPayload.audioFile);
+        questionPayload.questionSoundUrl = questionPayload.audioFile.name;
+    }
+
+    if (Array.isArray(questionPayload.choices)) {
+        questionPayload.choices = questionPayload.choices.map(choice => {
+            if (choice.imageFile) {
+                files.push(choice.imageFile);
+                choice.imageFileName = choice.imageFile.name;
+            }
+            if (choice.audioFile) {
+                files.push(choice.audioFile);
+                choice.audioFileName = choice.audioFile.name;
+            }
+            return choice;
+        });
+    }
+
+    formData.append("questionDto", JSON.stringify(questionPayload));
+    files.forEach(f => formData.append("files", f)); // Important: append all files under "files"
+
     const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData),
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
     });
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        throw new Error(errorData.message || `Failed to create question. Status: ${response.status}`);
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `Failed to create question. Status: ${response.status}`);
     }
+
     return response.json();
 };
 
@@ -39,73 +71,110 @@ export const updateQuestion = async (activityNodeTypeId, questionId, questionDat
     if (!activityNodeTypeId || !questionId || !questionData || !token) {
         throw new Error('ActivityNodeType ID, Question ID, question data, and auth token are required.');
     }
+
     const url = `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}`;
 
-    const hasFilesToUpload = questionData.choices.some(c => c.imageFile || c.audioFile);
+    const hasFilesToUpload =
+        questionData.imageFile instanceof File ||
+        questionData.audioFile instanceof File ||
+        (Array.isArray(questionData.choices) &&
+            questionData.choices.some(c => c.imageFile instanceof File || c.audioFile instanceof File));
 
     if (hasFilesToUpload) {
-        console.log("updateQuestion: Detected files, sending as multipart/form-data.");
-        const formData = new FormData();
+        console.log('🔄 Detected file updates, preparing multipart/form-data...');
 
-        // This array will hold the actual file objects to append.
+        const formData = new FormData();
         const filesToAppend = [];
 
-        // Create a deep copy of the choices to modify without side effects.
-        const choicesPayload = JSON.parse(JSON.stringify(questionData.choices)).map(choice => {
-            // Find the original choice from the questionData that has the File object
-            const originalChoice = questionData.choices.find(c => c.tempChoiceId === choice.tempChoiceId);
+        // Build deep-cloned choices with unique file names
+        const choicesPayload = questionData.choices.map(choice => {
+            const cloned = { ...choice };
+            const ts = Date.now();
 
-            if (originalChoice && originalChoice.imageFile) {
-                const uniqueFileName = `image_${Date.now()}_${originalChoice.imageFile.name}`;
-                choice.imageFileName = uniqueFileName;
-                // ✨ THE FIX: We pass the original File object, with its type intact.
-                filesToAppend.push({ name: uniqueFileName, file: originalChoice.imageFile });
+            if (choice.imageFile instanceof File) {
+                const filename = `choice_image_${ts}_${choice.imageFile.name}`;
+                cloned.imageFileName = filename;
+                filesToAppend.push({ name: filename, file: choice.imageFile });
             }
-            if (originalChoice && originalChoice.audioFile) {
-                const uniqueFileName = `audio_${Date.now()}_${originalChoice.audioFile.name}`;
-                choice.audioFileName = uniqueFileName;
-                filesToAppend.push({ name: uniqueFileName, file: originalChoice.audioFile });
+
+            if (choice.audioFile instanceof File) {
+                const filename = `choice_audio_${ts}_${choice.audioFile.name}`;
+                cloned.audioFileName = filename;
+                filesToAppend.push({ name: filename, file: choice.audioFile });
             }
-            // Remove properties that the backend DTO doesn't need
-            delete choice.imageFile;
-            delete choice.audioFile;
-            return choice;
+
+            delete cloned.imageFile;
+            delete cloned.audioFile;
+
+            return cloned;
         });
 
-        const questionDtoPayload = { ...questionData, choices: choicesPayload };
+        // Handle question-level image/audio
+        const ts = Date.now();
+        const questionDtoPayload = {
+            ...questionData,
+            choices: choicesPayload,
+            questionImageUrl: questionData.questionImageUrl || null,
+            questionSoundUrl: questionData.questionSoundUrl || null,
+        };
+
+        if (questionData.imageFile instanceof File) {
+            const filename = `question_image_${ts}_${questionData.imageFile.name}`;
+            questionDtoPayload.questionImageUrl = filename;
+            filesToAppend.push({ name: filename, file: questionData.imageFile });
+        }
+
+        if (questionData.audioFile instanceof File) {
+            const filename = `question_audio_${ts}_${questionData.audioFile.name}`;
+            questionDtoPayload.questionSoundUrl = filename;
+            filesToAppend.push({ name: filename, file: questionData.audioFile });
+        }
+
+        // Append JSON DTO
         formData.append('questionDto', JSON.stringify(questionDtoPayload));
 
-        filesToAppend.forEach(item => {
-            formData.append('files', item.file, item.name);
+        // Append files
+        filesToAppend.forEach(({ file, name }) => {
+            formData.append('files', file, name);
         });
 
+        // 🔐 Send request
         const response = await fetch(url, {
             method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData,
+            headers: {
+                Authorization: `Bearer ${token}`
+                // No Content-Type needed for multipart!
+            },
+            body: formData
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-            throw new Error(errorData.message || 'Failed to update question with files.');
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `Failed to update question. Status: ${response.status}`);
         }
-        return response.json();
 
-    } else {
-        // If no files are involved, send a simple JSON request.
-        console.log("updateQuestion: No new files detected, sending as JSON.");
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(questionData),
-        });
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-            throw new Error(errorData.message || `Failed to update question.`);
-        }
         return response.json();
     }
+
+    // Fallback: No files, send pure JSON
+    console.log('📦 No files detected. Sending JSON...');
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(questionData),
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `Failed to update question. Status: ${response.status}`);
+    }
+
+    return response.json();
 };
+
 
 export const deleteQuestion = async (activityNodeTypeId, questionId, token) => {
     if (!activityNodeTypeId || !questionId || !token) {

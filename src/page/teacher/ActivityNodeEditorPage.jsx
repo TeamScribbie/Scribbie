@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../../config/apiConfig';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/layout/navbar';
@@ -127,16 +128,9 @@ const ActivityNodeEditorPage = () => {
         }
     };
 
-    const handleSaveQuestionFromDialog = async (payloadFromDialog) => {
-        if (!authState || !authState.token) {
-            setDialogError("Authentication missing. Please log in again.");
-            setIsDialogSaving(false);
-            return;
-        }
-
-        if (!activityNodeTypeId) {
-            setDialogError("Activity Node ID context is missing. Cannot save question.");
-            setIsDialogSaving(false);
+    const handleSaveQuestionFromDialog = async (payload) => {
+        if (!authState.token || !activityNodeTypeId) {
+            setDialogError("Missing auth or activity ID.");
             return;
         }
 
@@ -144,56 +138,55 @@ const ActivityNodeEditorPage = () => {
         setDialogError(null);
 
         try {
-            const { choices = [], ...questionDataForApi } = payloadFromDialog;
+            const formData = new FormData();
 
-            if (payloadFromDialog.isNew || !payloadFromDialog.questionId) {
-                const savedOrUpdatedQuestion = await createQuestionForActivityNode(
-                    activityNodeTypeId,
-                    questionDataForApi,
-                    authState.token
-                );
-
-                if (savedOrUpdatedQuestion?.questionId && choices.length > 0) {
-                    for (const choice of choices) {
-                        const hasFiles = choice.imageFile || choice.audioFile;
-                        const choicePayload = {
-                            choiceText: choice.choiceText,
-                            isCorrect: !!choice.isCorrect,
-                            ...(hasFiles && {
-                                imageFile: choice.imageFile || null,
-                                audioFile: choice.audioFile || null
-                            })
-                        };
-
-                        await createChoiceForQuestion(
-                            activityNodeTypeId,
-                            savedOrUpdatedQuestion.questionId,
-                            choicePayload,
-                            authState.token
-                        );
-                    }
-                    setSnackbarMessage("Question and choices added successfully!");
-                } else {
-                    setSnackbarMessage("Question added successfully.");
-                }
-
-            } else {
-                await updateQuestion(
-                    activityNodeTypeId,
-                    payloadFromDialog.questionId,
-                    payloadFromDialog,
-                    authState.token
-                );
-                setSnackbarMessage("Question updated successfully!");
+            // Prepare DTO
+            const dto = { ...payload };
+            if (dto.imageFile) {
+                dto.questionImageUrl = dto.imageFile.name;
+                formData.append('files', dto.imageFile, dto.imageFile.name);
+            }
+            if (dto.audioFile) {
+                dto.questionSoundUrl = dto.audioFile.name;
+                formData.append('files', dto.audioFile, dto.audioFile.name);
             }
 
+            (dto.choices || []).forEach(choice => {
+                if (choice.imageFile) {
+                    choice.imageFileName = choice.imageFile.name;
+                    formData.append('files', choice.imageFile, choice.imageFile.name);
+                }
+                if (choice.audioFile) {
+                    choice.audioFileName = choice.audioFile.name;
+                    formData.append('files', choice.audioFile, choice.audioFile.name);
+                }
+            });
+
+            formData.append('questionDto', JSON.stringify(dto));
+
+            const isUpdating = !!payload.questionId;
+            const url = isUpdating
+                ? `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${payload.questionId}`
+                : `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions`;
+
+            const response = await fetch(url, {
+                method: isUpdating ? 'PUT' : 'POST',
+                headers: { Authorization: `Bearer ${authState.token}` },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Failed to save question.');
+            }
+
+            setSnackbarMessage("Question saved successfully!");
             setIsQuestionDialogOpen(false);
-            setEditingQuestion(null);
             fetchActivityNodeData();
+
         } catch (err) {
-            console.error("Error saving question from dialog:", err);
-            const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred.";
-            setDialogError(`Save failed: ${errorMessage}`);
+            console.error("Error in saveQuestion:", err);
+            setDialogError(`Save failed: ${err.message}`);
         } finally {
             setIsDialogSaving(false);
         }
