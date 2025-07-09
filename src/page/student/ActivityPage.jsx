@@ -5,13 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 import QuizMcqGame from '../../components/student/QuizMcqGame';
 import ReadingGameComponent from '../../components/student/ReadingGameComponent';
 import FillBlanksGameComponent from '../../components/student/FillBlanksGameComponent';
-// highlight-start
 import Matching2GameComponent from '../../components/student/Matching2GameComponent'; // Import the new game
 import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
 import FlipMatchingGame from '../../components/student/FlipMatchingGame';
-// highlight-end
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
+
+// Import the background music
+import challengeBGMusic from '../../assets/sounds/activitybgmusic.ogg';
 
 const ActivityPage = () => {
     const { lessonDefinitionId, activityNodeTypeId } = useParams();
@@ -27,6 +28,23 @@ const ActivityPage = () => {
     const classroomId = location.state?.classroomId;
     const activityTitleFromState = location.state?.activityTitle;
     const activityInstructionsFromState = location.state?.activityInstructions;
+
+    // --- Music control effect ---
+    useEffect(() => {
+        const audio = new Audio(challengeBGMusic);
+        audio.loop = true; // Loop the music
+        audio.volume = 0.5; // Adjust volume as needed (0.0 to 1.0)
+
+        // Play the music when the component mounts
+        audio.play().catch(e => console.error("Error playing background music:", e));
+
+        // Pause and clean up the audio when the component unmounts
+        return () => {
+            audio.pause();
+            audio.currentTime = 0; // Reset time for next play
+        };
+    }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
+    // --- End music control effect ---
 
     const fetchActivityDetailsCallback = useCallback(async () => {
         if (!activityNodeTypeId || !authState.token) {
@@ -135,7 +153,6 @@ const ActivityPage = () => {
                             lessonDefinitionId={lessonDefinitionId}
                         />
                     );
-                // highlight-start
                 case 'MATCHING2':
                     return (
                         <Matching2GameComponent
@@ -171,7 +188,6 @@ const ActivityPage = () => {
                             lessonDefinitionId={lessonDefinitionId}
                         />
                     );
-                // highlight-end
                 default:
                     return (
                         <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100%', height: '100%', p:2 }}>
@@ -206,6 +222,7 @@ const ActivityPage = () => {
                 overflow: 'hidden',
             }}
         >
+            {/* The renderGameArea handles displaying the actual game or loading/error states. */}
             {renderGameArea()} 
         </Box>
     );
