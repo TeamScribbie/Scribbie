@@ -1,10 +1,10 @@
 :root {
-    --blimp-img: url('/Blimp.png'); /* Path to your blimp image */
+    --taco-img: url('/taco.png'); 
 }
 
 body {
     margin: 0;
-    font-family: sans-serif;
+    font-family: 'Comic Neue', cursive;
     background: #111;
 }
 
@@ -28,20 +28,27 @@ body {
     margin: 0;
     z-index: 1;
     overflow: hidden;
-    background: linear-gradient(to bottom, #0a0e23, #1a213b);
+    background: linear-gradient(to bottom, #f5e347, #ffb347);
 }
 
-.sidebar {
+.bottom-base {
     position: absolute;
+    bottom: 0;
     left: 0;
-    width: 80px;
-    height: 100%;
-    background: #446;
-    color: #fff;
-    writing-mode: vertical-rl;
-    text-align: center;
-    padding-top: 10px;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to top, #f7941e, #ffbe76);
+    border-top-left-radius: 40px;
+    border-top-right-radius: 40px;
+    box-shadow: 0 -8px 15px rgba(0,0,0,0.3);
+    color: white;
     font-weight: bold;
+    font-size: 1.8rem;
+    text-align: center;
+    line-height: 100px;
+    z-index: 3;
+    font-family: 'Luckiest Guy', cursive;
+    text-shadow: 1px 1px 2px #924e00;
 }
 
 .hud {
@@ -52,55 +59,90 @@ body {
     padding: 5px 10px;
     border-radius: 4px;
     font-weight: bold;
+    font-family: 'Baloo Bhai', sans-serif;
 }
 
 .target {
     position: absolute;
-    bottom: 20px;
+    top: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background: #fff;
-    color: #222;
-    padding: 6px 20px;
-    border-radius: 6px;
-    font-size: 18px;
+    background: #fff8dc;
+    color: #5a2e00;
+    padding: 15px 25px;
+    border-radius: 20px;
+    font-size: 20px;
     font-weight: bold;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    font-family: 'Comic Neue', cursive;
+    animation: bounce 1s infinite alternate;
+    border: 3px dashed #ff9900;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 5;
+    text-align: center;
+}
+
+@keyframes bounce {
+    from { transform: translateX(-50%) translateY(0); }
+    to { transform: translateX(-50%) translateY(-5px); }
+}
+
+.target strong {
+    color: #a04000;
+    font-size: 1.5em;
+    display: block;
+    margin-bottom: 5px;
 }
 
 .word {
     position: absolute;
-    background-image: var(--blimp-img);
+    background-image: var(--taco-img);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    width: 200px; /* scaled down proportionally */
-    height: 140px;
+    width: 120px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     user-select: none;
     cursor: pointer;
     transition: transform 0.2s;
 }
+
 .word:hover {
     transform: scale(1.1);
 }
 
+@keyframes tacoFall {
+    0%   { transform: rotate(0deg) translateY(-150px); opacity: 0; }
+    50%  { transform: rotate(5deg); opacity: 0.8; }
+    100% { transform: rotate(0deg) translateY(100vh); opacity: 1; }
+}
+
 .feedback {
     position: absolute;
-    top: 20px;
+    top: 100px;
     left: 50%;
     transform: translateX(-50%);
-    background: #fff;
-    padding: 8px 15px;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 20px;
+    border-radius: 20px;
     font-weight: bold;
-    font-size: 1rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    font-size: 1.2rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     z-index: 10;
+    animation: fadeAndScale 1.2s forwards;
+    white-space: nowrap;
+    color: #222;
+}
+
+@keyframes fadeAndScale {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
+    20% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+    80% { opacity: 1; transform: translateX(-50%) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) scale(0.9); }
 }
 
 .overlay {
@@ -109,19 +151,65 @@ body {
     left: 0;
     width: 100%;
     text-align: center;
+    font-family: 'Comic Neue', cursive;
 }
+
 .word-label {
     padding: 6px 10px;
     border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.6); /* semi-dark overlay for contrast */
+    background-color: rgba(0, 0, 0, 0.6);
     color: white;
     font-size: 1.3rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .word-label.correct {
-    background-color: rgba(60, 180, 90, 0.8); /* green for correct */
+    background-color: rgba(60, 180, 90, 0.8);
 }
 
 .word-label.wrong {
-    background-color: rgba(230, 80, 80, 0.8); /* red for incorrect */
+    background-color: rgba(230, 80, 80, 0.8);
 }
+
+.taco-clouds-row {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120px;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+}
+
+.taco-cloud {
+    position: absolute;
+    width: 250px;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));
+    transform: translateY(var(--cloud-offset, 0px)) scale(var(--cloud-scale, 1));
+}
+
+.animated-cloud {
+    animation: floatcloud 6s ease-in-out infinite;
+}
+
+.cloud-0 { animation-delay: 0s; }
+.cloud-1 { animation-delay: 1s; }
+.cloud-2 { animation-delay: 2s; }
+.cloud-3 { animation-delay: 3s; }
+
+@keyframes floatcloud {
+    0% { transform: translateY(0px) translateX(0); }
+    50% { transform: translateY(-8px) translateX(5px); }
+    100% { transform: translateY(0px) translateX(0); }
+}
+

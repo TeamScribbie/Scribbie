@@ -34,16 +34,16 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const lanesRef = useRef([]);
 
     const generateLanes = () => {
-        const laneCount = 4;
-        const spacing = 170;
-        const topOffset = 50;
-        const lanes = Array.from({ length: laneCount }, (_, i) => topOffset + i * spacing);
+        const laneCount = 8;
+        const spacing = 120;
+        const leftOffset = 80;
+        const lanes = Array.from({ length: laneCount }, (_, i) => leftOffset + i * spacing);
         lanesRef.current = lanes;
-        lanes.forEach(y => laneOccupancy.current[y] = null);
+        lanes.forEach(x => laneOccupancy.current[x] = null);
     };
 
     const getLane = (wordId) => {
-        const available = lanesRef.current.filter(y => !laneOccupancy.current[y]);
+        const available = lanesRef.current.filter(x => !laneOccupancy.current[x]);
         if (available.length === 0) return null;
         const lane = getRandom(available);
         laneOccupancy.current[lane] = wordId;
@@ -73,18 +73,10 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         const targetWord = getRandom(wordBank);
         setTarget(targetWord);
 
-        const width = containerRef.current?.getBoundingClientRect().width || 1200;
-
         const totalCount = 20;
-        const minTargetWords = 3;
-        const maxTargetWords = 5;
-
         const numTargetWords = getRandom([3, 4, 5]);
-        const numDistractors = totalCount - numTargetWords;
-
         const wordQueue = new Array(totalCount);
 
-        // Evenly distribute target words
         const spacing = Math.floor(totalCount / numTargetWords);
         for (let i = 0; i < numTargetWords; i++) {
             const pos = i * spacing;
@@ -95,7 +87,6 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             };
         }
 
-        // Fill in distractors in empty slots
         for (let i = 0; i < totalCount; i++) {
             if (!wordQueue[i]) {
                 const distractor = getRandom(wordBank.filter(w => w !== targetWord));
@@ -107,7 +98,6 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             }
         }
 
-        // Shuffle lightly to break strict pattern
         for (let i = wordQueue.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [wordQueue[i], wordQueue[j]] = [wordQueue[j], wordQueue[i]];
@@ -124,11 +114,11 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             const trySpawn = () => {
                 const lane = getLane(nextWord.id);
                 if (lane !== null) {
-                    const x = width + 50;
-                    setWords(prev => [...prev, { ...nextWord, x, y: lane }]);
-                    setTimeout(spawnNext, 3000);
+                    const y = -100;
+                    setWords(prev => [...prev, { ...nextWord, x: lane, y }]);
+                    setTimeout(spawnNext, 1200);
                 } else {
-                    setTimeout(trySpawn, 1000);
+                    setTimeout(trySpawn, 500);
                 }
             };
 
@@ -139,13 +129,15 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     };
 
     const step = () => {
+        const containerHeight = containerRef.current?.getBoundingClientRect().height || 800;
+
         setWords(prev => {
             const updated = prev
-                .map(w => ({ ...w, x: w.x - w.speed }))
+                .map(w => ({ ...w, y: w.y + w.speed }))
                 .filter(w => {
-                    if (w.x < -10) {
-                        if (laneOccupancy.current[w.y] === w.id) {
-                            laneOccupancy.current[w.y] = null;
+                    if (w.y > containerHeight - 100) {
+                        if (laneOccupancy.current[w.x] === w.id) {
+                            laneOccupancy.current[w.x] = null;
                         }
 
                         if (w.text === target) {
@@ -215,8 +207,8 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
     const shoot = (w) => {
         setWords(prev => prev.filter(p => p.id !== w.id));
-        if (laneOccupancy.current[w.y] === w.id) {
-            laneOccupancy.current[w.y] = null;
+        if (laneOccupancy.current[w.x] === w.id) {
+            laneOccupancy.current[w.x] = null;
         }
 
         if (w.text === target) {
@@ -247,8 +239,19 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
             {gameState === 'playing' && (
                 <div className="game-area fullscreen" ref={containerRef}>
-                    <div className="sidebar">YOUR BASE</div>
+                    <div className="bottom-base">TACO TRAY</div>
                     <div className="hud">Wave: {wave} | Score: {score} | Lives: {lives}</div>
+                    <div className="taco-clouds-sky">
+                        {[...Array(12)].map((_, i) => (
+                            <img
+                                key={i}
+                                src="/taco-cloud.png"
+                                alt="Taco Cloud"
+                                className={`taco-cloud animated-cloud cloud-${i % 4}`}
+                                style={{ left: `${i * 10}%` }}
+                            />
+                        ))}
+                    </div>
 
                     <div
                         className="target"
@@ -256,8 +259,10 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         style={{ cursor: 'pointer' }}
                         title="Click to hear"
                     >
-                        Target Word: <strong>{target}</strong><br />
-                        Only shoot this word before it reaches your base!
+                        <strong>{target}</strong>
+                        <div className="target-instructions">
+                            Only shoot this word before it reaches your base!
+                        </div>
                     </div>
 
                     {words.map(w => (
