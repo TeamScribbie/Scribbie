@@ -239,8 +239,20 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
             {gameState === 'playing' && (
                 <div className="game-area fullscreen" ref={containerRef}>
+                    <div className="mascot-wrapper">
+                        <img src="/mascot.png" className="mascot-img" alt="Mascot" />
+                        {feedback && (
+                            <div className="mascot-speech">
+                                {feedback}
+                            </div>
+                        )}
+                    </div>
                     <div className="bottom-base">TACO TRAY</div>
-                    <div className="hud">Wave: {wave} | Score: {score} | Lives: {lives}</div>
+                        <div className="hud">
+                        <span>🌊 Wave: {wave}</span>
+                        <span>⭐ Score: {score}</span>
+                        <span>❤️ Lives: {'❤️'.repeat(lives)}</span>
+                    </div>
                     <div className="taco-clouds-sky">
                         {[...Array(12)].map((_, i) => (
                             <img
@@ -253,15 +265,14 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         ))}
                     </div>
 
-                    <div
-                        className="target"
-                        onClick={() => speak(target)}
-                        style={{ cursor: 'pointer' }}
-                        title="Click to hear"
-                    >
-                        <strong>{target}</strong>
-                        <div className="target-instructions">
-                            Only shoot this word before it reaches your base!
+                    <div className="target-bubble-container">
+                        <p className="target-instruction">Target Word</p>
+                        <div
+                            className="target-bubble"
+                            onClick={() => speak(target)}
+                            title="Click to hear the word"
+                        >
+                            <div className="target-letter">{target}</div>
                         </div>
                     </div>
 
@@ -277,8 +288,6 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             </span>
                         </div>
                     ))}
-
-                    {feedback && <div className="feedback">{feedback}</div>}
                 </div>
             )}
 
