@@ -18,12 +18,7 @@ import SaveIcon from '@mui/icons-material/Save';
 
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import {
-    createQuestionForActivityNode,
-    updateQuestion,
     deleteQuestion,
-    createChoiceForQuestion,
-    updateChoice,
-    deleteChoice,
     updateQuestionOrderForActivityNode
 } from '../../services/lessonService';
 
@@ -62,20 +57,17 @@ const ActivityNodeEditorPage = () => {
         setIsLoadingPage(true);
         setPageError(null);
         try {
-            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token); //
+            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
             setActivityNodeDetails(data);
-            const formattedQuestions = (data.questions || []).map((q, index) => ({ //
+            const formattedQuestions = (data.questions || []).map((q, index) => ({
                 ...q,
-                choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}`, isNew: false, isModified: false, isDeleted: false })) : [], //
-                orderIndex: q.orderIndex !== undefined ? q.orderIndex : index, //
-                isNew: false,
-                isModified: false,
-                isDeleted: false,
-            })).sort((a, b) => a.orderIndex - b.orderIndex); //
+                choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}` })) : [],
+                orderIndex: q.orderIndex !== undefined ? q.orderIndex : index,
+            })).sort((a, b) => a.orderIndex - b.orderIndex);
             setQuestions(formattedQuestions);
             setModifiedQuestionOrderIds(new Set());
         } catch (err) {
-            setPageError(err.message || "Could not load activity node details."); //
+            setPageError(err.message || "Could not load activity node details.");
             setQuestions([]);
         } finally {
             setIsLoadingPage(false);
@@ -86,7 +78,7 @@ const ActivityNodeEditorPage = () => {
         if (authState.isAuthenticated && authState.token) {
             fetchActivityNodeData();
         } else if (authState.isAuthenticated === false) {
-            setPageError("User not authenticated. Please log in."); //
+            setPageError("User not authenticated. Please log in.");
             setIsLoadingPage(false);
         }
     }, [authState.isAuthenticated, authState.token, fetchActivityNodeData]);
@@ -104,8 +96,8 @@ const ActivityNodeEditorPage = () => {
     };
 
     const handleDeleteQuestionLocalOrApi = async (questionId, indexInUI) => {
-        const questionToDelete = questions[indexInUI]; //
-        if (window.confirm(`Are you sure you want to delete Question ${indexInUI + 1}: "${questionToDelete.questionText.substring(0, 30)}..."?`)) { //
+        const questionToDelete = questions[indexInUI];
+        if (window.confirm(`Are you sure you want to delete Question ${indexInUI + 1}: "${questionToDelete.questionText.substring(0, 30)}..."?`)) {
             if (!questionToDelete.questionId) {
                 setQuestions(prev => prev.filter((_, idx) => idx !== indexInUI)
                     .map((q, newIdx) => ({ ...q, orderIndex: newIdx })));
@@ -115,12 +107,12 @@ const ActivityNodeEditorPage = () => {
             }
             setIsOrderSaving(true);
             try {
-                await deleteQuestion(activityNodeTypeId, questionToDelete.questionId, authState.token); //
-                setSnackbarMessage("Question deleted successfully!"); //
+                await deleteQuestion(activityNodeTypeId, questionToDelete.questionId, authState.token);
+                setSnackbarMessage("Question deleted successfully!");
                 setSnackbarOpen(true);
                 fetchActivityNodeData();
             } catch (err) {
-                setSnackbarMessage(`Error deleting question: ${err.message}`); //
+                setSnackbarMessage(`Error deleting question: ${err.message}`);
                 setSnackbarOpen(true);
             } finally {
                 setIsOrderSaving(false);
@@ -139,26 +131,38 @@ const ActivityNodeEditorPage = () => {
 
         try {
             const formData = new FormData();
-
-            // Prepare DTO
             const dto = { ...payload };
-            if (dto.imageFile) {
-                dto.questionImageUrl = dto.imageFile.name;
-                formData.append('files', dto.imageFile, dto.imageFile.name);
+
+            // ✨ FIX: Filter out choices marked for deletion before sending to backend
+            if (dto.choices) {
+                dto.choices = dto.choices.filter(choice => !choice.isDeleted);
             }
+
+            const generateUniqueName = (prefix, file) =>
+                `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2)}_${file.name}`;
+
+            if (dto.imageFile) {
+                const uniqueImageName = generateUniqueName("questionImage", dto.imageFile);
+                dto.questionImageUrl = uniqueImageName;
+                formData.append('files', dto.imageFile, uniqueImageName);
+            }
+
             if (dto.audioFile) {
-                dto.questionSoundUrl = dto.audioFile.name;
-                formData.append('files', dto.audioFile, dto.audioFile.name);
+                const uniqueAudioName = generateUniqueName("questionAudio", dto.audioFile);
+                dto.questionSoundUrl = uniqueAudioName;
+                formData.append('files', dto.audioFile, uniqueAudioName);
             }
 
             (dto.choices || []).forEach(choice => {
                 if (choice.imageFile) {
-                    choice.imageFileName = choice.imageFile.name;
-                    formData.append('files', choice.imageFile, choice.imageFile.name);
+                    const uniqueName = generateUniqueName("choiceImage", choice.imageFile);
+                    choice.imageFileName = uniqueName;
+                    formData.append('files', choice.imageFile, uniqueName);
                 }
                 if (choice.audioFile) {
-                    choice.audioFileName = choice.audioFile.name;
-                    formData.append('files', choice.audioFile, choice.audioFile.name);
+                    const uniqueName = generateUniqueName("choiceAudio", choice.audioFile);
+                    choice.audioFileName = uniqueName;
+                    formData.append('files', choice.audioFile, uniqueName);
                 }
             });
 
@@ -171,7 +175,10 @@ const ActivityNodeEditorPage = () => {
 
             const response = await fetch(url, {
                 method: isUpdating ? 'PUT' : 'POST',
-                headers: { Authorization: `Bearer ${authState.token}` },
+                // ✨ FIX: Explicitly set the Authorization header for FormData requests
+                headers: {
+                    'Authorization': `Bearer ${authState.token}`,
+                },
                 body: formData,
             });
 
@@ -193,21 +200,21 @@ const ActivityNodeEditorPage = () => {
     };
 
     const handleMoveQuestion = (currentIndex, direction) => {
-        const newQuestions = [...questions]; //
-        const targetIndex = currentIndex + direction; //
+        const newQuestions = [...questions];
+        const targetIndex = currentIndex + direction;
 
-        if (targetIndex < 0 || targetIndex >= newQuestions.length) return; //
+        if (targetIndex < 0 || targetIndex >= newQuestions.length) return;
 
-        [newQuestions[currentIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[currentIndex]]; //
+        [newQuestions[currentIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[currentIndex]];
 
-        const reorderedQuestions = newQuestions.map((q, idx) => { //
-            const orderChanged = q.orderIndex !== idx; //
+        const reorderedQuestions = newQuestions.map((q, idx) => {
+            const orderChanged = q.orderIndex !== idx;
             if (q.questionId && orderChanged) {
-                setModifiedQuestionOrderIds(prev => new Set(prev).add(q.questionId)); //
+                setModifiedQuestionOrderIds(prev => new Set(prev).add(q.questionId));
             }
             return { ...q, orderIndex: idx };
         });
-        setQuestions(reorderedQuestions); //
+        setQuestions(reorderedQuestions);
     };
 
     const handleSaveOrder = async () => {
@@ -216,8 +223,8 @@ const ActivityNodeEditorPage = () => {
             setSnackbarOpen(true);
             return;
         }
-        if (modifiedQuestionOrderIds.size === 0) { //
-            setSnackbarMessage("No order changes to save."); //
+        if (modifiedQuestionOrderIds.size === 0) {
+            setSnackbarMessage("No order changes to save.");
             setSnackbarOpen(true);
             return;
         }
@@ -227,7 +234,6 @@ const ActivityNodeEditorPage = () => {
 
         try {
             await updateQuestionOrderForActivityNode(activityNodeTypeId, questions, authState.token);
-
             setSnackbarMessage("Question order saved successfully!");
             setModifiedQuestionOrderIds(new Set());
             fetchActivityNodeData();
@@ -241,9 +247,9 @@ const ActivityNodeEditorPage = () => {
     };
 
     const pageTitle = activityNodeDetails
-        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}` //
+        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}`
         : 'Loading Activity Node Editor...';
-    const lessonManagementPath = `/teacher/course/${courseId}/lessons`; //
+    const lessonManagementPath = `/teacher/course/${courseId}/lessons`;
 
     return (
         <Box className="teacher-homepage-container">
@@ -315,8 +321,6 @@ const ActivityNodeEditorPage = () => {
                                                             }
                                                         </Box>
                                                     }
-                                                    // --- THIS IS THE REVERTED CHANGE ---
-                                                    // Restoring the detailed choices display
                                                     secondary={
                                                         <>
                                                             <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block' }}>

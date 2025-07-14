@@ -1,146 +1,135 @@
-// src/page/student/ChallengePage.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Box, Typography, Container, Paper, CircularProgress, Alert, Button } from '@mui/material';
-import Navbar from '../../components/layout/navbar'; // Assuming Navbar is not part of the immersive game screen
-import HealthBasedChallenge from '../../components/student/HealthBasedChallenge';
-import { useAuth } from '../../context/AuthContext';
-import { getChallengeConfigurationForLesson, getChallengeQuestions } from '../../services/challengeService';
+import React from 'react';
+import { Box, Typography, Button, Grid } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import Navbar from '../../components/layout/navbar';
+import StudentSidebar from '../../components/layout/StudentSidebar';
 
-const ChallengePage = () => {
-    const { lessonDefinitionId } = useParams();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { authState } = useAuth();
+const challenges = [
+  {
+    image: '/src/assets/reading-bg.png',
+  },
+  {
+    image: '/src/assets/stories-bg.png',
+  },
+  {
+    image: '/src/assets/grammar-bg.png',
+  },
+];
 
-    const classroomId = location.state?.classroomId;
-    const lessonTitleFromState = location.state?.lessonTitle; // Passed from LessonPage
+const StudentChallenges = () => {
+  return (
+    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#ffffff' }}>
+      {/* Sidebar */}
+      <StudentSidebar />
 
-    const [challengeConfig, setChallengeConfig] = useState(null);
-    const [questions, setQuestions] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+      {/* Main Content */}
+      <Box sx={{ flex: 1, ml: '100px' }}>
+        {/* Navbar */}
+        <Navbar />
 
-    const fetchChallengeData = useCallback(async () => {
-        if (!lessonDefinitionId || !authState.token) {
-            setError("Required information is missing to load the challenge.");
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        setError(null);
-        try {
-            console.log(`ChallengePage: Fetching config for lessonDefId: ${lessonDefinitionId}`);
-            const config = await getChallengeConfigurationForLesson(lessonDefinitionId, authState.token);
-            if (!config) {
-                throw new Error("Challenge not configured for this lesson. Please contact your teacher.");
-            }
-            setChallengeConfig(config); // This is ChallengeDefinitionResponseDto
-            console.log("ChallengePage: Config fetched:", config);
+{/* Page Content */}
+<Box
+  sx={{
+    overflow: 'auto',
+    p: 10,
+    backgroundImage: 'url(/src/assets/challengepage-bg.png)',
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    minHeight: 'calc(100vh - 64px)', // ✅ wrap in string
+    width: '100%',
+  }}
+>
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 5 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 'bold',
+                background: 'linear-gradient(270deg, #FF6B6B, #FFD93D, #6BCB77, #4D96FF, #FF6B6B)',
+                backgroundSize: '1000% 100%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                animation: 'gradientShift 8s ease infinite',
+                display: 'inline-block',
+                '@keyframes gradientShift': {
+                  '0%': { backgroundPosition: '0% 50%' },
+                  '50%': { backgroundPosition: '100% 50%' },
+                  '100%': { backgroundPosition: '0% 50%' },
+                },
+              }}
+            >
+              It's time for fun!
+            </Typography>
+            <Typography variant="subtitle1" sx={{ color: '#444' }}>
+              Learn English through games and fun tasks!
+            </Typography>
+          </Box>
 
-            console.log(`ChallengePage: Fetching questions for lessonDefId: ${lessonDefinitionId}`);
-            const fetchedQuestions = await getChallengeQuestions(lessonDefinitionId, authState.token);
-             if (!Array.isArray(fetchedQuestions) || fetchedQuestions.length === 0) {
-                // Even if config exists, if no questions, it's an issue for gameplay
-                throw new Error("No questions available for this challenge. Please contact your teacher.");
-            }
-            setQuestions(fetchedQuestions);
-            console.log("ChallengePage: Questions fetched:", fetchedQuestions.length);
-
-        } catch (err) {
-            console.error("ChallengePage: Error fetching challenge data:", err);
-            setError(err.message || "Failed to load challenge data.");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [lessonDefinitionId, authState.token]);
-
-    useEffect(() => {
-        fetchChallengeData();
-    }, [fetchChallengeData]);
-
-    const handleChallengeEnd = (results) => {
-        console.log("ChallengePage: Challenge ended. Results:", results);
-        navigate('/student/challenge-summary', {
-            state: {
-                ...results, // score, status, highestStreak, questionsAnswered, timeTaken
-                lessonDefinitionId: lessonDefinitionId, // Ensure this is passed
-                classroomId: classroomId,
-                lessonTitle: challengeConfig?.lessonTitle || lessonTitleFromState || "Challenge", // Get lesson title from config if available
-            }
-        });
-    };
-
-    if (isLoading) {
-        return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
-                {/* Navbar might be optional here if the game is truly fullscreen */}
-                {/* <Navbar />  */}
-                <Container component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: '60px' }}>
-                    <CircularProgress />
-                    <Typography sx={{ mt: 2 }}>Loading Challenge...</Typography>
-                </Container>
-            </Box>
-        );
-    }
-
-    if (error) {
-        return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
-                {/* <Navbar /> */}
-                <Container component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: '60px' }}>
-                    <Alert severity="error" sx={{p:3}}>
-                        <Typography variant="h6">Error Loading Challenge</Typography>
-                        {error}
-                        <Button onClick={() => navigate(classroomId ? `/student/classroom/${classroomId}/lessons` : '/student-homepage')} sx={{mt:2}}>
-                            Back to Lessons
-                        </Button>
-                    </Alert>
-                </Container>
-            </Box>
-        );
-    }
-    
-    if (!challengeConfig || questions.length === 0) {
-         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
-                <Container component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: '60px' }}>
-                    <Alert severity="warning" sx={{p:3}}>
-                        <Typography variant="h6">Challenge Not Ready</Typography>
-                        <Typography>This challenge is not fully configured or has no questions. Please contact your teacher.</Typography>
-                         <Button onClick={() => navigate(classroomId ? `/student/classroom/${classroomId}/lessons` : '/student-homepage')} sx={{mt:2}}>
-                            Back to Lessons
-                        </Button>
-                    </Alert>
-                </Container>
-            </Box>
-        );
-    }
-    return (
-        <> 
-            {/* Navbar is intentionally omitted here for a more immersive game experience as requested */}
-            {challengeConfig.challengeType === 'HEALTH_BASED' && (
-                <HealthBasedChallenge
-                    questions={questions}
-                    challengeConfig={challengeConfig} // Pass ChallengeDefinitionResponseDto
-                    onChallengeEnd={handleChallengeEnd}
-                    lessonDefinitionId={lessonDefinitionId} // For leaderboard
-                />
-            )}
-            {challengeConfig.challengeType !== 'HEALTH_BASED' && (
-                 <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
-                    <Container component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', pt: '60px' }}>
-                        <Alert severity="info">
-                            Challenge type "{challengeConfig.challengeType}" is not yet implemented.
-                             <Button onClick={() => navigate(classroomId ? `/student/classroom/${classroomId}/lessons` : '/student-homepage')} sx={{mt:2}}>
-                                Back to Lessons
-                            </Button>
-                        </Alert>
-                    </Container>
+          {/* Challenge Cards */}
+<Grid container spacing={20} justifyContent="center">
+  {challenges.map((challenge, index) => (
+    <Grid item xs={12} sm={6} md={4} key={index}>
+      <Box
+        sx={{
+          height: '450px',
+          width: '155%', // make it fit inside the grid item
+          backgroundImage: `url(${challenge.image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderRadius: 5,
+          boxShadow: 5,
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          '&:hover': {
+            transform: 'scale(1.03)',
+            boxShadow: 10,
+          },
+          p: 2, 
+          m: 1, 
+        }}
+      >
+{/* Play Button */}
+<Box
+  sx={{
+    zIndex: 100,
+    display: 'flex',
+    justifyContent: 'right',
+    pb: 1, // padding bottom for spacing
+  }}
+>
+  <Button
+    variant="contained"
+    startIcon={<PlayArrowIcon />}
+    sx={{
+      borderRadius: '50px',
+      backgroundColor: '#4CAF50', // bright green
+      color: '#fff', // white text for contrast
+      fontWeight: 'bold',
+      px: 4,
+      py: 1.5,
+      fontSize: '1.1rem',
+      boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
+      '&:hover': {
+        backgroundColor: '#43A047', // darker green on hover
+      },
+    }}
+  >
+    PLAY
+  </Button>
+                  </Box>
                 </Box>
-            )}
-        </>
-    );
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      </Box>
+    </Box>
+  );
 };
 
-export default ChallengePage;
+export default StudentChallenges;
