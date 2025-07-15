@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { Box, Typography, Button } from '@mui/material';
 import{Application, extend} from '@pixi/react';
 import {Container,Graphics,Sprite,} from 'pixi.js';
-import {useRef} from 'react';
 
 extend({
     Container,Graphics,Sprite,
