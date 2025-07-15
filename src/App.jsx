@@ -2,6 +2,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LandingPage from "./components/layout/LandingPage";
+import { Box, CircularProgress } from '@mui/material';
 
 // Import Authentication Context Provider
 // Ensure useAuth is also exported from AuthContext if ProtectedRoute is in the same file or imported separately
@@ -38,14 +39,17 @@ import ReadingGameComponent from './components/student/ReadingGameComponent';
 import FillBlanksGameComponent from './components/student/FillBlanksGameComponent';
 import ReadingDefenderComponent from "./components/student/ReadingDefenderComponent.jsx";
 
-// ProtectedRoute component (ensure this is defined as you had it)
 const ProtectedRoute = ({ allowedRoles, children }) => {
     const { authState } = useAuth();
+    if (authState.loading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
 
     if (!authState.isAuthenticated) {
-        // If not authenticated, redirect to a relevant login page
-        // For teacher routes, teacher-login; for student, student-login
-        // This might need adjustment based on which login to prefer for generic protected routes
         return <Navigate to="/teacher-login" replace />;
     }
 
@@ -56,8 +60,7 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
             "Access Denied: User with roles", authState.user?.roles,
             "tried to access a route requiring one of:", allowedRoles
         );
-        // Redirect to a safe default page if role access is denied
-        return <Navigate to="/teacher-homepage" replace />; // Or a generic access-denied page
+        return <Navigate to="/teacher-homepage" replace />;
     }
     return children ? children : <Outlet />;
 };
@@ -193,8 +196,6 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-
-          {/* --- NEW TEACHER PROGRESS ROUTES START --- */}
           <Route
               path="/teacher/classroom/:classroomId/progress"
               element={<ClassroomStudentProgressOverviewPage />}
@@ -203,7 +204,6 @@ const App = () => {
               path="/teacher/classroom/:classroomId/student/:studentId/progress"
               element={<StudentCourseDetailPage />}
           />
-
         <Route path="/" element={<Navigate to="/student-login" replace />} />
         <Route path="*" element={
             <div style={{ textAlign: 'center', marginTop: '50px' }}>

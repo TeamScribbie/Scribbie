@@ -187,7 +187,6 @@ export const deleteChoice = async (activityNodeTypeId, questionId, choiceId, tok
     return response.json();
 };
 
-// ... (other lesson service functions like those related to student progress can remain)
 export const getLessonDefinitions = async (courseId, token) => {
   if (!courseId || !token) {
     throw new Error('Course ID and auth token are required to fetch lesson definitions.');
