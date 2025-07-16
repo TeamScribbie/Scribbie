@@ -19,6 +19,7 @@ import ChallengePage from './page/student/ChallengePage';
 import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
 import ViewLeaderboardPage from './page/student/ViewLeaderboardPage';
 import MemoryGame from './page/student/MemoryGame';
+import StoryGame from './page/student/StoryGame';
 
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
@@ -74,6 +75,7 @@ const App = () => {
         <Route path="/teacher-login" element={<TeacherLogin />} />
         <Route path="/teacher-register" element={<TeacherRegistration />} />
         <Route path="/student-memory-game" element={<MemoryGame />} />
+        <Route path="/student-story-game" element={<StoryGame />} />
 
 
         {/* Student Protected Routes */}

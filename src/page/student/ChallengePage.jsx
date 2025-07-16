@@ -11,9 +11,8 @@ const challenges = [
   },
   {
     image: '/src/assets/stories-bg.png',
-  },
-  {
-    image: '/src/assets/grammar-bg.png',
+    to: '/student-story-game',
+    label: 'Tell Me A Story',
   },
   {
     image: '/src/assets/memorygame-bg.png',

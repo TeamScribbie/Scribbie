@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/memory.css";
 import { Box, Button, Typography } from "@mui/material";
 
-
 const cardImages = [
   { src: "/icons/apple.png", word: "Apple", matched: false },
   { src: "/icons/banana.png", word: "Banana", matched: false },
@@ -38,6 +37,8 @@ export default function MemoryGame() {
   const [popupWord, setPopupWord] = useState(null);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [musicPlaying, setMusicPlaying] = useState(false);
+  const [nickname, setNickname] = useState("");
+  const [gameStarted, setGameStarted] = useState(false);
   const totalPairs = cardImages.length;
 
   const navigate = useNavigate();
@@ -57,6 +58,7 @@ export default function MemoryGame() {
 
   const handleChoice = (card) => {
     if (!disabled) {
+      if (card === choiceOne) return; // prevent double click on the same card
       labelSounds[card.src]?.play();
       setPopupWord(card.word);
       setTimeout(() => setPopupWord(null), 1200);
@@ -112,98 +114,149 @@ export default function MemoryGame() {
   useEffect(() => {
     backgroundMusic.play();
     setMusicPlaying(true);
-
     return () => {
-        backgroundMusic.pause();
-        backgroundMusic.currentTime = 0;
-        setMusicPlaying(false);
+      backgroundMusic.pause();
+      backgroundMusic.currentTime = 0;
+      setMusicPlaying(false);
     };
   }, []);
 
   return (
     <Box className="memory-container">
-      {/* ✅ Back Button at top-left */}
-      <Box display="flex" justifyContent="flex-start" width="100%" mb={1}>
-        <Button
-          variant="contained"
-          style={{
-            backgroundColor: "#607d8b",
-            color: "white",
-            fontWeight: "bold",
-          }}
-          onClick={() => navigate("/student-challenges")}
-        >
-          ⬅ Back to Challenge
-        </Button>
-      </Box>
+      {!gameStarted ? (
+  <Box display="flex" flexDirection="column" alignItems="center" mt={5}>
+  <Typography
+    variant="h3"
+    mb={3}
+    style={{ fontWeight: "bold", color: "#3f51b5" }}
+  >
+    🎮 Enter Your Nickname
+  </Typography>
 
-      <Typography variant="h3" className="game-title">
-        🌟 Memory Puzzle 🌙
-      </Typography>
+  <input
+    type="text"
+    placeholder="Enter nickname..."
+    value={nickname}
+    onChange={(e) => setNickname(e.target.value)}
+    style={{
+      padding: "20px",
+      fontSize: "28px",
+      borderRadius: "12px",
+      border: "2px solid #3f51b5",
+      marginBottom: "30px",
+      width: "350px",
+      textAlign: "center",
+    }}
+  />
 
-      <Box display="flex" justifyContent="center" gap={2} mb={2}>
-        <Button variant="contained" className="restart-button" onClick={shuffleCards}>
-          🔄 Restart Game
-        </Button>
-        <Button
-          variant="outlined"
-          className="restart-button"
-          onClick={toggleMusic}
-          style={{ backgroundColor: musicPlaying ? "#4caf50" : "#9e9e9e" }}
-        >
-          {musicPlaying ? "🔊 Music On" : "🔇 Music Off"}
-        </Button>
-      </Box>
+  <Button
+    variant="contained"
+    size="large"
+    style={{
+      fontSize: "20px",
+      padding: "12px 24px",
+      backgroundColor: "#4caf50",
+      color: "#fff",
+      fontWeight: "bold",
+    }}
+    onClick={() => {
+      if (nickname.trim()) setGameStarted(true);
+    }}
+  >
+    🚀 Start Game
+  </Button>
+</Box>
 
-      {gameWon && (
+      ) : (
         <>
-          <Typography className="win-message">
-            🎉 You matched all cards! 🎉
+          <Box display="flex" justifyContent="space-between" width="100%" mb={1}>
+            <Button
+              variant="contained"
+              style={{
+                backgroundColor: "#607d8b",
+                color: "white",
+                fontWeight: "bold",
+              }}
+              onClick={() => navigate("/student-challenges")}
+            >
+              ⬅ EXIT
+            </Button>
+            <Typography variant="h6" style={{ marginTop: "8px" }}>
+              👤 Player: <strong>{nickname}</strong>
+            </Typography>
+          </Box>
+
+          <Typography variant="h3" className="game-title">
+            🌟 Memory Puzzle 🌙
           </Typography>
-          <div className="confetti">
-            {Array.from({ length: 30 }).map((_, i) => (
-              <span
-                key={i}
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 3}s`,
-                }}
-              >
-                {Math.random() > 0.5 ? "🌟" : "✨"}
-              </span>
-            ))}
-          </div>
+
+          <Box display="flex" justifyContent="center" gap={2} mb={2}>
+            <Button variant="contained" className="restart-button" onClick={shuffleCards}>
+              🔄 Restart Game
+            </Button>
+            <Button
+              variant="outlined"
+              className="restart-button"
+              onClick={toggleMusic}
+              style={{ backgroundColor: musicPlaying ? "#4caf50" : "#9e9e9e" }}
+            >
+              {musicPlaying ? "🔊 Music On" : "🔇 Music Off"}
+            </Button>
+          </Box>
+
+          {gameWon && (
+            <>
+              <Typography className="win-message">
+                🎉 You matched all cards, {nickname}! 🎉
+              </Typography>
+              <div className="confetti">
+                {Array.from({ length: 30 }).map((_, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      animationDelay: `${Math.random() * 3}s`,
+                    }}
+                  >
+                    {Math.random() > 0.5 ? "🌟" : "✨"}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {popupWord && <div className="popup-word">{popupWord}</div>}
+
+          <Typography className="progress-score">
+            Matched Pairs: {matchedPairs} / {totalPairs}
+          </Typography>
+
+          <Box className="card-grid">
+            {cards.map((card) => {
+              const isFlipped = card === choiceOne || card === choiceTwo || card.matched;
+              return (
+                <div
+                  key={card.id}
+                  className={`card ${isFlipped ? "flipped" : ""}`}
+                  onClick={() => {
+                    if (!disabled && !isFlipped) handleChoice(card);
+                  }}
+                >
+                  {isFlipped ? (
+                    <img src={card.src} alt={card.word} className="card-image" />
+                  ) : (
+                    <div className="card-back">🪐</div>
+                  )}
+                </div>
+              );
+            })}
+          </Box>
+
+          <Typography className="turn-counter">Turns: {turns}</Typography>
+
+          <div className="floating-mascot">🌙 You're doing great!</div>
         </>
       )}
-
-      {popupWord && <div className="popup-word">{popupWord}</div>}
-
-      <Typography className="progress-score">
-        Matched Pairs: {matchedPairs} / {totalPairs}
-      </Typography>
-
-      <Box className="card-grid">
-        {cards.map((card) => {
-          const isFlipped = card === choiceOne || card === choiceTwo || card.matched;
-          return (
-            <div
-              key={card.id}
-              className={`card ${isFlipped ? "flipped" : ""}`}
-              onClick={() => !isFlipped && handleChoice(card)}
-            >
-              {isFlipped ? (
-                <img src={card.src} alt={card.word} className="card-image" />
-              ) : (
-                <div className="card-back">🪐</div>
-              )}
-            </div>
-          );
-        })}
-      </Box>
-
-      <Typography className="turn-counter">Turns: {turns}</Typography>
-
-      <div className="floating-mascot">🌙 You're doing great!</div>
     </Box>
   );
 }
