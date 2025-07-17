@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import MemoryGame from '../../page/student/MemoryGame.jsx'; // Make sure this path is correct
+import {MEDIA_BASE_URL} from "../../config/apiConfig.js";
 
 const FlipMatchingGame = ({ questions = [], onGameComplete = () => {} }) => {
     // Transform the 'questions' prop into the format 'MemoryGame' expects.
@@ -10,10 +11,10 @@ const FlipMatchingGame = ({ questions = [], onGameComplete = () => {} }) => {
             if (!choice) return null;
 
             return {
-                src: choice.imagePath ? `http://localhost:8080/${choice.imagePath.replace(/^\/+/, '')}` : null,
+                src: choice.imagePath ? `${MEDIA_BASE_URL}${choice.imagePath.replace(/^\/+/, '')}` : null,
                 word: choice.choiceText,
                 // Assuming you have an 'audioPath' in your choice object
-                soundSrc: choice.audioPath ? `http://localhost:8080/${choice.audioPath.replace(/^\/+/, '')}` : null,
+                soundSrc: choice.audioPath ? `${MEDIA_BASE_URL}${choice.audioPath.replace(/^\/+/, '')}` : null,
             };
         }).filter(Boolean); // Filter out any null entries if a question has no choice
     }, [questions]);
