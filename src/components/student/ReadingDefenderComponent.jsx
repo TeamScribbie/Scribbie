@@ -20,6 +20,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const [target, setTarget] = useState('');
     const [feedback, setFeedback] = useState('');
     const [highestScore, setHighestScore] = useState(0);
+    const [showWaveAnnouncer, setShowWaveAnnouncer] = useState(false);
 
     const wordBank = questions.length > 0
         ? questions[0].choices.map(c => c.choiceText)
@@ -168,13 +169,16 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             ) {
                 waveReadyRef.current = false;
                 setTimeout(() => {
-                    setWave(prev => {
-                        const next = prev + 1;
-                        spawnWave(next);
-                        waveReadyRef.current = true;
-                        return next;
-                    });
-                }, 800);
+                setShowWaveAnnouncer(true);
+                setTimeout(() => setShowWaveAnnouncer(false), 1500); // Hide after 1.5 seconds
+
+                setWave(prev => {
+                    const next = prev + 1;
+                    spawnWave(next);
+                    waveReadyRef.current = true;
+                    return next;
+                });
+            }, 800);
             }
 
             return updated;
@@ -239,6 +243,9 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
             {gameState === 'playing' && (
                 <div className="game-area fullscreen" ref={containerRef}>
+                    {showWaveAnnouncer && (
+                        <div className="wave-announcer">🌊 Wave {wave}!</div>
+                    )}
                     <div className="mascot-wrapper">
                         <img src="/mascot.png" className="mascot-img" alt="Mascot" />
                         {feedback && (
@@ -248,11 +255,11 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         )}
                     </div>
                     <div className="bottom-base">TACO TRAY</div>
-                        <div className="hud">
-                        <span>🌊 Wave: {wave}</span>
-                        <span>⭐ Score: {score}</span>
-                        <span>❤️ Lives: {'❤️'.repeat(lives)}</span>
-                    </div>
+                        <div className="wave-hud">🌊 Wave: {wave} </div>
+                        <div className="left-hud">❤️ Lives: {[...Array(lives)].map((_, i) => (
+                            <img key={i} src="/heart.png" alt="life" className="life-icon" />
+                            ))}</div>
+                        <div className="right-hud">⭐ Score: {score}</div>
                     <div className="taco-clouds-sky">
                         {[...Array(12)].map((_, i) => (
                             <img
@@ -272,7 +279,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             onClick={() => speak(target)}
                             title="Click to hear the word"
                         >
-                            <div className="target-letter">{target}</div>
+                            <div className="target-letter">Click Me!</div>
                         </div>
                     </div>
 

@@ -35,6 +35,18 @@ body {
     background-repeat: no-repeat;
 }
 
+.left-tray,
+.right-tray {
+  flex: 1;
+  text-align: center;
+}
+
+.tray-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
 .bottom-base {
     position: absolute;
     bottom: 0;
@@ -64,6 +76,44 @@ body {
     border-radius: 4px;
     font-weight: bold;
     font-family: 'Baloo Bhai', sans-serif;
+}
+
+.wave-hud {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: 'Baloo Bhai', sans-serif;
+    z-index: 5;
+}
+
+.left-hud {
+    position: absolute;
+    bottom: 20px;
+    left: 30px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-family: 'Comic Neue', cursive;
+    font-size: 1.3rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    z-index: 4;
+}
+
+.right-hud {
+    position: absolute;
+    bottom: 20px;
+    right: 30px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-family: 'Comic Neue', cursive;
+    font-size: 1.3rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    z-index: 4;
 }
 
 .target-bubble-container {
@@ -115,7 +165,7 @@ body {
 }
 
 .target-letter {
-    font-size: 3.0rem;
+    font-size: 1.0rem;
     font-weight: bold;
     color: #451513;
     font-family: 'Luckiest Guy', cursive;
@@ -256,7 +306,7 @@ body {
 
 .mascot-wrapper {
   position: absolute;
-  bottom: 100px; /* slightly above taco tray */
+  bottom: 100px;
   right: 20px;
   display: flex;
   flex-direction: column-reverse;
@@ -297,4 +347,58 @@ body {
   border-width: 10px 10px 0 10px;
   border-style: solid;
   border-color: #fff transparent transparent transparent;
+}
+
+.life-icon {
+  width: 50px;
+  height: auto;
+  margin: 0 3px;
+  animation: pulseHeart 1.5s infinite;
+}
+
+@keyframes pulseHeart {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+button {
+  font-family: 'Luckiest Guy', cursive;
+  padding: 12px 24px;
+  border: none;
+  background: #ff9900;
+  color: white;
+  font-size: 1.5rem;
+  border-radius: 12px;
+  animation: bounceIn 1s ease;
+  cursor: pointer;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.wave-announcer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  color: #ff6600;
+  padding: 24px 48px;
+  border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-family: 'Luckiest Guy', cursive;
+  z-index: 10;
+  animation: popUpWave 1.2s ease-out;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@keyframes popUpWave {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  60% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
 }
