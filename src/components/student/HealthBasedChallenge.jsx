@@ -348,33 +348,19 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
         return <Typography sx={{ textAlign: 'center', color: 'white', p:3, fontSize: '1.5rem' }}>Preparing challenge...</Typography>;
     }
     
-    const timerProgress = (timeLeft / (challengeConfig?.initialQuestionTimeSeconds || 15)) * 100;
-
-    return (
-        <Box sx={{
-            width: '100vw',
-            height: '100vh',
-            backgroundImage: `url(${backgroundImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            position: 'relative',
-            py: 2
+    const timerProgress = (timeLeft / (challengeConfig?.initialQuestionTimeSeconds || 15)) * 100;    return (        <Box sx={{
+            width: '100vw', height: '100vh', backgroundImage: `url(${backgroundImage})`,
+            backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden', position: 'relative',
+            py: 2 // Add vertical padding (top and bottom margin)
         }}>
             {comboMessage && (
                 <Typography sx={{
-                    position: 'absolute',
-                    top: '30%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: 'clamp(2rem, 10vw, 5rem)',
-                    fontWeight: 'bold',
-                    color: streak > 0 ? '#FFD700' : '#FF6B6B',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
-                    zIndex: 100,
+                    position: 'absolute', top: '30%', left: '50%',
+                    transform: 'translate(-50%, -50%)', fontSize: 'clamp(2rem, 10vw, 5rem)',
+                    fontWeight: 'bold', color: streak > 0 ? '#FFD700' : '#FF6B6B',
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.7)', zIndex: 100,
                     animation: 'comboAnim 1s ease-out forwards',
                     '@keyframes comboAnim': {
                         '0%': { opacity: 0, transform: 'translate(-50%, -50%) scale(0.5)' },
@@ -384,200 +370,120 @@ const HealthBasedChallenge = ({ questions, challengeConfig, onChallengeEnd, less
                 }}>
                     {comboMessage}
                 </Typography>
-            )}
-
-            {/* Main Content */}
-            <Box sx={{
-                maxWidth: '1200px',
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                position: 'relative',
-                zIndex: 1
-            }}>
-                {/* Timer Bar */}
-                <Box sx={{ 
-                    width: '600px',
-                    mt: 2,
-                    mb: 3,
-                    position: 'relative',
-                }}>
+            )}            <Grid container sx={{ height: '96vh', width: '100%', overflow: 'hidden', pl: 2 }} alignItems="center" wrap="nowrap">
+                
+                {/* Left Timer Bar and Anubis */}
+                <Grid item sx={{ width: '5%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', overflow: 'hidden' }}>
                     <Box sx={{
-                        height: 20,
-                        bgcolor: 'rgba(255, 255, 255, 0.2)',
-                        borderRadius: 10,
-                        backdropFilter: 'blur(8px)',
-                        border: '2px solid rgba(255, 255, 255, 0.1)',
+                        width: '30px', height: '70%', 
+                        maxHeight: '500px',
+                        backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '10px',
                         position: 'relative',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.1)'
+                        border: '2px solid #004d00',
+                        mb: 2
                     }}>
-                        <Box sx={{
-                            position: 'absolute',
-                            left: 0,
-                            top: 0,
-                            height: '100%',
-                            width: `${timerProgress}%`,
-                            background: 'linear-gradient(90deg, #4CAF50 0%, #81C784 100%)',
-                            transition: 'width 1s linear',
-                            boxShadow: '0 0 20px rgba(76, 175, 80, 0.3)'
-                        }}/>
-                    </Box>
-                </Box>
-
-                {/* Game Stats Container */}
-                <Paper elevation={3} sx={{
-                    display: 'flex',
-                    justifyContent: 'space-around',
-                    alignItems: 'center',
-                    p: {xs: 1, sm: 1.5},
-                    borderRadius: '20px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    width: '100%',
-                    maxWidth: '800px',
-                    mb: {xs: 2, sm: 3},
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
-                }}>
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        p: {xs: 1, sm: 2},
-                        borderRadius: 3,
-                        background: 'linear-gradient(135deg, #FF5252 0%, #FF1744 100%)',
-                        boxShadow: '0 4px 15px rgba(255, 23, 68, 0.3)'
-                    }}>
-                        {Array.from({ length: challengeConfig?.initialHealth || 3 }).map((_, i) => (
-                            i < health 
-                                ? <FavoriteIcon key={i} sx={{ 
-                                    color: 'white',
-                                    fontSize: {xs: '1.5rem', sm: '2rem'},
-                                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                                    mx: 0.5,
-                                    animation: 'pulse 1.5s infinite'
-                                }} />
-                                : <FavoriteBorderIcon key={i} sx={{
-                                    color: 'rgba(255,255,255,0.5)',
-                                    fontSize: {xs: '1.5rem', sm: '2rem'},
-                                    mx: 0.5
-                                }} />
-                        ))}
-                    </Box>
-                    <Box sx={{
-                        p: {xs: 1, sm: 2},
-                        borderRadius: 3,
-                        background: 'linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%)',
-                        boxShadow: '0 4px 15px rgba(156, 39, 176, 0.3)'
-                    }}>
-                        <Typography sx={{
-                            color: 'white',
-                            fontWeight: 'bold',
-                            fontSize: {xs: '1.2rem', sm: '1.5rem'},
-                            display: 'flex',
-                            alignItems: 'center'
-                        }}>
-                            <ScoreboardIcon sx={{mr: 1, fontSize: 'inherit'}}/> {score}
-                        </Typography>
-                    </Box>
-                    <Box sx={{
-                        p: {xs: 1, sm: 2},
-                        borderRadius: 3,
-                        background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                        boxShadow: '0 4px 15px rgba(33, 150, 243, 0.3)'
-                    }}>
-                        <Typography sx={{ color: 'white', fontWeight: 'bold', fontSize: {xs: '0.9rem', sm: '1.2rem'} }}>
-                            <WhatshotIcon sx={{verticalAlign: 'bottom', mr: 0.5, fontSize: 'inherit'}}/> {streak}x
-                        </Typography>
-                    </Box>
-                </Paper>
-
-                {/* Question Container */}
-                <Paper elevation={3} sx={{
-                    p: {xs: 2, sm: 3},
-                    my: {xs: 2, sm: 3},
-                    background: 'linear-gradient(135deg, rgba(66, 66, 66, 0.95) 0%, rgba(33, 33, 33, 0.95) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    color: 'white',
-                    width: '100%',
-                    maxWidth: '800px',
-                    textAlign: 'center',
-                    borderRadius: '20px',
-                    minHeight: '100px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                    <Typography variant="h5" sx={{
-                        fontSize: 'clamp(1.3rem, 3.5vw, 2rem)',
-                        fontWeight: 'bold',
-                        letterSpacing: '0.5px',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                        lineHeight: 1.4
-                    }}>
-                        {currentQuestionData?.questionText}
-                    </Typography>
-                </Paper>
-
-                {/* Mascot Image */}
-                <Box sx={{ my: {xs:1, sm:1.5}, display: 'flex', justifyContent: 'center' }}>
-                    <img src={mascotImage} alt="Mascot" style={{ height: 'clamp(80px, 15vh, 120px)', objectFit: 'contain' }} />
-                </Box>
-
-                {/* Question Image */}
-                {currentQuestionData?.questionImageUrl && (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mb: {xs:1, sm:1.5}, width: '100%', maxHeight: '100px' }}>
-                        <img
-                            src={currentQuestionData.questionImageUrl.startsWith('http') ? currentQuestionData.questionImageUrl : `/api/media/download/${currentQuestionData.questionImageUrl}`}
-                            alt="Question visual hint"
-                            style={{ maxWidth: '80%', maxHeight: '100px', borderRadius: '8px', objectFit: 'contain' }}
+                        <LinearProgress
+                            variant="determinate" value={timerProgress}
+                            sx={{
+                                width: '100%', height: '100%',
+                                position: 'absolute', bottom: 0,
+                                transform: 'rotate(180deg)',
+                                transformOrigin: 'center',
+                                '& .MuiLinearProgress-bar': { backgroundColor: '#38E54D', transition: 'transform .2s linear !important' },
+                                backgroundColor: 'transparent',
+                            }}
+                            orientation="vertical"
                         />
                     </Box>
-                )}
+                    <Box sx={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <img src={anubisImage} alt="Anubis" style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain' }} />
+                    </Box>
+                </Grid>
 
-                {/* Choices Container */}
-                <Box sx={{
-                    width: '100%',
-                    maxWidth: '800px',
-                    p: {xs: 1.5, sm: 2},
-                    background: 'linear-gradient(135deg, rgba(121, 85, 72, 0.9) 0%, rgba(93, 64, 55, 0.9) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '20px',
-                    overflowY: 'auto',
-                    maxHeight: '45vh',
-                    flexGrow: 0,
-                    mb: 2,
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}>
-                    <Grid container spacing={1} justifyContent="center">
-                        {displayedChoices.map((choice) => (
-                            <Grid item xs={12} sm={displayedChoices.length > 4 ? 6 : (12 / Math.max(1, displayedChoices.length))} key={choice.choiceId}>
-                                <StyledButton
-                                    fullWidth
-                                    onClick={() => handleAnswerCbRef.current(choice)}
-                                    disabled={isAnswerSubmitted}
-                                    selected={selectedChoiceId === choice.choiceId}
-                                    correct={choice.isCorrect}
-                                    submitted={isAnswerSubmitted}
-                                >
-                                    {choice.choiceText}
-                                </StyledButton>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Box>
-            </Box>            {/* Floating Leaderboard */}
+                {/* Center Content */}                <Grid item sx={{ width: '80%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%', overflow: 'hidden' }}>
+                    <Paper elevation={3} sx={{
+                        display: 'flex', justifyContent: 'space-around', alignItems: 'center',
+                        p: {xs: 0.5, sm:1}, borderRadius: '15px', backgroundColor: 'rgba(255, 224, 130, 0.8)',
+                        width: '100%', maxWidth: '700px', mb: {xs:1, sm:1.5}
+                    }}>
+                         <Box sx={{ display: 'flex', alignItems: 'center', p: {xs:0.5, sm:1}, borderRadius: 1, backgroundColor: 'rgba(229, 57, 53, 0.7)'}}>
+                            {Array.from({ length: challengeConfig?.initialHealth || 3 }).map((_, i) => (
+                                i < health ? <FavoriteIcon key={i} sx={{ color: 'white', fontSize: {xs: '1.2rem', sm: '1.5rem'} }} /> : <FavoriteBorderIcon key={i} sx={{ color: 'rgba(255,255,255,0.5)', fontSize: {xs: '1.2rem', sm: '1.5rem'} }} />
+                            ))}
+                        </Box>
+                        <Box sx={{ p: {xs:0.5, sm:1}, borderRadius: 1, backgroundColor: 'rgba(123, 31, 162, 0.7)'}}>
+                            <Typography sx={{ color: 'white', fontWeight: 'bold', fontSize: {xs: '0.9rem', sm: '1.2rem'} }}>
+                                <ScoreboardIcon sx={{verticalAlign: 'bottom', mr: 0.5, fontSize: 'inherit'}}/> {score}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ p: {xs:0.5, sm:1}, borderRadius: 1, backgroundColor: 'rgba(25, 118, 210, 0.7)'}}>
+                            <Typography sx={{ color: 'white', fontWeight: 'bold', fontSize: {xs: '0.9rem', sm: '1.2rem'} }}>
+                                <WhatshotIcon sx={{verticalAlign: 'bottom', mr: 0.5, fontSize: 'inherit'}}/> {streak}x
+                            </Typography>
+                        </Box>
+                    </Paper>
+
+                    <Paper elevation={3} sx={{ p: {xs:1, sm:2}, my: {xs:1, sm:1.5}, backgroundColor: 'rgba(30,30,30,0.85)', color: 'white', width: '100%', maxWidth: '700px', textAlign: 'center', borderRadius: '10px', minHeight: '80px', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                        <Typography variant="h5" sx={{ fontSize: 'clamp(1.2rem, 3vw, 1.75rem)', fontWeight: 'bold' }}>
+                            {currentQuestionData?.questionText}
+                        </Typography>
+                    </Paper>
+                    
+                    <Box sx={{ my: {xs:1, sm:1.5}, display: 'flex', justifyContent: 'center' }}>
+                        <img src={mascotImage} alt="Mascot" style={{ height: 'clamp(80px, 15vh, 120px)', objectFit: 'contain' }} />
+                    </Box>
+                    
+                    {currentQuestionData?.questionImageUrl && (
+                         <Box sx={{ display: 'flex', justifyContent: 'center', mb: {xs:1, sm:1.5}, width: '100%', maxHeight: '100px' }}>
+                            <img
+                                src={currentQuestionData.questionImageUrl.startsWith('http') ? currentQuestionData.questionImageUrl : `/api/media/download/${currentQuestionData.questionImageUrl}`}
+                                alt="Question visual hint"
+                                style={{ maxWidth: '80%', maxHeight: '100px', borderRadius: '8px', objectFit: 'contain' }}
+                            />
+                        </Box>
+                    )}                    <Box sx={{
+                        width: '100%', maxWidth: '700px', p: {xs:0.5, sm:1}, backgroundColor: 'rgba(121, 85, 72, 0.75)',
+                        borderRadius: '10px', overflowY: 'auto',
+                        maxHeight: '40vh', flexGrow: 0, mb: 1
+                    }}>
+                        <Grid container spacing={1} justifyContent="center">
+                            {displayedChoices.map((choice) => (
+                                <Grid item xs={12} sm={displayedChoices.length > 4 ? 6 : (12 / Math.max(1, displayedChoices.length))} key={choice.choiceId}>
+                                    <StyledButton
+                                        fullWidth
+                                        onClick={() => handleAnswerCbRef.current(choice)}
+                                        disabled={isAnswerSubmitted}
+                                        selected={selectedChoiceId === choice.choiceId}
+                                        correct={choice.isCorrect}
+                                        submitted={isAnswerSubmitted}
+                                    >
+                                        {choice.choiceText}
+                                    </StyledButton>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                </Grid>
+            </Grid>
+
+            {/* Floating Leaderboard */}
             <Box sx={{
                 position: 'fixed',
-                right: { xs: 16, sm: 32, md: 48 },  // Increased margin from the right edge
+                right: '16px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                zIndex: 10
+                width: '15%',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
             }}>
                 {lessonDefinitionId && (
                     <LiveLeaderboard
@@ -598,16 +504,16 @@ HealthBasedChallenge.propTypes = {
         choices: PropTypes.arrayOf(PropTypes.shape({
             choiceId: PropTypes.any.isRequired,
             choiceText: PropTypes.string.isRequired,
-            isCorrect: PropTypes.bool.isRequired
-        })).isRequired
+            isCorrect: PropTypes.bool.isRequired,
+        })).isRequired,
     })).isRequired,
     challengeConfig: PropTypes.shape({
         initialHealth: PropTypes.number,
         initialQuestionTimeSeconds: PropTypes.number,
-        challengeType: PropTypes.string
+        challengeType: PropTypes.string,
     }).isRequired,
     onChallengeEnd: PropTypes.func.isRequired,
-    lessonDefinitionId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired
+    lessonDefinitionId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 };
 
 export default HealthBasedChallenge;

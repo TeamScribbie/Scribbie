@@ -19,6 +19,7 @@ import ActivitySummaryPage from './page/student/ActivitySummaryPage';
 import ChallengePage from './page/student/ChallengePage';
 import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
 import ViewLeaderboardPage from './page/student/ViewLeaderboardPage';
+import MemoryGame from './page/student/MemoryGame';
 
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
@@ -76,6 +77,8 @@ const App = () => {
         <Route path="/student-register" element={<StudentRegistration />} />
         <Route path="/teacher-login" element={<TeacherLogin />} />
         <Route path="/teacher-register" element={<TeacherRegistration />} />
+        <Route path="/student-memory-game" element={<MemoryGame />} />
+
 
         {/* Student Protected Routes */}
         <Route path="/student-homepage" element={
@@ -144,11 +147,6 @@ const App = () => {
             <ReadingGameComponent />
           </ProtectedRoute>
         } />
-          <Route path="/student/activity/BALLOONGAME/:activityId" element={
-              <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                  <ReadingDefenderComponent />
-              </ProtectedRoute>
-          } />
         <Route path="/student/activity/fill-blanks/:activityId" element={
           <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
             <FillBlanksGameComponent />

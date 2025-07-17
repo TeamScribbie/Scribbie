@@ -1,35 +1,57 @@
-// AI Context/Frontend/services/lessonService.js
-
 import { API_BASE_URL } from '../config/apiConfig';
-// ... (getLessonDefinitions, getActivityNodeTypesForLesson, createLessonDefinition, createActivityNodeTypeForLesson remain THE SAME)
-// ... (getStudentLessonProgress, startLessonProgress, submitActivityProgress remain THE SAME)
 
-// --- Question Management (Now interacts with ActivityController's nested paths) ---
+// --- Question Management ---
 
-/**
- * Creates a new question for a specific Activity Node Type.
- * POST /api/activity-node-types/{activityNodeTypeId}/questions
- */
-export const createQuestionForActivityNode = async (activityNodeTypeId, questionData, token) => {
-    if (!activityNodeTypeId || !questionData || !token) {
-        throw new Error('ActivityNodeType ID, question data, and auth token are required.');
+export const createQuestionForActivityNode = async (activityNodeTypeId, questionPayload, token) => {
+    if (!activityNodeTypeId || !token) {
+        throw new Error('ActivityNodeType ID and auth token are required.');
     }
+
+    const formData = new FormData();
+
+    const files = [];
+    if (questionPayload.imageFile) {
+        files.push(questionPayload.imageFile);
+        questionPayload.questionImageUrl = questionPayload.imageFile.name;
+    }
+    if (questionPayload.audioFile) {
+        files.push(questionPayload.audioFile);
+        questionPayload.questionSoundUrl = questionPayload.audioFile.name;
+    }
+
+    if (Array.isArray(questionPayload.choices)) {
+        questionPayload.choices = questionPayload.choices.map(choice => {
+            if (choice.imageFile) {
+                files.push(choice.imageFile);
+                choice.imageFileName = choice.imageFile.name;
+            }
+            if (choice.audioFile) {
+                files.push(choice.audioFile);
+                choice.audioFileName = choice.audioFile.name;
+            }
+            return choice;
+        });
+    }
+
+    formData.append("questionDto", JSON.stringify(questionPayload));
+    files.forEach(f => formData.append("files", f)); // Important: append all files under "files"
+
     const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(questionData),
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
     });
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        throw new Error(errorData.message || `Failed to create question. Status: ${response.status}`);
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `Failed to create question. Status: ${response.status}`);
     }
+
     return response.json();
 };
 
-/**
- * Fetches all questions for a specific Activity Node Type.
- * GET /api/activity-node-types/{activityNodeTypeId}/questions
- */
 export const getQuestionsForActivityNode = async (activityNodeTypeId, token) => {
     if (!activityNodeTypeId || !token) {
         throw new Error('ActivityNodeType ID and auth token are required.');
@@ -45,31 +67,115 @@ export const getQuestionsForActivityNode = async (activityNodeTypeId, token) => 
     return response.json();
 };
 
-/**
- * Updates an existing question.
- * PUT /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}
- * Note: activityNodeTypeId in the path is for context/consistency, actual update targets questionId.
- */
 export const updateQuestion = async (activityNodeTypeId, questionId, questionData, token) => {
     if (!activityNodeTypeId || !questionId || !questionData || !token) {
         throw new Error('ActivityNodeType ID, Question ID, question data, and auth token are required.');
     }
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}`, {
+
+    const url = `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}`;
+
+    const hasFilesToUpload =
+        questionData.imageFile instanceof File ||
+        questionData.audioFile instanceof File ||
+        (Array.isArray(questionData.choices) &&
+            questionData.choices.some(c => c.imageFile instanceof File || c.audioFile instanceof File));
+
+    if (hasFilesToUpload) {
+        console.log('🔄 Detected file updates, preparing multipart/form-data...');
+
+        const formData = new FormData();
+        const filesToAppend = [];
+
+        // Build deep-cloned choices with unique file names
+        const choicesPayload = questionData.choices.map(choice => {
+            const cloned = { ...choice };
+            const ts = Date.now();
+
+            if (choice.imageFile instanceof File) {
+                const filename = `choice_image_${ts}_${choice.imageFile.name}`;
+                cloned.imageFileName = filename;
+                filesToAppend.push({ name: filename, file: choice.imageFile });
+            }
+
+            if (choice.audioFile instanceof File) {
+                const filename = `choice_audio_${ts}_${choice.audioFile.name}`;
+                cloned.audioFileName = filename;
+                filesToAppend.push({ name: filename, file: choice.audioFile });
+            }
+
+            delete cloned.imageFile;
+            delete cloned.audioFile;
+
+            return cloned;
+        });
+
+        // Handle question-level image/audio
+        const ts = Date.now();
+        const questionDtoPayload = {
+            ...questionData,
+            choices: choicesPayload,
+            questionImageUrl: questionData.questionImageUrl || null,
+            questionSoundUrl: questionData.questionSoundUrl || null,
+        };
+
+        if (questionData.imageFile instanceof File) {
+            const filename = `question_image_${ts}_${questionData.imageFile.name}`;
+            questionDtoPayload.questionImageUrl = filename;
+            filesToAppend.push({ name: filename, file: questionData.imageFile });
+        }
+
+        if (questionData.audioFile instanceof File) {
+            const filename = `question_audio_${ts}_${questionData.audioFile.name}`;
+            questionDtoPayload.questionSoundUrl = filename;
+            filesToAppend.push({ name: filename, file: questionData.audioFile });
+        }
+
+        // Append JSON DTO
+        formData.append('questionDto', JSON.stringify(questionDtoPayload));
+
+        // Append files
+        filesToAppend.forEach(({ file, name }) => {
+            formData.append('files', file, name);
+        });
+
+        // 🔐 Send request
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${token}`
+                // No Content-Type needed for multipart!
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || `Failed to update question. Status: ${response.status}`);
+        }
+
+        return response.json();
+    }
+
+    // Fallback: No files, send pure JSON
+    console.log('📦 No files detected. Sending JSON...');
+    const response = await fetch(url, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
         body: JSON.stringify(questionData),
     });
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        throw new Error(errorData.message || `Failed to update question. Status: ${response.status}`);
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `Failed to update question. Status: ${response.status}`);
     }
+
     return response.json();
 };
 
-/**
- * Deletes a question.
- * DELETE /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}
- */
+
 export const deleteQuestion = async (activityNodeTypeId, questionId, token) => {
     if (!activityNodeTypeId || !questionId || !token) {
         throw new Error('ActivityNodeType ID, Question ID, and auth token are required.');
@@ -86,12 +192,9 @@ export const deleteQuestion = async (activityNodeTypeId, questionId, token) => {
     return response.json();
 };
 
-// --- Choice Management (Now interacts with ActivityController's nested paths) ---
 
-/**
- * Fetches choices for a specific question.
- * GET /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices
- */
+// --- Choice Management ---
+
 export const getChoicesForQuestion = async (activityNodeTypeId, questionId, token) => {
     if (!activityNodeTypeId || !questionId || !token) {
         throw new Error('ActivityNodeType ID, Question ID, and auth token are required.');
@@ -107,17 +210,11 @@ export const getChoicesForQuestion = async (activityNodeTypeId, questionId, toke
     return response.json();
 };
 
-/**
- * Creates a choice for a specific question.
- * POST /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices
- */
 export const createChoiceForQuestion = async (actId, qId, choiceData, token) => {
     const url = `${API_BASE_URL}/activity-node-types/${actId}/questions/${qId}/choices`;
-
     const hasFiles = choiceData.imageFile || choiceData.audioFile;
 
     if (hasFiles) {
-        console.log("Sending FormData with files:", choiceData);
         const form = new FormData();
         form.append("choiceText", choiceData.choiceText);
         form.append("isCorrect", choiceData.isCorrect);
@@ -132,7 +229,6 @@ export const createChoiceForQuestion = async (actId, qId, choiceData, token) => 
         if (!resp.ok) throw new Error(await resp.text());
         return resp.json();
     } else {
-        console.log("Sending JSON without files:", choiceData);
         const resp = await fetch(url, {
             method: "POST",
             headers: {
@@ -146,31 +242,48 @@ export const createChoiceForQuestion = async (actId, qId, choiceData, token) => 
     }
 };
 
-
-/**
- * Updates an existing choice.
- * PUT /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices/{choiceId}
- */
 export const updateChoice = async (activityNodeTypeId, questionId, choiceId, choiceData, token) => {
     if (!activityNodeTypeId || !questionId || !choiceId || !choiceData || !token) {
-        throw new Error('ActivityNodeType ID, Question ID, Choice ID, choice data, and auth token are required.');
+        throw new Error('Required IDs, choice data, and auth token must be provided.');
     }
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices/${choiceId}`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(choiceData),
-    });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        throw new Error(errorData.message || `Failed to update choice. Status: ${response.status}`);
+    const url = `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${questionId}/choices/${choiceId}`;
+
+    const hasNewFiles = choiceData.imageFile || choiceData.audioFile;
+    const isRemovingFiles = choiceData.removeImage || choiceData.removeAudio;
+
+    if (hasNewFiles || isRemovingFiles) {
+        const formData = new FormData();
+        formData.append('choiceText', choiceData.choiceText);
+        formData.append('isCorrect', choiceData.isCorrect);
+        if (choiceData.imageFile) formData.append('imageFile', choiceData.imageFile);
+        if (choiceData.audioFile) formData.append('audioFile', choiceData.audioFile);
+        if (choiceData.removeImage) formData.append('removeImage', true);
+        if (choiceData.removeAudio) formData.append('removeAudio', true);
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData,
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+            throw new Error(errorData.message || `Failed to update choice with files. Status: ${response.status}`);
+        }
+        return response.json();
+    } else {
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(choiceData),
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+            throw new Error(errorData.message || `Failed to update choice. Status: ${response.status}`);
+        }
+        return response.json();
     }
-    return response.json();
 };
 
-/**
- * Deletes a choice.
- * DELETE /api/activity-node-types/{activityNodeTypeId}/questions/{questionId}/choices/{choiceId}
- */
 export const deleteChoice = async (activityNodeTypeId, questionId, choiceId, token) => {
     if (!activityNodeTypeId || !questionId || !choiceId || !token) {
         throw new Error('ActivityNodeType ID, Question ID, Choice ID, and auth token are required.');
@@ -187,34 +300,35 @@ export const deleteChoice = async (activityNodeTypeId, questionId, choiceId, tok
     return response.json();
 };
 
+// ... (Rest of your unchanged functions)
 export const getLessonDefinitions = async (courseId, token) => {
-  if (!courseId || !token) {
-    throw new Error('Course ID and auth token are required to fetch lesson definitions.');
-  }
-  const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lesson-definitions`, {
-    method: 'GET',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-    throw new Error(errorData.message || `Failed to fetch lesson definitions. Status: ${response.status}`);
-  }
-  return response.json();
+    if (!courseId || !token) {
+        throw new Error('Course ID and auth token are required to fetch lesson definitions.');
+    }
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lesson-definitions`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to fetch lesson definitions. Status: ${response.status}`);
+    }
+    return response.json();
 };
 
 export const getActivityNodeTypesForLesson = async (lessonDefinitionId, token) => {
-  if (!lessonDefinitionId || !token) {
-    throw new Error('Lesson Definition ID and auth token are required.');
-  }
-  const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/activity-node-types`, {
-     method: 'GET',
-     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-  });
-  if (!response.ok) {
-     const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-     throw new Error(errorData.message || `Failed to fetch activity node types. Status: ${response.status}`);
-  }
-  return response.json();
+    if (!lessonDefinitionId || !token) {
+        throw new Error('Lesson Definition ID and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/activity-node-types`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to fetch activity node types. Status: ${response.status}`);
+    }
+    return response.json();
 };
 
 export const createLessonDefinition = async (courseId, lessonData, token) => {
@@ -250,19 +364,19 @@ export const createActivityNodeTypeForLesson = async (lessonDefinitionId, activi
 };
 
 export const getStudentLessonProgress = async (studentId, lessonDefinitionId, token) => {
-  if (!studentId || !lessonDefinitionId || !token) {
-      throw new Error('Student ID, Lesson Definition ID, and auth token are required.');
-  }
-  const response = await fetch(`${API_BASE_URL}/students/${studentId}/lesson-progress/definition/${lessonDefinitionId}`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-  });
-   if (response.status === 404) return null;
-  if (!response.ok) {
-     const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-     throw new Error(errorData.message || `Failed to fetch lesson progress. Status: ${response.status}`);
-  }
-  return response.json();
+    if (!studentId || !lessonDefinitionId || !token) {
+        throw new Error('Student ID, Lesson Definition ID, and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/students/${studentId}/lesson-progress/definition/${lessonDefinitionId}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to fetch lesson progress. Status: ${response.status}`);
+    }
+    return response.json();
 };
 
 export const startLessonProgress = async (lessonDefinitionId, token) => {
@@ -282,35 +396,25 @@ export const startLessonProgress = async (lessonDefinitionId, token) => {
 };
 
 export const submitActivityProgress = async (progressData, token) => {
-      if (!progressData || !token) {
-          throw new Error('Progress data and auth token are required.');
-      }
-      const response = await fetch(`${API_BASE_URL}/activity-node-progress/submit`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(progressData),
-      });
-      if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-          throw new Error(errorData.message || `Failed to submit activity progress. Status: ${response.status}`);
-      }
-      return response.json();
-  };
+    if (!progressData || !token) {
+        throw new Error('Progress data and auth token are required.');
+    }
+    const response = await fetch(`${API_BASE_URL}/activity-node-progress/submit`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(progressData),
+    });
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
+        throw new Error(errorData.message || `Failed to submit activity progress. Status: ${response.status}`);
+    }
+    return response.json();
+};
 
-/**
- * ✨ ADD THIS FUNCTION TO UPDATE A LESSON ✨
- * Updates an existing lesson definition.
- * @param {string|number} courseId - The ID of the course the lesson belongs to.
- * @param {string|number} lessonId - The ID of the lesson to update.
- * @param {object} lessonData - The data to update (e.g., { lessonTitle, lessonDescription }).
- * @param {string} token - The JWT auth token.
- * @returns {Promise<object>} - The updated lesson object.
- */
 export const updateLessonDefinition = async (courseId, lessonId, lessonData, token) => {
     if (!courseId || !lessonId || !token) {
         throw new Error('Course ID, Lesson ID, and auth token are required.');
     }
-
     const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}`, {
         method: 'PUT',
         headers: {
@@ -319,80 +423,55 @@ export const updateLessonDefinition = async (courseId, lessonId, lessonData, tok
         },
         body: JSON.stringify(lessonData),
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         console.error(`Update Lesson API Error (ID ${lessonId}):`, errorData);
         throw new Error(errorData.message || 'Failed to update lesson.');
     }
-
     return response.json();
 };
 
-/**
- * ✨ ADD THIS FUNCTION TO DELETE A LESSON ✨
- * Deletes a lesson definition.
- * @param {string|number} courseId - The ID of the course.
- * @param {string|number} lessonId - The ID of the lesson to delete.
- * @param {string} token - The JWT auth token.
- * @returns {Promise<object>} - A promise that resolves with the success message.
- */
 export const deleteLessonDefinition = async (courseId, lessonId, token) => {
     if (!courseId || !lessonId || !token) {
         throw new Error('Course ID, Lesson ID, and auth token are required for deletion.');
     }
-
-    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}`, { // Corrected line
+    const response = await fetch(`http://localhost:8080/api/courses/${courseId}/lessons/${lessonId}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`,
         },
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         throw new Error(errorData.message || 'Failed to delete lesson.');
     }
-
     return response.json();
 };
 
-/**
- * ✨ ADD THIS FUNCTION TO DELETE AN ACTIVITY NODE ✨
- * Deletes an activity node type.
- * @param {string|number} activityNodeTypeId - The ID of the activity node to delete.
- * @param {string} token - The JWT auth token.
- * @returns {Promise<object>} - A promise that resolves with the success message.
- */
 export const deleteActivityNode = async (activityNodeTypeId, token) => {
     if (!activityNodeTypeId || !token) {
         throw new Error('Activity Node ID and auth token are required for deletion.');
     }
-
-    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
+    const response = await fetch(`http://localhost:8080/api/activity-node-types/${activityNodeTypeId}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`,
         },
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
         throw new Error(errorData.message || 'Failed to delete activity node.');
     }
-
     return response.json();
 };
 
 export const updateQuestionOrderForActivityNode = async (activityNodeTypeId, questions, token) => {
-    // This payload only contains the ID and new order index, which is safe.
     const payload = {
         questions: questions.map(q => ({
             questionId: q.questionId,
             orderIndex: q.orderIndex
         }))
     };
-
     const response = await fetch(`${API_BASE_URL}/${activityNodeTypeId}/questions/order`, {
         method: 'PUT',
         headers: {
@@ -401,12 +480,9 @@ export const updateQuestionOrderForActivityNode = async (activityNodeTypeId, que
         },
         body: JSON.stringify(payload)
     });
-
     if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to update question order.');
     }
-
     return await response.json();
 };
-

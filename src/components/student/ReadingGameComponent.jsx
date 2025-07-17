@@ -36,14 +36,14 @@ const pulseAnimation = (isCorrect) => ({
     }
 });
 
-const ReadingGameComponent = ({ 
-    activityData,
-    onGameComplete,
-    activityTitle,
-    activityInstructions,
-    classroomId,
-    lessonDefinitionId 
-}) => {
+const ReadingGameComponent = ({
+                                  activityData,
+                                  onGameComplete,
+                                  activityTitle,
+                                  activityInstructions,
+                                  classroomId,
+                                  lessonDefinitionId
+                              }) => {
     const [openInstructions, setOpenInstructions] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [score, setScore] = useState(0);
@@ -175,16 +175,16 @@ const ReadingGameComponent = ({
                 setGameOver(true);
                 const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
                 const finalStatus = (allQuestionsDone && (lives > 0 || (isCorrect && lives === 0))) ? 'COMPLETED' : 'FAILED';
-                
+
                 // Play appropriate game end sound
                 const soundToPlay = finalStatus === 'COMPLETED' ? winAudioRef.current : loseAudioRef.current;
                 soundToPlay.currentTime = 0;
                 await soundToPlay.play().catch(error => console.error('Error playing sound:', error));
-                
+
                 // Calculate accuracy based on correct answers vs total questions attempted
                 const questionsAttempted = currentIndex + 1;
                 const correctAnswers = Math.floor(currentScore / 100); // Since each correct answer is worth 100 points
-                
+
                 onGameComplete({
                     score: currentScore,
                     status: finalStatus,
@@ -244,30 +244,30 @@ const ReadingGameComponent = ({
             }}
         >
             {/* Back button */}
-            <Box sx={{ 
-                position: 'absolute', 
-                top: {xs: 10, sm:16}, 
-                left: {xs:10, sm:16}, 
-                zIndex: 10 
+            <Box sx={{
+                position: 'absolute',
+                top: {xs: 10, sm:16},
+                left: {xs:10, sm:16},
+                zIndex: 10
             }}>
-                {/* <IconButton 
-                    onClick={handleExitGame} 
-                    aria-label="back" 
-                    sx={{ 
-                        backgroundColor: 'rgba(0,0,0,0.4)', 
-                        color: 'white', 
-                        '&:hover': { 
+                {/* <IconButton
+                    onClick={handleExitGame}
+                    aria-label="back"
+                    sx={{
+                        backgroundColor: 'rgba(0,0,0,0.4)',
+                        color: 'white',
+                        '&:hover': {
                             backgroundColor: 'rgba(0,0,0,0.65)'
-                        }, 
-                        padding: '8px' 
+                        },
+                        padding: '8px'
                     }}
                 >
                     <ArrowBackIcon fontSize="medium" />
                 </IconButton> */}
             </Box>            Reading Button - Floating Action Button
-            <Box sx={{ 
+            <Box sx={{
                 position: 'fixed',
-                bottom: {xs: 20, sm:30}, 
+                bottom: {xs: 20, sm:30},
                 right: {xs:20, sm:30},
                 zIndex: 1000
             }}>
@@ -276,7 +276,7 @@ const ReadingGameComponent = ({
                     color="primary"
                     onClick={() => setOpenInstructions(true)}
                     onMouseEnter={playHoverSound}
-                    sx={{ 
+                    sx={{
                         bgcolor: '#FFD966',
                         color: '#451513',
                         borderRadius: '50%',
@@ -292,23 +292,23 @@ const ReadingGameComponent = ({
                         transition: 'all 0.2s ease-in-out'
                     }}
                 >
-                    <img 
-                        src={BookIcon} 
-                        alt="Read" 
-                        style={{ 
-                            width: '28px', 
+                    <img
+                        src={BookIcon}
+                        alt="Read"
+                        style={{
+                            width: '28px',
                             height: '28px'
-                        }} 
+                        }}
                     />
                 </Button>
             </Box>
 
             {/* Top Stats Section */}
-            <Box 
-                component="header" 
-                sx={{ 
-                    mb: {xs:1, sm:1.5, md: 2}, 
-                    width: '100%', 
+            <Box
+                component="header"
+                sx={{
+                    mb: {xs:1, sm:1.5, md: 2},
+                    width: '100%',
                     pt: {xs:5, sm:3},
                     px: {xs: 2, sm: 3},
                     display: 'flex',
@@ -318,29 +318,29 @@ const ReadingGameComponent = ({
                     maxWidth: '100%'
                 }}
             >                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <span key={`life-${i}`} style={{
-                            opacity: i < lives ? 1 : 0.3,
-                            margin: '0 3px',
-                            fontSize: 'clamp(2rem, 7vh, 3rem)',
-                            filter: i < lives ? 'none' : 'grayscale(100%)',
-                            transition: 'all 0.3s ease',
-                            textShadow: i < lives ? '0 0 6px rgba(255,0,0,0.5)' : 'none'
-                        }}>❤️</span>
-                    ))}
-                </Box>
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <span key={`life-${i}`} style={{
+                        opacity: i < lives ? 1 : 0.3,
+                        margin: '0 3px',
+                        fontSize: 'clamp(2rem, 7vh, 3rem)',
+                        filter: i < lives ? 'none' : 'grayscale(100%)',
+                        transition: 'all 0.3s ease',
+                        textShadow: i < lives ? '0 0 6px rgba(255,0,0,0.5)' : 'none'
+                    }}>❤️</span>
+                ))}
+            </Box>
 
                 {/* Score and Streak */}
-                <Box sx={{ 
+                <Box sx={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: {xs: 1.5, sm: 2.5}
                 }}>
-                    <Typography 
-                        key={score} 
+                    <Typography
+                        key={score}
                         sx={{
-                            color: '#451513', 
-                            fontWeight: 'bold', 
+                            color: '#451513',
+                            fontWeight: 'bold',
                             fontSize: 'clamp(1.2rem, 4vw, 2rem)',
                             animation: showFeedback ? 'pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'none',
                             '@keyframes pop-in': {
@@ -357,13 +357,13 @@ const ReadingGameComponent = ({
                         icon={<WhatshotIcon sx={{
                             fontSize: 'clamp(1.2rem, 3.5vw, 1.6rem) !important',
                             color: streak >= 7 ? '#ff3d00 !important' :
-                                   streak >= 6 ? '#ff4d00 !important' :
-                                   streak >= 5 ? '#ff5d00 !important' :
-                                   streak >= 4 ? '#ff6d00 !important' :
-                                   streak >= 3 ? '#ff7d00 !important' :
-                                   streak >= 2 ? '#ff8d00 !important' :
-                                   streak >= 1 ? '#ff9d00 !important' :
-                                   '#757575 !important',
+                                streak >= 6 ? '#ff4d00 !important' :
+                                    streak >= 5 ? '#ff5d00 !important' :
+                                        streak >= 4 ? '#ff6d00 !important' :
+                                            streak >= 3 ? '#ff7d00 !important' :
+                                                streak >= 2 ? '#ff8d00 !important' :
+                                                    streak >= 1 ? '#ff9d00 !important' :
+                                                        '#757575 !important',
                             animation: streak >= 3 ? 'flameWave 1s ease-in-out infinite' : 'none',
                             '@keyframes flameWave': {
                                 '0%': { transform: 'scale(1) rotate(0deg)' },
@@ -380,13 +380,13 @@ const ReadingGameComponent = ({
                             backgroundColor: 'transparent',
                             border: `2px solid ${
                                 streak >= 7 ? '#ff3d00' :
-                                streak >= 6 ? '#ff4d00' :
-                                streak >= 5 ? '#ff5d00' :
-                                streak >= 4 ? '#ff6d00' :
-                                streak >= 3 ? '#ff7d00' :
-                                streak >= 2 ? '#ff8d00' :
-                                streak >= 1 ? '#ff9d00' :
-                                '#9e9e9e'
+                                    streak >= 6 ? '#ff4d00' :
+                                        streak >= 5 ? '#ff5d00' :
+                                            streak >= 4 ? '#ff6d00' :
+                                                streak >= 3 ? '#ff7d00' :
+                                                    streak >= 2 ? '#ff8d00' :
+                                                        streak >= 1 ? '#ff9d00' :
+                                                            '#9e9e9e'
                             }`,
                             color: streak >= 1 ? '#ff6d00' : '#757575',
                             boxShadow: streak >= 1 ? `0 0 ${Math.min(streak * 2, 14)}px rgba(255, 109, 0, ${Math.min(streak * 0.1, 0.7)})` : 'none',
@@ -400,23 +400,23 @@ const ReadingGameComponent = ({
             </Box>
 
             {/* Main Game Area */}
-            <Box 
+            <Box
                 component="main"
-                sx={{ 
-                    flexGrow: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    width: '100%', 
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '100%',
                     maxWidth: '100%',
                     py: {xs:0.5, sm:1},
                     overflowX: 'hidden',
                     boxSizing: 'border-box'
                 }}
             >
-                <Typography 
-                    variant="h2" 
+                <Typography
+                    variant="h2"
                     component="h1"
                     sx={{
                         mb: {xs:1, sm:1.5},
@@ -452,20 +452,20 @@ const ReadingGameComponent = ({
             </Box>
 
             {/* Choices Section */}
-            <Box 
+            <Box
                 component="footer"
-                sx={{ 
+                sx={{
                     width: '100%',
                     maxWidth: '100%',
-                    pb: {xs:1.5, sm:2}, 
+                    pb: {xs:1.5, sm:2},
                     px: {xs:1, sm:2},
                     mt: {xs:1, sm: 'auto'},
                     boxSizing: 'border-box'
                 }}
             >
-                <Grid 
-                    container 
-                    spacing={{xs:1.5, sm:2}} 
+                <Grid
+                    container
+                    spacing={{xs:1.5, sm:2}}
                     justifyContent="center"
                     sx={{ margin: 0, width: '100%' }}
                 >
@@ -494,31 +494,31 @@ const ReadingGameComponent = ({
                         };
 
                         if (showFeedback) {
-                            if (choice.isCorrect) { 
-                                buttonSx.bgcolor = '#4CAF50'; 
-                                buttonSx.color = 'white'; 
-                                buttonSx['&:hover'] = { bgcolor: '#388E3C' }; 
+                            if (choice.isCorrect) {
+                                buttonSx.bgcolor = '#4CAF50';
+                                buttonSx.color = 'white';
+                                buttonSx['&:hover'] = { bgcolor: '#388E3C' };
                                 buttonSx.borderColor = '#2e7d32';
-                            } else if (isSelected && !choice.isCorrect) { 
-                                buttonSx.bgcolor = '#F44336'; 
-                                buttonSx.color = 'white'; 
-                                buttonSx['&:hover'] = { bgcolor: '#D32F2F' }; 
+                            } else if (isSelected && !choice.isCorrect) {
+                                buttonSx.bgcolor = '#F44336';
+                                buttonSx.color = 'white';
+                                buttonSx['&:hover'] = { bgcolor: '#D32F2F' };
                                 buttonSx.borderColor = '#c62828';
-                            } else { 
-                                buttonSx.bgcolor = '#FFD966'; 
-                                buttonSx.color = '#451513'; 
-                                buttonSx.opacity = 0.45; 
-                                buttonSx['&:hover'] = { bgcolor: '#FFC107' }; 
+                            } else {
+                                buttonSx.bgcolor = '#FFD966';
+                                buttonSx.color = '#451513';
+                                buttonSx.opacity = 0.45;
+                                buttonSx['&:hover'] = { bgcolor: '#FFC107' };
                             }
                             if (isSelected) buttonSx = { ...buttonSx, ...pulseAnimation(choice.isCorrect) };
                         } else {
-                            buttonSx.bgcolor = '#FFD966'; 
+                            buttonSx.bgcolor = '#FFD966';
                             buttonSx.color = '#451513';
                             buttonSx.borderColor = '#e5a900';
-                            buttonSx['&:hover'] = { 
-                                bgcolor: '#FFC107', 
-                                transform: 'translateY(-3px) scale(1.02)', 
-                                boxShadow: '0 7px 14px rgba(0,0,0,0.2)' 
+                            buttonSx['&:hover'] = {
+                                bgcolor: '#FFC107',
+                                transform: 'translateY(-3px) scale(1.02)',
+                                boxShadow: '0 7px 14px rgba(0,0,0,0.2)'
                             };
                         }
 
@@ -540,10 +540,10 @@ const ReadingGameComponent = ({
                 </Grid>
             </Box>
 
-            <Dialog 
-                open={openInstructions} 
-                onClose={() => setOpenInstructions(false)} 
-                maxWidth="md" 
+            <Dialog
+                open={openInstructions}
+                onClose={() => setOpenInstructions(false)}
+                maxWidth="md"
                 fullWidth
                 PaperProps={{
                     sx: {
@@ -553,8 +553,8 @@ const ReadingGameComponent = ({
                     }
                 }}
             >
-                <DialogTitle sx={{ 
-                    color: '#451513', 
+                <DialogTitle sx={{
+                    color: '#451513',
                     fontWeight: 'bold',
                     textAlign: 'center',
                     fontSize: 'clamp(1.5rem, 4vw, 2rem)'
@@ -564,9 +564,9 @@ const ReadingGameComponent = ({
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
                         <img src={BookIcon} alt="Book" style={{ width: 120, marginBottom: 16 }} />
-                        <Typography 
-                            variant="body1" 
-                            sx={{ 
+                        <Typography
+                            variant="body1"
+                            sx={{
                                 whiteSpace: 'pre-line',
                                 color: '#451513',
                                 fontSize: 'clamp(1rem, 2.5vw, 1.2rem)',
@@ -579,8 +579,8 @@ const ReadingGameComponent = ({
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
-                    <Button 
-                        onClick={() => setOpenInstructions(false)} 
+                    <Button
+                        onClick={() => setOpenInstructions(false)}
                         variant="contained"
                         sx={{
                             bgcolor: '#451513',
@@ -588,7 +588,7 @@ const ReadingGameComponent = ({
                             '&:hover': {
                                 bgcolor: '#5d211f'
                             }
-                        }} 
+                        }}
                         autoFocus
                     >
                         Close

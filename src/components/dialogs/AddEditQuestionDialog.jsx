@@ -1,3 +1,4 @@
+// Context/Scribbie frontend/src/components/dialogs/AddEditQuestionDialog.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -5,48 +6,46 @@ import {
     CircularProgress, Typography, Box, Checkbox, FormControlLabel, IconButton, Link as MuiLink,
     List, Divider, Alert
 } from '@mui/material';
-// import PhotoCamera from '@mui/icons-material/PhotoCamera';
-// import AudiotrackIcon from '@mui/icons-material/Audiotrack';
-// import ClearIcon from '@mui/icons-material/Clear';
+import PhotoCamera from '@mui/icons-material/PhotoCamera'; // Keep this import
+import Audiotrack from '@mui/icons-material/Audiotrack'; // Keep this import
+import ClearIcon from '@mui/icons-material/Clear'; // Keep this import
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import { useAuth } from '../../context/AuthContext';
-// import { uploadMediaFile } from '../../services/mediaService';
-import InlineChoiceForm from '../teacher/editor/InlineChoiceForm';
+import InlineChoiceForm from '../teacher/editor/InlineChoiceForm'; // Import this
 
 const AddEditQuestionDialog = ({
                                    open,
                                    onClose,
                                    onSave,
                                    existingQuestion,
-                                   activityNodeTypeId,
+                                   activityNodeTypeId, // This prop seems unused in the dialog itself but is part of original
                                    isLoading: isParentLoading,
                                    orderIndexForNewQuestion
                                }) => {
     const { authState } = useAuth();
-    const backendBaseUrl = 'http://localhost:8080';
-    const publicPrefix = authState.config?.uploadPublicPathPrefix || '/media-content';
+    const backendBaseUrl = 'http://localhost:8080'; // Ensure this matches your backend config
 
     const [questionText, setQuestionText] = useState('');
     const [isInstructional, setIsInstructional] = useState(false);
 
-    // --- Start of Commented Out Block ---
-    // const [imageFile, setImageFile] = useState(null);
-    // const [soundFile, setSoundFile] = useState(null);
-    // const [existingImageUrl, setExistingImageUrl] = useState(null);
-    // const [existingSoundUrl, setExistingSoundUrl] = useState(null);
-    // const [imagePreview, setImagePreview] = useState(null);
-    // --- End of Commented Out Block ---
+    // --- RE-ENABLED/UPDATED STATE FOR QUESTION-LEVEL FILES ---
+    const [imageFile, setImageFile] = useState(null);
+    const [audioFile, setAudioFile] = useState(null);
+    const [questionImageUrl, setQuestionImageUrl] = useState(null); // Stores backend path for existing image
+    const [questionSoundUrl, setQuestionSoundUrl] = useState(null); // Stores backend path for existing audio
+    const [removeImage, setRemoveImage] = useState(false); // Flag to signal image removal
+    const [removeAudio, setRemoveAudio] = useState(false); // Flag to signal audio removal
+    const [imagePreview, setImagePreview] = useState(null); // For new image file preview
 
     const [choices, setChoices] = useState([]);
 
-    // const imageInputRef = useRef(null);
-    // const soundInputRef = useRef(null);
+    const imageInputRef = useRef(null); // Used for resetting file input
+    const audioInputRef = useRef(null); // Used for resetting file input
 
-    // const [isUploadingMedia, setIsUploadingMedia] = useState(false);
     const [dialogError, setDialogError] = useState(null);
 
-    const isLoading = isParentLoading; // Removed isUploadingMedia
+    const isLoading = isParentLoading; // Use isParentLoading as the primary loading state
 
     useEffect(() => {
         if (open) {
@@ -54,60 +53,93 @@ const AddEditQuestionDialog = ({
             if (existingQuestion) {
                 setQuestionText(existingQuestion.questionText || '');
                 setIsInstructional(existingQuestion.instructional || false);
-                // setExistingImageUrl(existingQuestion.questionImageUrl || null);
-                // setExistingSoundUrl(existingQuestion.questionSoundUrl || null);
-                // setImagePreview(existingQuestion.questionImageUrl ? `${backendBaseUrl}${publicPrefix}/${existingQuestion.questionImageUrl}` : null);
+                // Set existing URLs from backend
+                setQuestionImageUrl(existingQuestion.questionImageUrl || null);
+                setQuestionSoundUrl(existingQuestion.questionSoundUrl || null);
+                // Set initial preview for existing image if available
+                setImagePreview(existingQuestion.questionImageUrl ? `${backendBaseUrl}${existingQuestion.questionImageUrl}` : null);
+
+                // Initialize choices with temp IDs and file flags
                 setChoices((existingQuestion.choices || []).map(c => ({
                     ...c,
-                    tempChoiceId: c.choiceId || `temp-c-${Date.now()}-${Math.random()}`,
-                    isNew: !c.choiceId,
+                    tempChoiceId: c.choiceId || `temp-c-${Date.now()}-${Math.random()}`, // Ensure a tempId for new choices during edit
+                    isNew: !c.choiceId, // True if choice doesn't have an ID from backend
                     isModified: false,
                     isDeleted: false,
-                    imageFile: null,
-                    audioFile: null
+                    imageFile: null, // No new file initially
+                    audioFile: null, // No new file initially
+                    removeImage: false, // Not removing initially
+                    removeAudio: false, // Not removing initially
                 })));
             } else {
+                // Reset for new question
                 setQuestionText('');
                 setIsInstructional(false);
-                // setExistingImageUrl(null);
-                // setExistingSoundUrl(null);
-                // setImagePreview(null);
+                setQuestionImageUrl(null);
+                setQuestionSoundUrl(null);
+                setImagePreview(null);
+                setRemoveImage(false);
+                setRemoveAudio(false);
                 setChoices([]);
             }
-            // setImageFile(null);
-            // setSoundFile(null);
+            // Clear any previously selected new files
+            setImageFile(null);
+            setAudioFile(null);
+            if (imageInputRef.current) imageInputRef.current.value = "";
+            if (audioInputRef.current) audioInputRef.current.value = "";
         }
-    }, [open, existingQuestion, backendBaseUrl, publicPrefix]);
+    }, [open, existingQuestion, backendBaseUrl, orderIndexForNewQuestion]); // Added orderIndexForNewQuestion to dependency array
 
-    // --- Start of Commented Out Block ---
-    /*
-    const handleImageFileChange = (event) => {
+    // Effect to clean up temporary object URLs when imagePreview changes or component unmounts
+    useEffect(() => {
+        const currentPreview = imagePreview;
+        return () => {
+            if (currentPreview && currentPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(currentPreview);
+            }
+        };
+    }, [imagePreview]);
+
+
+    // --- RE-ENABLED/UPDATED QUESTION-LEVEL FILE HANDLERS ---
+    const handleQuestionFileChange = (event, fileType) => {
         const file = event.target.files[0];
-        if (file) {
+        if (!file) return;
+
+        if (fileType === 'image') {
+            if (imagePreview && imagePreview.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview); // Clean up old blob URL
+            }
             setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result);
-            reader.readAsDataURL(file);
-            setExistingImageUrl(null);
+            setImagePreview(URL.createObjectURL(file)); // Create new blob URL for preview
+            setQuestionImageUrl(null); // Clear existing URL, new file will override
+            setRemoveImage(false); // Ensure removal flag is off
+        } else if (fileType === 'audio') {
+            setAudioFile(file);
+            setQuestionSoundUrl(null); // Clear existing URL, new file will override
+            setRemoveAudio(false); // Ensure removal flag is off
         }
     };
-    const clearImage = () => {
-        setImageFile(null); setImagePreview(null); setExistingImageUrl(null);
-        if (imageInputRef.current) imageInputRef.current.value = "";
-    };
-    const handleSoundFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setSoundFile(file);
-            setExistingSoundUrl(null);
+
+    const handleQuestionFileRemove = (fileType) => {
+        if (fileType === 'image') {
+            if (imagePreview && imagePreview.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview); // Clean up blob URL
+            }
+            setImageFile(null); // Clear selected new file
+            setImagePreview(null); // Clear preview
+            setQuestionImageUrl(null); // Clear existing backend URL
+            setRemoveImage(true); // Flag for backend to remove image
+            if (imageInputRef.current) imageInputRef.current.value = ""; // Reset file input
+        } else if (fileType === 'audio') {
+            setAudioFile(null); // Clear selected new file
+            setQuestionSoundUrl(null); // Clear existing backend URL
+            setRemoveAudio(true); // Flag for backend to remove audio
+            if (audioInputRef.current) audioInputRef.current.value = ""; // Reset file input
         }
     };
-    const clearSound = () => {
-        setSoundFile(null); setExistingSoundUrl(null);
-        if (soundInputRef.current) soundInputRef.current.value = "";
-    };
-    */
-    // --- End of Commented Out Block ---
+
+    // --- CHOICE-LEVEL HANDLERS (already look correct from previous context) ---
     const handleChoiceFileChange = (index, field, file) => {
         setChoices(prev =>
             prev.map((choice, idx) =>
@@ -115,6 +147,30 @@ const AddEditQuestionDialog = ({
             )
         );
     };
+
+    // This handler will now also receive the 'fileType' ('image' or 'audio')
+    // and will set the corresponding remove flag for the choice.
+    const handleChoiceFileRemove = (index, fileType) => {
+        setChoices(prev =>
+            prev.map((choice, idx) => {
+                if (idx === index) {
+                    const updated = { ...choice, isModified: true };
+                    if (fileType === 'image') {
+                        updated.imagePath = null; // Clear current image path from entity
+                        updated.imageFile = null; // Clear any newly selected file
+                        updated.removeImage = true; // Signal backend to remove existing image
+                    } else if (fileType === 'audio') {
+                        updated.audioPath = null; // Clear current audio path from entity
+                        updated.audioFile = null; // Clear any newly selected file
+                        updated.removeAudio = true; // Signal backend to remove existing audio
+                    }
+                    return updated;
+                }
+                return choice;
+            })
+        );
+    };
+
     const handleAddChoice = () => {
         setChoices(prev => [
             ...prev,
@@ -125,24 +181,33 @@ const AddEditQuestionDialog = ({
                 isNew: true,
                 isModified: false,
                 isDeleted: false,
+                imageFile: null,
+                audioFile: null,
+                removeImage: false,
+                removeAudio: false,
             }
         ]);
     };
+
     const handleChoiceChange = (index, updatedChoiceData) => {
         setChoices(prev => prev.map((c, idx) =>
             idx === index ? { ...c, ...updatedChoiceData, isModified: !c.isNew || c.isModified } : c
         ));
     };
+
     const handleDeleteChoice = (index) => {
         setChoices(prev => {
-            const choice = prev[index];
-            if (choice.isNew) {
+            const choiceToDelete = prev[index];
+            if (choiceToDelete.isNew) {
+                // If it's a new choice not yet saved, simply filter it out
                 return prev.filter((_, idx) => idx !== index);
             } else {
+                // If it's an existing choice, mark it as deleted
                 return prev.map((c, idx) => idx === index ? { ...c, isDeleted: true, isModified: true } : c);
             }
         });
     };
+
 
     const handleSubmitDialog = async () => {
         if (!questionText.trim()) {
@@ -154,56 +219,46 @@ const AddEditQuestionDialog = ({
             choice => !choice.isDeleted && choice.choiceText.trim() === ''
         );
         if (hasBlankChoice) {
-            setDialogError("All active choices must have text. Please remove or fill in any blank choices.");
+            setDialogError("All active choices must have text.");
             return;
         }
 
         setDialogError(null);
 
-        // --- Start of Commented Out Block ---
-        /*
-        setIsUploadingMedia(true);
-
-        let finalImageUrl = existingImageUrl;
-        let finalSoundUrl = existingSoundUrl;
-
-        try {
-            if (imageFile) {
-                const imgRes = await uploadMediaFile(imageFile, 'image', authState.token);
-                finalImageUrl = imgRes.filePath;
-            }
-            if (soundFile) {
-                const soundRes = await uploadMediaFile(soundFile, 'sound', authState.token);
-                finalSoundUrl = soundRes.filePath;
-            }
-        } catch (err) {
-            setDialogError(`Media upload failed: ${err.message}`);
-            setIsUploadingMedia(false);
-            return;
-        }
-        setIsUploadingMedia(false);
-        */
-        // --- End of Commented Out Block ---
-
-        const questionPayload = {
+        const payload = {
             ...(existingQuestion && { questionId: existingQuestion.questionId }),
             questionText: questionText.trim(),
             instructional: isInstructional,
-            // questionImageUrl: finalImageUrl, // Commented out
-            // questionSoundUrl: finalSoundUrl, // Commented out
             orderIndex: existingQuestion ? existingQuestion.orderIndex : orderIndexForNewQuestion,
-            choices: choices.map(c => ({
-                choiceId: c.isNew ? null : c.choiceId,
-                choiceText: c.choiceText,
-                isCorrect: c.isCorrect,
-                isDeleted: c.isDeleted,
-                imageFile: c.imageFile || undefined,
-                audioFile: c.audioFile || undefined,
-            })),
-            isNew: !existingQuestion,
-            isModified: !!existingQuestion,
+            removeImage,
+            removeAudio,
+            // ✨ Add original filenames so backend can map them
+            questionImageUrl: imageFile?.name || questionImageUrl || undefined,
+            questionSoundUrl: audioFile?.name || questionSoundUrl || undefined,
+            imageFile: imageFile || undefined,
+            audioFile: audioFile || undefined,
+            choices: choices
+                .filter(c => !c.isDeleted || c.isModified)
+                .map(c => ({
+                    choiceId: c.isNew ? null : c.choiceId,
+                    choiceText: c.choiceText,
+                    isCorrect: c.isCorrect,
+                    isDeleted: c.isDeleted,
+                    imagePath: c.imagePath || undefined,
+                    audioPath: c.audioPath || undefined,
+                    removeImage: c.removeImage || undefined,
+                    removeAudio: c.removeAudio || undefined,
+                    imageFile: c.imageFile || undefined,
+                    audioFile: c.audioFile || undefined,
+                    // ✨ Add these so backend can map choice files
+                    imageFileName: c.imageFile?.name || c.imagePath || undefined,
+                    audioFileName: c.audioFile?.name || c.audioPath || undefined,
+                })),
         };
-        onSave(questionPayload);
+
+        console.log("✅ Submitting question payload with filenames:", payload);
+
+        onSave(payload);
     };
 
     return (
@@ -217,29 +272,67 @@ const AddEditQuestionDialog = ({
                 <FormControlLabel control={<Checkbox checked={isInstructional} onChange={(e) => setIsInstructional(e.target.checked)} disabled={isLoading} />}
                                   label="Instructional (exclude from Challenges, but can still have choices)" sx={{ mb: 2 }} />
 
-                {/* --- Start of Commented Out Block --- */}
-                {/* <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
-                    <Typography variant="subtitle2" gutterBottom>Question Image</Typography>
-                    <input accept="image/*" style={{ display: 'none' }} id={`dialog-image-upload-${existingQuestion?.questionId || 'new'}`} type="file" onChange={handleImageFileChange} ref={imageInputRef} disabled={isLoading} />
-                    <label htmlFor={`dialog-image-upload-${existingQuestion?.questionId || 'new'}`}>
-                        <Button variant="outlined" component="span" startIcon={<PhotoCamera />} size="small" disabled={isLoading}>Upload Image</Button>
-                    </label>
-                    {imagePreview && (<Box sx={{ mt: 1, position: 'relative', maxWidth: '150px' }}><img src={imagePreview} alt="Preview" style={{ width: '100%' }} /><IconButton onClick={clearImage} size="small" sx={{ position: 'absolute', top: 0, right: 0 }} disabled={isLoading}><ClearIcon fontSize="small" /></IconButton></Box>)}
-                    {imageFile && <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>New: {imageFile.name}</Typography>}
-                    {!imageFile && existingImageUrl && !imagePreview && (<Box sx={{ mt: 1 }}><MuiLink href={`${backendBaseUrl}${publicPrefix}/${existingImageUrl}`} target="_blank">Current: {existingImageUrl.split('/').pop()}</MuiLink><IconButton onClick={clearImage} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
-                </Box>
+                {/* --- RE-ENABLED QUESTION-LEVEL MEDIA SECTION --- */}
+                <Divider sx={{ my: 2 }}>Question Media</Divider>
+                <Box sx={{ display: 'flex', gap: 4, mb: 2 }}>
+                    {/* Question Image Section */}
+                    <Box>
+                        <Button component="label" startIcon={<PhotoCamera />} disabled={isLoading}>
+                            Question Image
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => handleQuestionFileChange(e, 'image')}
+                                ref={imageInputRef} // Attach ref for clearing
+                            />
+                        </Button>
+                        {imageFile ? (
+                            // Preview for newly selected image
+                            <Box sx={{ mt: 1, position: 'relative', width: 120 }}>
+                                <img src={imagePreview} alt="Preview" style={{ width: '100%', borderRadius: 4 }} />
+                                <IconButton onClick={() => handleQuestionFileRemove('image')} size="small" sx={{ position: 'absolute', top: -10, right: -10 }}><ClearIcon fontSize="small" /></IconButton>
+                            </Box>
+                        ) : (questionImageUrl && !removeImage) ? (
+                            // Link for existing image
+                            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                                <MuiLink href={`${backendBaseUrl}${questionImageUrl}`} target="_blank" variant="caption" sx={{ ml: 1 }}>
+                                    Current Image
+                                </MuiLink>
+                                <IconButton onClick={() => handleQuestionFileRemove('image')} size="small" sx={{ ml: 0.5 }}><ClearIcon fontSize="inherit" /></IconButton>
+                            </Box>
+                        ) : null}
+                        {imageFile && <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>New: {imageFile.name}</Typography>}
+                    </Box>
 
-                <Box sx={{ mb: 2, p: 1.5, border: '1px dashed #bdbdbd', borderRadius: '4px' }}>
-                    <Typography variant="subtitle2" gutterBottom>Question Sound</Typography>
-                    <input accept="audio/*" style={{ display: 'none' }} id={`dialog-sound-upload-${existingQuestion?.questionId || 'new'}`} type="file" onChange={handleSoundFileChange} ref={soundInputRef} disabled={isLoading} />
-                    <label htmlFor={`dialog-sound-upload-${existingQuestion?.questionId || 'new'}`}>
-                        <Button variant="outlined" component="span" startIcon={<AudiotrackIcon />} size="small" disabled={isLoading}>Upload Sound</Button>
-                    </label>
-                    {soundFile && (<Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}><Typography variant="caption">New: {soundFile.name}</Typography><IconButton onClick={clearSound} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
-                    {!soundFile && existingSoundUrl && (<Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center' }}><MuiLink href={`${backendBaseUrl}${publicPrefix}/${existingSoundUrl}`} target="_blank">Current: {existingSoundUrl.split('/').pop()}</MuiLink><IconButton onClick={clearSound} size="small" sx={{ ml: 0.5 }} disabled={isLoading}><ClearIcon fontSize="inherit" /></IconButton></Box>)}
+                    {/* Question Audio Section */}
+                    <Box>
+                        <Button component="label" startIcon={<Audiotrack />} disabled={isLoading}>
+                            Question Audio
+                            <input
+                                type="file"
+                                hidden
+                                accept="audio/*"
+                                onChange={(e) => handleQuestionFileChange(e, 'audio')}
+                                ref={audioInputRef} // Attach ref for clearing
+                            />
+                        </Button>
+                        {audioFile ? (
+                            // Display filename for newly selected audio
+                            <Typography variant="caption" display="block" sx={{ mt: 1 }}>New: {audioFile.name}</Typography>
+                        ) : (questionSoundUrl && !removeAudio) ? (
+                            // Link for existing audio
+                            <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                                <MuiLink href={`${backendBaseUrl}${questionSoundUrl}`} target="_blank" variant="caption" sx={{ ml: 1 }}>
+                                    Current Audio
+                                </MuiLink>
+                                <IconButton onClick={() => handleQuestionFileRemove('audio')} size="small" sx={{ ml: 0.5 }}><ClearIcon fontSize="inherit" /></IconButton>
+                            </Box>
+                        ) : null}
+                        {audioFile && <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>New: {audioFile.name}</Typography>}
+                    </Box>
                 </Box>
-                */}
-                {/* --- End of Commented Out Block --- */}
+                {/* --- END RE-ENABLED QUESTION-LEVEL MEDIA SECTION --- */}
 
                 <>
                     <Divider sx={{ my: 2 }} />
@@ -251,13 +344,15 @@ const AddEditQuestionDialog = ({
                         {choices.filter(c => !c.isDeleted).map((choice, choiceIdx) => (
                             <InlineChoiceForm
                                 key={choice.choiceId || choice.tempChoiceId}
-                                onFileChange={handleChoiceFileChange}
                                 choice={choice}
                                 choiceIndex={choiceIdx}
                                 onChoiceChange={handleChoiceChange}
                                 onDeleteChoice={handleDeleteChoice}
-                                isQuestionInstructional={false}
+                                onFileChange={handleChoiceFileChange}
+                                onFileRemove={handleChoiceFileRemove} // Pass this handler to InlineChoiceForm
+                                isQuestionInstructional={isInstructional} // Pass instructional flag
                                 isLoading={isLoading}
+                                backendUrl={backendBaseUrl} // Pass backendUrl for existing file links
                             />
                         ))}
                     </List>
@@ -284,7 +379,7 @@ AddEditQuestionDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
     existingQuestion: PropTypes.object,
-    activityNodeTypeId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    activityNodeTypeId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]), // Adjusted PropTypes to allow string/number
     isLoading: PropTypes.bool,
     orderIndexForNewQuestion: PropTypes.number,
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { API_BASE_URL } from '../../config/apiConfig';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from '../../components/layout/navbar';
@@ -17,12 +18,7 @@ import SaveIcon from '@mui/icons-material/Save';
 
 import { getActivityNodeTypeDetails } from '../../services/activityService';
 import {
-    createQuestionForActivityNode,
-    updateQuestion,
     deleteQuestion,
-    createChoiceForQuestion,
-    updateChoice,
-    deleteChoice,
     updateQuestionOrderForActivityNode
 } from '../../services/lessonService';
 
@@ -61,20 +57,17 @@ const ActivityNodeEditorPage = () => {
         setIsLoadingPage(true);
         setPageError(null);
         try {
-            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token); //
+            const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
             setActivityNodeDetails(data);
-            const formattedQuestions = (data.questions || []).map((q, index) => ({ //
+            const formattedQuestions = (data.questions || []).map((q, index) => ({
                 ...q,
-                choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}`, isNew: false, isModified: false, isDeleted: false })) : [], //
-                orderIndex: q.orderIndex !== undefined ? q.orderIndex : index, //
-                isNew: false,
-                isModified: false,
-                isDeleted: false,
-            })).sort((a, b) => a.orderIndex - b.orderIndex); //
+                choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}` })) : [],
+                orderIndex: q.orderIndex !== undefined ? q.orderIndex : index,
+            })).sort((a, b) => a.orderIndex - b.orderIndex);
             setQuestions(formattedQuestions);
             setModifiedQuestionOrderIds(new Set());
         } catch (err) {
-            setPageError(err.message || "Could not load activity node details."); //
+            setPageError(err.message || "Could not load activity node details.");
             setQuestions([]);
         } finally {
             setIsLoadingPage(false);
@@ -85,7 +78,7 @@ const ActivityNodeEditorPage = () => {
         if (authState.isAuthenticated && authState.token) {
             fetchActivityNodeData();
         } else if (authState.isAuthenticated === false) {
-            setPageError("User not authenticated. Please log in."); //
+            setPageError("User not authenticated. Please log in.");
             setIsLoadingPage(false);
         }
     }, [authState.isAuthenticated, authState.token, fetchActivityNodeData]);
@@ -103,8 +96,8 @@ const ActivityNodeEditorPage = () => {
     };
 
     const handleDeleteQuestionLocalOrApi = async (questionId, indexInUI) => {
-        const questionToDelete = questions[indexInUI]; //
-        if (window.confirm(`Are you sure you want to delete Question ${indexInUI + 1}: "${questionToDelete.questionText.substring(0, 30)}..."?`)) { //
+        const questionToDelete = questions[indexInUI];
+        if (window.confirm(`Are you sure you want to delete Question ${indexInUI + 1}: "${questionToDelete.questionText.substring(0, 30)}..."?`)) {
             if (!questionToDelete.questionId) {
                 setQuestions(prev => prev.filter((_, idx) => idx !== indexInUI)
                     .map((q, newIdx) => ({ ...q, orderIndex: newIdx })));
@@ -114,12 +107,12 @@ const ActivityNodeEditorPage = () => {
             }
             setIsOrderSaving(true);
             try {
-                await deleteQuestion(activityNodeTypeId, questionToDelete.questionId, authState.token); //
-                setSnackbarMessage("Question deleted successfully!"); //
+                await deleteQuestion(activityNodeTypeId, questionToDelete.questionId, authState.token);
+                setSnackbarMessage("Question deleted successfully!");
                 setSnackbarOpen(true);
                 fetchActivityNodeData();
             } catch (err) {
-                setSnackbarMessage(`Error deleting question: ${err.message}`); //
+                setSnackbarMessage(`Error deleting question: ${err.message}`);
                 setSnackbarOpen(true);
             } finally {
                 setIsOrderSaving(false);
@@ -127,16 +120,9 @@ const ActivityNodeEditorPage = () => {
         }
     };
 
-    const handleSaveQuestionFromDialog = async (payloadFromDialog) => {
-        if (!authState || !authState.token) {
-            setDialogError("Authentication missing. Please log in again.");
-            setIsDialogSaving(false);
-            return;
-        }
-
-        if (!activityNodeTypeId) {
-            setDialogError("Activity Node ID context is missing. Cannot save question.");
-            setIsDialogSaving(false);
+    const handleSaveQuestionFromDialog = async (payload) => {
+        if (!authState.token || !activityNodeTypeId) {
+            setDialogError("Missing auth or activity ID.");
             return;
         }
 
@@ -144,77 +130,91 @@ const ActivityNodeEditorPage = () => {
         setDialogError(null);
 
         try {
-            const { choices = [], ...questionDataForApi } = payloadFromDialog;
+            const formData = new FormData();
+            const dto = { ...payload };
 
-            if (payloadFromDialog.isNew || !payloadFromDialog.questionId) {
-                const savedOrUpdatedQuestion = await createQuestionForActivityNode(
-                    activityNodeTypeId,
-                    questionDataForApi,
-                    authState.token
-                );
-
-                if (savedOrUpdatedQuestion?.questionId && choices.length > 0) {
-                    for (const choice of choices) {
-                        const hasFiles = choice.imageFile || choice.audioFile;
-                        const choicePayload = {
-                            choiceText: choice.choiceText,
-                            isCorrect: !!choice.isCorrect,
-                            ...(hasFiles && {
-                                imageFile: choice.imageFile || null,
-                                audioFile: choice.audioFile || null
-                            })
-                        };
-
-                        await createChoiceForQuestion(
-                            activityNodeTypeId,
-                            savedOrUpdatedQuestion.questionId,
-                            choicePayload,
-                            authState.token
-                        );
-                    }
-                    setSnackbarMessage("Question and choices added successfully!");
-                } else {
-                    setSnackbarMessage("Question added successfully.");
-                }
-
-            } else {
-                await updateQuestion(
-                    activityNodeTypeId,
-                    payloadFromDialog.questionId,
-                    payloadFromDialog,
-                    authState.token
-                );
-                setSnackbarMessage("Question updated successfully!");
+            // ✨ FIX: Filter out choices marked for deletion before sending to backend
+            if (dto.choices) {
+                dto.choices = dto.choices.filter(choice => !choice.isDeleted);
             }
 
+            const generateUniqueName = (prefix, file) =>
+                `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2)}_${file.name}`;
+
+            if (dto.imageFile) {
+                const uniqueImageName = generateUniqueName("questionImage", dto.imageFile);
+                dto.questionImageUrl = uniqueImageName;
+                formData.append('files', dto.imageFile, uniqueImageName);
+            }
+
+            if (dto.audioFile) {
+                const uniqueAudioName = generateUniqueName("questionAudio", dto.audioFile);
+                dto.questionSoundUrl = uniqueAudioName;
+                formData.append('files', dto.audioFile, uniqueAudioName);
+            }
+
+            (dto.choices || []).forEach(choice => {
+                if (choice.imageFile) {
+                    const uniqueName = generateUniqueName("choiceImage", choice.imageFile);
+                    choice.imageFileName = uniqueName;
+                    formData.append('files', choice.imageFile, uniqueName);
+                }
+                if (choice.audioFile) {
+                    const uniqueName = generateUniqueName("choiceAudio", choice.audioFile);
+                    choice.audioFileName = uniqueName;
+                    formData.append('files', choice.audioFile, uniqueName);
+                }
+            });
+
+            formData.append('questionDto', JSON.stringify(dto));
+
+            const isUpdating = !!payload.questionId;
+            const url = isUpdating
+                ? `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions/${payload.questionId}`
+                : `${API_BASE_URL}/activity-node-types/${activityNodeTypeId}/questions`;
+
+            const response = await fetch(url, {
+                method: isUpdating ? 'PUT' : 'POST',
+                // ✨ FIX: Explicitly set the Authorization header for FormData requests
+                headers: {
+                    'Authorization': `Bearer ${authState.token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(text || 'Failed to save question.');
+            }
+
+            setSnackbarMessage("Question saved successfully!");
             setIsQuestionDialogOpen(false);
-            setEditingQuestion(null);
             fetchActivityNodeData();
+
         } catch (err) {
-            console.error("Error saving question from dialog:", err);
-            const errorMessage = err.response?.data?.message || err.message || "An unexpected error occurred.";
-            setDialogError(`Save failed: ${errorMessage}`);
+            console.error("Error in saveQuestion:", err);
+            setDialogError(`Save failed: ${err.message}`);
         } finally {
             setIsDialogSaving(false);
         }
     };
 
     const handleMoveQuestion = (currentIndex, direction) => {
-        const newQuestions = [...questions]; //
-        const targetIndex = currentIndex + direction; //
+        const newQuestions = [...questions];
+        const targetIndex = currentIndex + direction;
 
-        if (targetIndex < 0 || targetIndex >= newQuestions.length) return; //
+        if (targetIndex < 0 || targetIndex >= newQuestions.length) return;
 
-        [newQuestions[currentIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[currentIndex]]; //
+        [newQuestions[currentIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[currentIndex]];
 
-        const reorderedQuestions = newQuestions.map((q, idx) => { //
-            const orderChanged = q.orderIndex !== idx; //
+        const reorderedQuestions = newQuestions.map((q, idx) => {
+            const orderChanged = q.orderIndex !== idx;
             if (q.questionId && orderChanged) {
-                setModifiedQuestionOrderIds(prev => new Set(prev).add(q.questionId)); //
+                setModifiedQuestionOrderIds(prev => new Set(prev).add(q.questionId));
             }
             return { ...q, orderIndex: idx };
         });
-        setQuestions(reorderedQuestions); //
+        setQuestions(reorderedQuestions);
     };
 
     const handleSaveOrder = async () => {
@@ -223,8 +223,8 @@ const ActivityNodeEditorPage = () => {
             setSnackbarOpen(true);
             return;
         }
-        if (modifiedQuestionOrderIds.size === 0) { //
-            setSnackbarMessage("No order changes to save."); //
+        if (modifiedQuestionOrderIds.size === 0) {
+            setSnackbarMessage("No order changes to save.");
             setSnackbarOpen(true);
             return;
         }
@@ -234,7 +234,6 @@ const ActivityNodeEditorPage = () => {
 
         try {
             await updateQuestionOrderForActivityNode(activityNodeTypeId, questions, authState.token);
-
             setSnackbarMessage("Question order saved successfully!");
             setModifiedQuestionOrderIds(new Set());
             fetchActivityNodeData();
@@ -248,9 +247,9 @@ const ActivityNodeEditorPage = () => {
     };
 
     const pageTitle = activityNodeDetails
-        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}` //
+        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}`
         : 'Loading Activity Node Editor...';
-    const lessonManagementPath = `/teacher/course/${courseId}/lessons`; //
+    const lessonManagementPath = `/teacher/course/${courseId}/lessons`;
 
     return (
         <Box className="teacher-homepage-container">
@@ -322,8 +321,6 @@ const ActivityNodeEditorPage = () => {
                                                             }
                                                         </Box>
                                                     }
-                                                    // --- THIS IS THE REVERTED CHANGE ---
-                                                    // Restoring the detailed choices display
                                                     secondary={
                                                         <>
                                                             <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block' }}>

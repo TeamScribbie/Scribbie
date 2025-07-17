@@ -12,7 +12,7 @@ import Matching2GameComponent from '../../components/student/Matching2GameCompon
 import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
 import WordFeastGame from '../../components/student/WordFeast/WordFeast';
 import FlipMatchingGame from '../../components/student/FlipMatchingGame';
-import QuizMcqGame from '../../components/student/QuizMcqGame';
+import QuizMcqGame from '../../components/student/QuizMcqGame'; // This import was added during the merge resolution
 
 const ActivityPage = () => {
     const { lessonDefinitionId, activityNodeTypeId } = useParams();
@@ -106,7 +106,7 @@ const ActivityPage = () => {
 
     if (error) {
         return (
-             <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100vw', height: '100vh', p:2, bgcolor: '#FFFBE0' }}>
+            <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100vw', height: '100vh', p:2, bgcolor: '#FFFBE0' }}>
                 <Alert severity="error" sx={{ width: '100%', maxWidth: '600px' }}>
                     <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>Oops!</Typography>
                     <Typography variant="body2" component="div" sx={{ mt: 1 }}>{error}</Typography>
@@ -122,9 +122,9 @@ const ActivityPage = () => {
         return (
             <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100%', height: '100%', p:2 }}>
                <Alert severity="info" sx={{ width: '100%', maxWidth: '600px' }}>
-                   <Typography variant="h6">Activity Not Loaded</Typography>
-                   <Typography>The activity data could not be retrieved.</Typography>
-                   <Button onClick={handleBackNavigation} variant="outlined" sx={{ mt: 2 }}>Go Back to Lessons</Button>
+                    <Typography variant="h6">Activity Not Loaded</Typography>
+                    <Typography>The activity data could not be retrieved.</Typography>
+                    <Button onClick={handleBackNavigation} variant="outlined" sx={{ mt: 2 }}>Go Back to Lessons</Button>
                </Alert>
            </Box>
         );
