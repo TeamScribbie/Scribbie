@@ -1,15 +1,16 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Ensure this is installed or handle token inspection differently
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
-    user: null, // Will store { id, name, identifier, roles: [] }
-    userType: null, // 'Student', 'Teacher' (this might become redundant if roles are comprehensive)
+    user: null,
+    userType: null,
     token: null,
+    loading: true, // <-- Add loading state, default to true
   });
 
   useEffect(() => {
@@ -18,90 +19,82 @@ export const AuthProvider = ({ children }) => {
      const storedUserString = localStorage.getItem('authUser');
 
      if (storedToken && storedUserString) {
-         console.log("AuthContext: Found token and user string in localStorage.");
          try {
-             const decodedPayload = jwtDecode(storedToken); // Use jwt-decode
+             const decodedPayload = jwtDecode(storedToken);
              const currentTime = Date.now() / 1000;
 
              if (decodedPayload.exp < currentTime) {
                  console.warn("AuthContext: Stored token has expired.");
                  localStorage.removeItem('authToken');
                  localStorage.removeItem('authUser');
-                 setAuthState({ isAuthenticated: false, user: null, userType: null, token: null }); // Explicitly clear state
+                 setAuthState({ isAuthenticated: false, user: null, userType: null, token: null, loading: false }); // <-- Set loading to false
                  return;
              }
 
              const storedUser = JSON.parse(storedUserString);
              console.log("AuthContext: Parsed Stored User Data:", storedUser);
 
-             // Ensure roles are part of the storedUser, or fallback to decoded token if available (though backend login response is better source)
              const roles = storedUser?.roles || decodedPayload?.roles || [];
-             // Determine userType based on roles for consistency if possible, or use stored userType
              let determinedUserType = storedUser?.userType;
              if (!determinedUserType && roles.length > 0) {
                 if (roles.includes("ROLE_STUDENT")) determinedUserType = "Student";
-                else if (roles.includes("ROLE_TEACHER") || roles.includes("ROLE_ADMIN") || roles.includes("ROLE_SUPERADMIN")) determinedUserType = "Teacher"; // Or more specific if needed by UI
+                else if (roles.includes("ROLE_TEACHER") || roles.includes("ROLE_ADMIN") || roles.includes("ROLE_SUPERADMIN")) determinedUserType = "Teacher";
              }
-
 
              setAuthState({
                  isAuthenticated: true,
-                 user: { // Reconstruct user object carefully
+                 user: {
                      id: storedUser?.id || decodedPayload?.sub,
-                     name: storedUser?.name || decodedPayload?.name, // Assuming name is in token or storedUser
+                     name: storedUser?.name || decodedPayload?.name,
                      identifier: storedUser?.identifier || decodedPayload?.sub,
-                     roles: roles, // ✨ Store roles
+                     roles: roles,
                  },
-                 userType: determinedUserType, // 'Student' or 'Teacher' (can be refined)
+                 userType: determinedUserType,
                  token: storedToken,
+                 loading: false, // <-- Set loading to false after successful restore
              });
              console.log("AuthContext: Auth state successfully restored from localStorage.");
          } catch (e) {
              console.error("AuthContext: Error processing stored auth data:", e);
              localStorage.removeItem('authToken');
              localStorage.removeItem('authUser');
-             setAuthState({ isAuthenticated: false, user: null, userType: null, token: null });
+             setAuthState({ isAuthenticated: false, user: null, userType: null, token: null, loading: false }); // <-- Set loading to false
          }
      } else {
          console.log("AuthContext: Token or user data missing in localStorage.");
-         // Ensure state is fully logged out if nothing valid is found
-         setAuthState({ isAuthenticated: false, user: null, userType: null, token: null });
+         setAuthState({ isAuthenticated: false, user: null, userType: null, token: null, loading: false }); // <-- Set loading to false
      }
   }, []);
 
 
-  const login = (loginResponseData, type) => { // loginResponseData is the direct body from backend
+  const login = (loginResponseData, type) => {
     console.log("AuthContext: Storing login response", loginResponseData, "Type:", type);
     const token = loginResponseData?.token;
 
     if (token) {
         try {
-            // The backend LoginResponse DTO already includes id, identifier, name, and roles.
-            // No need to decode JWT here for these details if backend provides them.
-            // const decodedPayload = jwtDecode(token); // Optional: if you need 'exp' or other JWT claims not in response body
-
             const userDetails = {
               id: loginResponseData.id,
               name: loginResponseData.name,
               identifier: loginResponseData.identifier,
-              roles: loginResponseData.roles || [], // ✨ Get roles from loginResponseData
+              roles: loginResponseData.roles || [],
             };
 
             setAuthState({
                 isAuthenticated: true,
                 user: userDetails,
-                userType: type, // 'Student' or 'Teacher' (for general UI distinction)
+                userType: type,
                 token: token,
+                loading: false, // <-- Set loading to false on login
             });
 
             localStorage.setItem('authToken', token);
-            // Store userDetails (which includes roles) and userType
             localStorage.setItem('authUser', JSON.stringify({...userDetails, userType: type }));
             console.log("AuthContext: Saved token and user data (with roles) to localStorage.");
 
         } catch (error) {
             console.error("AuthContext: Error processing login data:", error);
-            logout(); // Log out if there's an issue
+            logout();
         }
     } else {
         console.error("AuthContext: Login response missing token!", loginResponseData);
@@ -116,6 +109,7 @@ export const AuthProvider = ({ children }) => {
       user: null,
       userType: null,
       token: null,
+      loading: false, // <-- Set loading to false on logout
     });
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');

@@ -1,12 +1,10 @@
-/* General resets and fonts */
 body, html {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #e41010;
+  background-color: #ffffff; /* This makes the whole app's background red */
   color: #2e2d2d;
 }
-
 /* Container */
 .landingpage {
   display: flex;
