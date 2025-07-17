@@ -1,3 +1,5 @@
+// src/components/student/WordFeast/GameStage.jsx
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Container, Text, useTick } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
@@ -19,7 +21,7 @@ const GameStage = ({ onGameOver, isGameOver, debugMode }) => {
     const [messages, setMessages] = useState([]);
     const mousePosition = useRef({ x: 400, y: 300 });
     const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
-    const dashInfo = useRef({ isDashing: false, dashTimer: 0, cooldownTimer: 0 });
+    const dashInfo = useRef({ isDashing: false, dashTimer: 0, cooldownTimer: 0, dashAngle: 0 }); // Added dashAngle
 
     const forceRender = () => setRenderTrigger(c => c + 1);
 
@@ -32,7 +34,6 @@ const GameStage = ({ onGameOver, isGameOver, debugMode }) => {
         }
         const rand = Math.random();
         const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
-        // Add wanderAngle for the new AI
         fishesRef.current.push({ id: Date.now() * Math.random(), size, points: gameConfig.fishTypes[size].points, position, velocity, wanderAngle: Math.random() * 2 * Math.PI });
     };
 
@@ -62,13 +63,11 @@ const GameStage = ({ onGameOver, isGameOver, debugMode }) => {
         }
         let velX = player.velocity.x;
         let velY = player.velocity.y;
+
         if (dashInfo.current.isDashing) {
-            const currentSpeed = Math.sqrt(velX * velX + velY * velY);
-            if (currentSpeed < gameConfig.player.dash.speed) {
-                const angle = Math.atan2(velY, velX) || 0;
-                velX = Math.cos(angle) * gameConfig.player.dash.speed;
-                velY = Math.sin(angle) * gameConfig.player.dash.speed;
-            }
+            // Dash in the stored direction
+            velX = Math.cos(dashInfo.current.dashAngle) * gameConfig.player.dash.speed;
+            velY = Math.sin(dashInfo.current.dashAngle) * gameConfig.player.dash.speed;
         } else {
             const dx = mousePosition.current.x - player.position.x;
             const dy = mousePosition.current.y - player.position.y;
@@ -108,17 +107,14 @@ const GameStage = ({ onGameOver, isGameOver, debugMode }) => {
             let status = 'Roaming';
             const isChasing = fishType.chaseRadius && sizeHierarchy[fish.size] > sizeHierarchy[player.size] && distance < fishType.chaseRadius;
             
-            // --- NEW NATURAL WANDERING AI ---
             if (isChasing) {
                 status = 'CHASING';
                 const chaseAngle = Math.atan2(nextPlayerPos.y - fish.position.y, nextPlayerPos.x - fish.position.x);
                 fishVelX = Math.cos(chaseAngle) * fishType.chaseSpeed;
                 fishVelY = Math.sin(chaseAngle) * fishType.chaseSpeed;
             } else {
-                // Update the wander angle for smooth, continuous turning
                 fish.wanderAngle += (Math.random() - 0.5) * fishType.wandering.turnStrength;
                 
-                // Steer the fish's velocity towards its wander angle
                 const targetAngle = Math.atan2(fishVelY, fishVelX);
                 const newAngle = targetAngle + (fish.wanderAngle - targetAngle) * 0.1;
                 
@@ -144,13 +140,17 @@ const GameStage = ({ onGameOver, isGameOver, debugMode }) => {
     });
 
     const handlePointerMove = useCallback(event => { mousePosition.current = event.global; }, []);
+
     const handlePointerDown = useCallback((event) => {
+        // Dash on left-click
         if (event.data.button === 0 && dashInfo.current.cooldownTimer <= 0) {
             dashInfo.current.isDashing = true;
             dashInfo.current.dashTimer = gameConfig.player.dash.duration;
             dashInfo.current.cooldownTimer = gameConfig.player.dash.cooldown;
+            // Store the angle of the current velocity
+            dashInfo.current.dashAngle = Math.atan2(player.velocity.y, player.velocity.x);
         }
-    }, []);
+    }, [player.velocity.x, player.velocity.y]); // Depend on player velocity
 
     return (
         <Container width={gameConfig.width} height={gameConfig.height} eventMode={'static'} pointermove={handlePointerMove} pointerdown={handlePointerDown}>
