@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Typography, Button, Grid } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Button, Grid, Modal } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Navbar from '../../components/layout/navbar';
 import StudentSidebar from '../../components/layout/StudentSidebar';
@@ -8,33 +8,53 @@ import { useNavigate } from 'react-router-dom';
 const challenges = [
   {
     image: '/src/assets/reading-bg.png',
+    label: 'Reading',
+    to: null,
+    startImage: '/src/assets/start-reading.png',
   },
   {
     image: '/src/assets/stories-bg.png',
     to: '/student-story-game',
     label: 'Tell Me A Story',
+    startImage: '/src/assets/start-story.png',
   },
   {
-    image: '/src/assets/memorygame-bg.png',
+    image: '/src/assets/memory-bg.png',
     to: '/student-memory-game',
     label: '🧠 Match Game',
+    startImage: '/src/assets/start-memory.png',
   },
 ];
 
 const StudentChallenges = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
+
+  const handleOpen = (challenge) => {
+    setSelectedChallenge(challenge);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedChallenge(null);
+  };
+
+  const handleStart = () => {
+    if (selectedChallenge?.to) {
+      navigate(selectedChallenge.to);
+      handleClose();
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#ffffff' }}>
-      {/* Sidebar */}
       <StudentSidebar />
 
-      {/* Main Content */}
       <Box sx={{ flex: 1, ml: '100px' }}>
-        {/* Navbar */}
         <Navbar />
 
-        {/* Page Content */}
         <Box
           sx={{
             overflow: 'auto',
@@ -47,7 +67,6 @@ const StudentChallenges = () => {
             width: '100%',
           }}
         >
-          {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 5 }}>
             <Typography
               variant="h3"
@@ -73,7 +92,6 @@ const StudentChallenges = () => {
             </Typography>
           </Box>
 
-          {/* Challenge Cards */}
           <Grid container spacing={20} justifyContent="center">
             {challenges.map((challenge, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
@@ -100,25 +118,11 @@ const StudentChallenges = () => {
                     m: 1,
                   }}
                 >
-                  {/* Play Button */}
-                  <Box
-                    sx={{
-                      zIndex: 100,
-                      display: 'flex',
-                      justifyContent: 'right',
-                      pb: 1,
-                    }}
-                  >
+                  <Box sx={{ zIndex: 100, display: 'flex', justifyContent: 'right', pb: 1 }}>
                     <Button
                       variant="contained"
                       startIcon={<PlayArrowIcon />}
-                      onClick={() => {
-                        if (challenge.to) {
-                          navigate(challenge.to);
-                        } else {
-                          alert('This challenge is coming soon!');
-                        }
-                      }}
+                      onClick={() => handleOpen(challenge)}
                       sx={{
                         borderRadius: '50px',
                         backgroundColor: '#4CAF50',
@@ -140,6 +144,79 @@ const StudentChallenges = () => {
               </Grid>
             ))}
           </Grid>
+
+          {/* Modal Popup */}
+          <Modal
+            open={open}
+            onClose={handleClose}
+            closeAfterTransition
+            BackdropProps={{
+              timeout: 300,
+              sx: { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+            }}
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 700,
+                height: 500,
+                outline: 'none',
+                borderRadius: 4,
+                overflow: 'hidden',
+                animation: 'popupFade 0.4s ease-out forwards',
+                '@keyframes popupFade': {
+                  from: { opacity: 0, transform: 'scale(0.8) translate(-50%, -50%)' },
+                  to: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)' },
+                },
+              }}
+            >
+              {selectedChallenge && (
+                <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
+                  <img
+                    src={selectedChallenge.startImage}
+                    alt="Start Game"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      filter: selectedChallenge.to ? 'none' : 'grayscale(70%)',
+                      transition: 'filter 0.3s',
+                    }}
+                  />
+                  <Button
+                    onClick={handleStart}
+                    disabled={!selectedChallenge.to}
+                    sx={{
+                      position: 'absolute',
+                      bottom: 30,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      px: 6,
+                      py: 1.8,
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      borderRadius: '30px',
+                      backgroundColor: selectedChallenge.to ? '#ea5546' : '#ccc',
+                      color: selectedChallenge.to ? '#fff' : '#666',
+                      boxShadow: selectedChallenge.to ? '0px 4px 12px rgba(0,0,0,0.3)' : 'none',
+                      transition: 'all 0.1s ease',
+                      '&:hover': {
+                        backgroundColor: selectedChallenge.to ? '#d4493c' : '#ccc',
+                        transform: selectedChallenge.to
+                          ? 'translateX(-50%) scale(1.05)'
+                          : 'translateX(-50%)',
+                      },
+                    }}
+                  >
+                    {selectedChallenge.to ? 'Start' : 'Coming Soon'}
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </Modal>
         </Box>
       </Box>
     </Box>

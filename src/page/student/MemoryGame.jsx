@@ -58,10 +58,10 @@ export default function MemoryGame() {
 
   const handleChoice = (card) => {
     if (!disabled) {
-      if (card === choiceOne) return; // prevent double click on the same card
+      if (card === choiceOne) return;
       labelSounds[card.src]?.play();
       setPopupWord(card.word);
-      setTimeout(() => setPopupWord(null), 1200);
+      setTimeout(() => setPopupWord(null), 10000);
       choiceOne ? setChoiceTwo(card) : setChoiceOne(card);
     }
   };
@@ -122,54 +122,73 @@ export default function MemoryGame() {
   }, []);
 
   return (
-    <Box className="memory-container">
+    <Box
+      className="memory-container"
+      sx={{
+        minHeight: "100vh",
+        backgroundImage: `url(/src/assets/memorygame-bg.png)`,
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        padding: 4,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
       {!gameStarted ? (
-  <Box display="flex" flexDirection="column" alignItems="center" mt={5}>
-  <Typography
-    variant="h3"
-    mb={3}
-    style={{ fontWeight: "bold", color: "#3f51b5" }}
-  >
-    🎮 Enter Your Nickname
-  </Typography>
+        <Box display="flex" flexDirection="column" alignItems="center" mt={5}>
+          <Typography
+            variant="h3"
+            mb={3}
+            style={{ fontWeight: "bold", color: "#3f51b5" }}
+          >
+            🎮 Enter Your Nickname
+          </Typography>
 
-  <input
-    type="text"
-    placeholder="Enter nickname..."
-    value={nickname}
-    onChange={(e) => setNickname(e.target.value)}
-    style={{
-      padding: "20px",
-      fontSize: "28px",
-      borderRadius: "12px",
-      border: "2px solid #3f51b5",
-      marginBottom: "30px",
-      width: "350px",
-      textAlign: "center",
-    }}
-  />
+          <input
+            type="text"
+            placeholder="Enter nickname..."
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            style={{
+              padding: "20px",
+              fontSize: "28px",
+              borderRadius: "12px",
+              border: "2px solid #3f51b5",
+              marginBottom: "30px",
+              width: "350px",
+              textAlign: "center",
+            }}
+          />
 
-  <Button
-    variant="contained"
-    size="large"
-    style={{
-      fontSize: "20px",
-      padding: "12px 24px",
-      backgroundColor: "#4caf50",
-      color: "#fff",
-      fontWeight: "bold",
-    }}
-    onClick={() => {
-      if (nickname.trim()) setGameStarted(true);
-    }}
-  >
-    🚀 Start Game
-  </Button>
-</Box>
-
+          <Button
+            variant="contained"
+            size="large"
+            style={{
+              fontSize: "20px",
+              padding: "12px 24px",
+              backgroundColor: "#f06292",
+              color: "#fff",
+              fontWeight: "bold",
+            }}
+            onClick={() => {
+              if (nickname.trim()) setGameStarted(true);
+            }}
+          >
+            🚀 Start Game
+          </Button>
+        </Box>
       ) : (
         <>
-          <Box display="flex" justifyContent="space-between" width="100%" mb={1}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            width="100%"
+            maxWidth="1000px"
+            mb={2}
+          >
             <Button
               variant="contained"
               style={{
@@ -181,24 +200,23 @@ export default function MemoryGame() {
             >
               ⬅ EXIT
             </Button>
-            <Typography variant="h6" style={{ marginTop: "8px" }}>
+            <Typography variant="h6">
               👤 Player: <strong>{nickname}</strong>
             </Typography>
           </Box>
 
-          <Typography variant="h3" className="game-title">
+          <Typography variant="h2" className="game-title" gutterBottom>
             🌟 Memory Puzzle 🌙
           </Typography>
 
-          <Box display="flex" justifyContent="center" gap={2} mb={2}>
+          <Box display="flex" justifyContent="center" gap={5} mb={5}>
             <Button variant="contained" className="restart-button" onClick={shuffleCards}>
-              🔄 Restart Game
+              🔄 Restart
             </Button>
             <Button
               variant="outlined"
-              className="restart-button"
               onClick={toggleMusic}
-              style={{ backgroundColor: musicPlaying ? "#4caf50" : "#9e9e9e" }}
+              style={{ backgroundColor: musicPlaying ? "#4caf50" : "#9e9e9e", color: "#fff" }}
             >
               {musicPlaying ? "🔊 Music On" : "🔇 Music Off"}
             </Button>
@@ -231,7 +249,18 @@ export default function MemoryGame() {
             Matched Pairs: {matchedPairs} / {totalPairs}
           </Typography>
 
-          <Box className="card-grid">
+          <Box
+            className="card-grid"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+              gap: 2,
+              maxWidth: "500px",
+              margin: "20px auto",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             {cards.map((card) => {
               const isFlipped = card === choiceOne || card === choiceTwo || card.matched;
               return (
@@ -253,7 +282,6 @@ export default function MemoryGame() {
           </Box>
 
           <Typography className="turn-counter">Turns: {turns}</Typography>
-
           <div className="floating-mascot">🌙 You're doing great!</div>
         </>
       )}
