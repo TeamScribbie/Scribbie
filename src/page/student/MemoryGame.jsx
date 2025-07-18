@@ -61,7 +61,7 @@ export default function MemoryGame() {
       if (card === choiceOne) return;
       labelSounds[card.src]?.play();
       setPopupWord(card.word);
-      setTimeout(() => setPopupWord(null), 10000);
+      setTimeout(() => setPopupWord(null), 12000);
       choiceOne ? setChoiceTwo(card) : setChoiceOne(card);
     }
   };
@@ -189,20 +189,23 @@ export default function MemoryGame() {
             maxWidth="1000px"
             mb={2}
           >
-            <Button
-              variant="contained"
-              style={{
-                backgroundColor: "#607d8b",
-                color: "white",
-                fontWeight: "bold",
-              }}
-              onClick={() => navigate("/student-challenges")}
-            >
-              ⬅ EXIT
-            </Button>
-            <Typography variant="h6">
-              👤 Player: <strong>{nickname}</strong>
-            </Typography>
+<Button
+  variant="contained"
+  style={{
+    backgroundColor: "#607d8b",
+    color: "white",
+    fontWeight: "bold",
+    fontSize: "1.1rem",      
+    padding: "12px 24px",     
+    borderRadius: "8px",      
+  }}
+  onClick={() => navigate("/student-challenges")}
+>
+  ⬅ EXIT
+</Button>
+<Typography variant="h6" style={{ color: "white" }}>
+  👤 Player: <strong>{nickname}</strong>
+</Typography>
           </Box>
 
           <Typography variant="h2" className="game-title" gutterBottom>

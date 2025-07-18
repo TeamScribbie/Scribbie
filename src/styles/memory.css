@@ -199,3 +199,6 @@
   color: #ffffff; /* white text */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* optional: improves visibility */
 }
+.player-name {
+  color: white;
+}
