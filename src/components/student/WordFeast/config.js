@@ -1,6 +1,6 @@
 export const gameConfig = {
-    width: 800,
-    height: 600,
+    width: 1280,
+    height: 720,
     player: {
         initialSize: 'small',
         accel: 0.08,
@@ -11,7 +11,12 @@ export const gameConfig = {
         dash: {
             speed: 12,
             duration: 15,
-            cooldown: 120,
+            cooldown: 1.2,
+        },
+        boost: { 
+            speedMultiplier: 2.5,
+            duration: 20,      
+            cooldown: 90,     
         }
     },
     fishSpawning: {
@@ -19,30 +24,30 @@ export const gameConfig = {
         respawnCooldown: 60,
     },
     fishTypes: {
-        small: { 
+        small: {
             points: 10,
-            wandering: { 
-                speed: 1.2, 
-                turnStrength: 0.1 // How sharply it turns while wandering
-            } 
-        },
-        medium: { 
-            points: 25, 
-            chaseRadius: 150,
-            chaseSpeed: 1.5,
-            wandering: { 
-                speed: 0.8, 
-                turnStrength: 0.05 
+            wandering: {
+                speed: 1.2,
+                turnStrength: 0.1 
             }
         },
-        large: { 
-            points: 50, 
-            chaseRadius: 200, 
+        medium: {
+            points: 25,
+            chaseRadius: 150,
+            chaseSpeed: 1.5,
+            wandering: {
+                speed: 0.8,
+                turnStrength: 0.05
+            }
+        },
+        large: {
+            points: 50,
+            chaseRadius: 200,
             chaseSpeed: 2.5,
-            wandering: { 
-                speed: 0.6, 
+            wandering: {
+                speed: 0.6,
                 turnStrength: 0.03
-            } 
+            }
         },
     }
 };

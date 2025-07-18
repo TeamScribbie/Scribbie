@@ -13,7 +13,6 @@ const Fish = ({ position, size, velocity, status, debugMode }) => {
 
     const { color, scale } = config[size];
 
-    // Draw the main fish placeholder rectangle
     const drawFish = useCallback(g => {
         g.clear();
         g.beginFill(color);
@@ -21,7 +20,6 @@ const Fish = ({ position, size, velocity, status, debugMode }) => {
         g.endFill();
     }, [color, scale]);
 
-    // Draw the debug visuals (chase radius circle)
     const drawDebug = useCallback((g) => {
         g.clear();
         if (!debugMode) return;
@@ -40,20 +38,22 @@ const Fish = ({ position, size, velocity, status, debugMode }) => {
         stroke: 'black',
         strokeThickness: 2,
     });
+    
+    // Calculate speed if velocity is available
+    const speed = velocity ? Math.sqrt(velocity.x ** 2 + velocity.y ** 2) : 0;
+    const debugText = `${status}\nSpeed: ${speed.toFixed(2)}`;
 
     return (
         <Container x={position.x} y={position.y}>
-            {/* The placeholder for the fish */}
             <Graphics draw={drawFish} />
 
-            {/* Debug visuals that only show when debugMode is true */}
             {debugMode && (
                 <>
                     <Graphics draw={drawDebug} />
                     <Text
-                        text={status}
+                        text={debugText}
                         anchor={{ x: 0.5, y: 0 }}
-                        y={25 * scale} // Position text below the fish, adjusted for size
+                        y={25 * scale}
                         style={debugStyle}
                     />
                 </>
