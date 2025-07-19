@@ -11,6 +11,7 @@ import { useGameLogic } from './hooks/useGameLogic';
 import { usePhysics } from './hooks/usePhysics';
 import { gameConfig } from './config';
 import { sizeHierarchy } from './gameUtils';
+import IntroAudio from './game/audio/monster/Intro.ogg';
 
 const MONSTER_WIDTH = 120;
 const MONSTER_HEIGHT = 160;
@@ -23,13 +24,31 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
         monster,
         messages, setMessages,
         fishLogics, setFishLogics,
-        swallowedWords, setSwallowedWords, 
+        swallowedWords, setSwallowedWords,
     } = useGameLogic(gameData, width, height);
 
     const [eatTrigger, setEatTrigger] = useState(0);
-    const [vomitTrigger, setVomitTrigger] = useState(0); 
+    const [vomitTrigger, setVomitTrigger] = useState(0);
     const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
     const vomitCooldown = useRef(0);
+
+    // useEffect to log game data
+    useEffect(() => {
+        if (gameData) {
+            console.log("Game Data Loaded:", gameData);
+            if (gameData.questions) {
+                console.log("Questions:", gameData.questions);
+            } else {
+                console.log("No questions found in gameData.");
+            }
+            if (gameData.choices) {
+                console.log("Choices:", gameData.choices);
+            } else {
+                console.log("No choices found in gameData.");
+            }
+        }
+    }, [gameData]);
+
 
     const handleVomit = () => {
         if (swallowedWords.length > 0 && vomitCooldown.current <= 0) {
@@ -51,9 +70,43 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
         swallowedWords, setSwallowedWords,
         onVomit: handleVomit,
         playerState,
-        messages, // --- PASS MESSAGES TO PHYSICS ---
-        setMessages, // --- PASS SETTER TO PHYSICS ---
+        messages,
+        setMessages,
     });
+
+    useEffect(() => {
+        if (!isLoading && monster) {
+            const timer = setTimeout(() => {
+                const introSound = new Audio(IntroAudio);
+                introSound.play().catch(e => console.error("Error playing intro sound:", e));
+
+                // When the intro sound finishes, play the monster's question sound
+                introSound.onended = () => {
+                    if (monster.audioUrl) {
+                        const monsterSound = new Audio(monster.audioUrl);
+                        monsterSound.play().catch(e => console.error("Error playing monster sound:", e));
+                    }
+                };
+
+                setMessages(currentMessages => [
+                    ...currentMessages,
+                    {
+                        id: `monster-dialogue-${Date.now()}`,
+                        text: "I'm hungry. I need the word: !#%@ . ",
+                        position: {
+                            x: monster.position.x + MONSTER_WIDTH / 2,
+                            y: monster.position.y - MONSTER_HEIGHT / 2 - 60
+                        },
+                        life: 360 // Message lasts for 6 seconds (360 frames / 60fps)
+                    }
+                ]);
+
+            }, 2000); // 2-second delay before sequence starts
+
+            return () => clearTimeout(timer); // Cleanup on unmount
+        }
+    }, [isLoading, monster, setMessages]);
+
 
     const handleVomitComplete = useCallback(() => {
         if (swallowedWords.length === 0) return;
@@ -71,12 +124,12 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
                 x: player.position.x + (facing * -vomitDistance),
                 y: player.position.y,
             },
-            velocity: { 
+            velocity: {
                 x: facing * -5,
                 y: -1.5,
             }
         };
-        
+
         setCagedWords(current => [...current, newVomitedBubble]);
         setSwallowedWords(current => current.slice(0, -1));
 
@@ -102,7 +155,7 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
             return () => clearInterval(timer);
         }
     }, [vomitTrigger]);
-    
+
     const handlePointerMove = useCallback(event => {
         mousePosition.current = event.global;
     }, [mousePosition]);
@@ -119,9 +172,9 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
             {cagedWords.map(cw => <CagedWord key={cw.id} {...cw} />)}
             {fishLogics.map(logic => <Fish key={logic.id} {...logic.state} debugMode={debugMode} />)}
             {player && (
-                <Player 
-                    position={player.position} 
-                    size={player.size} 
+                <Player
+                    position={player.position}
+                    size={player.size}
                     velocity={player.velocity}
                     eatTrigger={eatTrigger}
                     vomitTrigger={vomitTrigger}
@@ -129,7 +182,7 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
                     onVomitComplete={handleVomitComplete}
                 />
             )}
-            
+
             <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24 })} x={10} y={10} />
             <Text text={`Sequence: ${swallowedText}`} style={new TextStyle({ fill: 'yellow', fontSize: 20 })} x={10} y={40} />
 
