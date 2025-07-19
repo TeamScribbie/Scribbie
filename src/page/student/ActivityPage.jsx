@@ -10,7 +10,7 @@ import ReadingGameComponent from '../../components/student/ReadingGameComponent'
 import FillBlanksGameComponent from '../../components/student/FillBlanksGameComponent';
 import Matching2GameComponent from '../../components/student/Matching2GameComponent';
 import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
-import WordFeastGame from '../../components/student/WordFeast/WordFeast';
+import WordFeastGame from '../../components/student/WordFeastGame';
 import FlipMatchingGame from '../../components/student/FlipMatchingGame';
 import QuizMcqGame from '../../components/student/QuizMcqGame'; // This import was added during the merge resolution
 

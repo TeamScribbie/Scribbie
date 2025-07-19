@@ -1,0 +1,213 @@
+// src/components/student/WordFeast/hooks/usePhysics.js
+import { useRef, useCallback, useEffect } from 'react';
+import { useTick } from '@pixi/react';
+import { gameConfig } from '../config';
+import { canEat, calculateDistance, sizeHierarchy } from '../gameUtils';
+import FishLogic from '../FishLogic';
+
+const MONSTER_WIDTH = 120;
+const MONSTER_HEIGHT = 160;
+const CAGE_WIDTH = 80;
+const CAGE_HEIGHT = 50;
+const turningFriction = 0.92;
+
+function isColliding(circle, radius, rect) {
+    if (!circle || !rect) return false;
+    const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+    const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+    const distanceX = circle.x - closestX;
+    const distanceY = circle.y - closestY;
+    return (distanceX * distanceX + distanceY * distanceY) < (radius * radius);
+}
+
+export const usePhysics = ({
+    player, setPlayer,
+    cagedWords, setCagedWords,
+    fishLogics, setFishLogics,
+    monster,
+    score, // <-- FIX: Accept score as a prop
+    setScore,
+    onGameOver,
+    isGameOver,
+    isPaused,
+    width,
+    height,
+    onPlayerEat,
+    isPlayerTurning,
+}) => {
+    const mousePosition = useRef({ x: width / 2, y: height / 2 });
+    const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
+    const lastVelocity = useRef({ x: 1, y: 0 });
+    const spacebarDown = useRef(false);
+    const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
+
+    const spawnFish = useCallback(() => {
+        const side = Math.floor(Math.random() * 2);
+        let position, velocity;
+        switch (side) {
+            case 0: position = { x: width + 30, y: Math.random() * height }; velocity = { x: -1, y: 0 }; break;
+            case 1: position = { x: -30, y: Math.random() * height }; velocity = { x: 1, y: 0 }; break;
+        }
+        const rand = Math.random();
+        const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
+
+        const newFishData = {
+            id: Date.now() * Math.random(),
+            size,
+            points: gameConfig.fishTypes[size].points,
+            position,
+            velocity,
+        };
+        setFishLogics(logics => [...logics, new FishLogic(newFishData, width, height)]);
+    }, [width, height, setFishLogics]);
+    
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.code === 'Space' && !spacebarDown.current && boostInfo.current.cooldownTimer <= 0) {
+                event.preventDefault();
+                spacebarDown.current = true;
+                boostInfo.current.isBoosting = true;
+                boostInfo.current.boostTimer = gameConfig.player.boost.duration;
+                boostInfo.current.cooldownTimer = gameConfig.player.boost.cooldown;
+            }
+        };
+        const handleKeyUp = (event) => { if (event.code === 'Space') spacebarDown.current = false; };
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
+
+    useTick(delta => {
+        if (isGameOver || isPaused || !player) return;
+
+        // --- THIS IS THE FIX ---
+        spawnCooldown.current -= delta; // Decrement the spawn cooldown each frame
+
+        if (fishLogics && fishLogics.length < gameConfig.fishSpawning.targetPopulation && spawnCooldown.current <= 0) {
+            spawnFish();
+            spawnCooldown.current = gameConfig.fishSpawning.respawnCooldown;
+        }
+        
+        if (fishLogics) {
+            setFishLogics(logics => logics.map(l => {
+                l.update(delta);
+                return l;
+            }));
+        }
+
+        boostInfo.current.cooldownTimer -= delta;
+        boostInfo.current.boostTimer -= delta;
+        if (boostInfo.current.boostTimer <= 0) boostInfo.current.isBoosting = false;
+
+        let { x: velX, y: velY } = player.velocity;
+        const originalVelX = velX;
+        const originalVelY = velY;
+
+        if (boostInfo.current.isBoosting) {
+            const boostSpeed = gameConfig.player.maxSpeed * gameConfig.player.boost.speedMultiplier;
+            const angle = Math.atan2(lastVelocity.current.y, lastVelocity.current.x);
+            velX = Math.cos(angle) * boostSpeed;
+            velY = Math.sin(angle) * boostSpeed;
+        } else {
+            const dx = mousePosition.current.x - player.position.x;
+            const dy = mousePosition.current.y - player.position.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 1) {
+                const angle = Math.atan2(dy, dx);
+                velX += Math.cos(angle) * gameConfig.player.accel * delta;
+                velY += Math.sin(angle) * gameConfig.player.accel * delta;
+            }
+
+            const friction = isPlayerTurning ? turningFriction : gameConfig.player.friction;
+            velX *= friction;
+            velY *= friction;
+            
+            const speed = Math.sqrt(velX * velX + velY * velY);
+            if (speed > gameConfig.player.maxSpeed) {
+                velX = (velX / speed) * gameConfig.player.maxSpeed;
+                velY = (velY / speed) * gameConfig.player.maxSpeed;
+            }
+            if (speed > 0.1) lastVelocity.current = { x: velX, y: velY };
+        }
+
+        let nextPlayerPos = {
+            x: Math.max(0, Math.min(width, player.position.x + velX * delta)),
+            y: Math.max(0, Math.min(height, player.position.y + velY * delta)),
+        };
+        const playerRadius = sizeHierarchy[player.size] * 10;
+        let playerBlocked = false;
+        
+        let newCages = cagedWords.map(c => ({...c, velocity: {...c.velocity}}));
+
+        if (monster) {
+            const monsterBounds = { x: monster.position.x - MONSTER_WIDTH/2, y: monster.position.y - MONSTER_HEIGHT/2, width: MONSTER_WIDTH, height: MONSTER_HEIGHT };
+            if (isColliding(nextPlayerPos, playerRadius, monsterBounds)) {
+                if (boostInfo.current.isBoosting) { velX *= -1.5; velY *= -1.5; boostInfo.current.isBoosting = false; }
+                playerBlocked = true;
+            }
+        }
+
+        newCages.forEach(cage => {
+            const cageBounds = { x: cage.position.x - CAGE_WIDTH/2, y: cage.position.y - CAGE_HEIGHT/2, width: CAGE_WIDTH, height: CAGE_HEIGHT };
+            if (isColliding(nextPlayerPos, playerRadius, cageBounds)) {
+                if (boostInfo.current.isBoosting) {
+                    if (cage.audioUrl) {
+                        const impactSound = new Audio(cage.audioUrl);
+                        impactSound.play().catch(e => console.error("Error playing sound:", e));
+                    }
+                    cage.velocity.x += originalVelX * 0.3;
+                    cage.velocity.y += originalVelY * 0.3;
+                    velX *= -1.5;
+                    velY *= -1.5;
+                    boostInfo.current.isBoosting = false;
+                }
+                playerBlocked = true;
+            }
+        });
+
+        newCages.forEach(cage => {
+            cage.position.x += cage.velocity.x * delta;
+            cage.position.y += cage.velocity.y * delta;
+            cage.velocity.x *= 0.95;
+            cage.velocity.y *= 0.95;
+
+            const halfCageW = CAGE_WIDTH / 2;
+            const halfCageH = CAGE_HEIGHT / 2;
+            if (cage.position.x < halfCageW) { cage.position.x = halfCageW; cage.velocity.x *= -0.7; }
+            else if (cage.position.x > width - halfCageW) { cage.position.x = width - halfCageW; cage.velocity.x *= -0.7; }
+            if (cage.position.y < halfCageH) { cage.position.y = halfCageH; cage.velocity.y *= -0.7; }
+            else if (cage.position.y > height - halfCageH) { cage.position.y = height - halfCageH; cage.velocity.y *= -0.7; }
+        });
+        
+        if (playerBlocked) nextPlayerPos = { ...player.position };
+        
+        const eatenFishIds = new Set();
+        if (fishLogics) {
+            fishLogics.forEach(logic => {
+                const distance = calculateDistance(nextPlayerPos, logic.state.position);
+                if (distance < (playerRadius + 15)) {
+                    if (canEat(player.size, logic.state.size)) {
+                        setScore(s => s + logic.state.points);
+                        eatenFishIds.add(logic.id);
+                        if (onPlayerEat) onPlayerEat();
+                    } else if (canEat(logic.state.size, player.size)) {
+                        // <-- FIX: Use the 'score' variable from props instead of 'player.score'
+                        onGameOver({ score: score, status: 'FAILED' });
+                    }
+                }
+            });
+        }
+
+        if (eatenFishIds.size > 0) {
+            setFishLogics(logics => logics.filter(l => !eatenFishIds.has(l.id)));
+        }
+        
+        setCagedWords(newCages);
+        setPlayer(p => ({ ...p, position: nextPlayerPos, velocity: { x: velX, y: velY } }));
+    });
+    
+    return { mousePosition, boostInfo };
+};
