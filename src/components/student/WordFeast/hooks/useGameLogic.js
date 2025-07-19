@@ -1,5 +1,12 @@
-// src/components/student/WordFeast/hooks/useGameLogic.js
 import { useState, useEffect } from 'react';
+import { Assets } from 'pixi.js';
+
+import playerSpriteImage from '../game/spritesheets/Player.png';
+import Lvl1CageImg from '../game/icons/Lvl1Cage.png';
+import Lvl2CageImg from '../game/icons/Lvl2Cage.png';
+import Lvl3CageImg from '../game/icons/Lvl3Cage.png';
+import BubbleImg from '../game/icons/bubble.png';
+import { calculateDistance } from '../gameUtils';
 
 const SAVE_GAME_KEY = 'wordfeast-save-data';
 
@@ -7,106 +14,133 @@ export const useGameLogic = (gameData, width, height) => {
     const [isLoading, setIsLoading] = useState(true);
 
     const loadInitialState = () => {
-        try {
-            const savedState = localStorage.getItem(SAVE_GAME_KEY);
-            if (!savedState) return null;
-            const parsed = JSON.parse(savedState);
-            
-            if (parsed.cagedWords) {
-                parsed.cagedWords = parsed.cagedWords.map(cage => ({
-                    ...cage,
-                    velocity: cage.velocity || { x: 0, y: 0 }
-                }));
-            }
-            if(parsed.player?.position) {
-                 parsed.player.position = {
-                    x: Math.min(width, Math.max(0, parsed.player.position.x)),
-                    y: Math.min(height, Math.max(0, parsed.player.position.y))
-                };
-            }
-            return parsed;
-        } catch (error) {
-            console.error("Failed to load saved game state:", error);
-            localStorage.removeItem(SAVE_GAME_KEY);
-            return null;
-        }
+        localStorage.removeItem(SAVE_GAME_KEY);
+        return null;
     };
 
     const initialState = loadInitialState();
-    
-    const [score, setScore] = useState(initialState?.score ?? 0);
-    const [player, setPlayer] = useState(initialState?.player ?? {
-        position: { x: width / 2, y: height / 2 },
+
+    const MONSTER_HEIGHT = 160;
+    const PLAYER_SPAWN_BUFFER = 50;
+    const defaultPlayerPosition = {
+        x: width / 2,
+        y: height / 2 + (MONSTER_HEIGHT / 2) + PLAYER_SPAWN_BUFFER
+    };
+
+    const [score, setScore] = useState(0);
+    const [player, setPlayer] = useState({
+        position: defaultPlayerPosition,
         velocity: { x: 0, y: 0 },
         size: 'small',
     });
-    const [cagedWords, setCagedWords] = useState(initialState?.cagedWords ?? []);
-    const [monster, setMonster] = useState(initialState?.monster ?? null);
+    const [cagedWords, setCagedWords] = useState([]);
+    const [monster, setMonster] = useState(null);
     const [messages, setMessages] = useState([]);
-    // --- THIS IS THE FIX: Ensure fishLogics is part of the state managed by this hook ---
-    const [fishLogics, setFishLogics] = useState([]); 
+    const [fishLogics, setFishLogics] = useState([]);
 
-    // Effect to set up the level from gameData
     useEffect(() => {
         const setupAndPreload = async () => {
             if (!gameData?.question || !gameData?.choices) {
                 setIsLoading(false);
                 return;
             }
-            if (!initialState) {
-                setMonster({
+
+            try {
+                await Assets.load([
+                    playerSpriteImage,
+                    Lvl1CageImg,
+                    Lvl2CageImg,
+                    Lvl3CageImg,
+                    BubbleImg
+                ]);
+
+                const activeMonster = {
                     word: gameData.question.word,
                     audioUrl: gameData.question.soundSrc,
                     position: { x: width / 2, y: height / 2 },
+                };
+                setMonster(activeMonster);
+
+                const correctChoices = gameData.choices.filter(c => c.isCorrect);
+                const incorrectChoices = gameData.choices.filter(c => !c.isCorrect);
+                let cagesToCreate = [];
+
+                if (correctChoices.length > 0) {
+                    const lvl3ChoiceIndex = Math.floor(Math.random() * correctChoices.length);
+                    const lvl3Choice = correctChoices.splice(lvl3ChoiceIndex, 1)[0];
+                    cagesToCreate.push({ ...lvl3Choice, strength: 3 });
+                }
+
+                const otherChoices = [...correctChoices, ...incorrectChoices];
+                otherChoices.forEach(choice => {
+                    cagesToCreate.push({ ...choice, strength: Math.ceil(Math.random() * 2) });
                 });
 
-                const newCagedWords = gameData.choices.map(choice => {
-                    const angle = Math.random() * Math.PI * 2;
-                    const distance = 150 + Math.random() * (width / 2 - 200);
-                    return {
+                cagesToCreate.sort(() => Math.random() - 0.5);
+
+                const activeCagedWords = [];
+                const margin = 100;
+                const minDistance = 150;
+                const monsterRadius = 150;
+
+                cagesToCreate.forEach(choice => {
+                    let position;
+                    let isValidPosition = false;
+                    let attempts = 0;
+
+                    while (!isValidPosition && attempts < 100) {
+                        const x = margin + Math.random() * (width - margin * 2);
+                        const y = margin + Math.random() * (height - margin * 2);
+                        position = { x, y };
+
+                        const isFarFromMonster = calculateDistance(position, activeMonster.position) > monsterRadius;
+                        
+                        const isFarFromOtherCages = activeCagedWords.every(
+                            (cw) => calculateDistance(position, cw.position) > minDistance
+                        );
+
+                        if (isFarFromMonster && isFarFromOtherCages) {
+                            isValidPosition = true;
+                        }
+                        attempts++;
+                    }
+                    
+                    activeCagedWords.push({
                         id: choice.id,
                         word: choice.word,
                         isCorrect: choice.isCorrect,
                         audioUrl: choice.soundSrc,
-                        strength: choice.strength || 1,
-                        position: {
-                            x: width / 2 + Math.cos(angle) * distance,
-                            y: height / 2 + Math.sin(angle) * distance,
-                        },
+                        strength: choice.strength,
+                        isBroken: false,
+                        position: position,
                         velocity: { x: 0, y: 0 },
-                    };
+                    });
                 });
-                setCagedWords(newCagedWords);
-            }
-            try {
-                const allGameObjects = [monster, ...cagedWords];
+                setCagedWords(activeCagedWords);
+
+                const allGameObjects = [activeMonster, ...activeCagedWords];
                 const audioUrls = allGameObjects.map(obj => obj?.audioUrl).filter(Boolean);
                 const preloadPromises = audioUrls.map(url =>
                     new Promise((resolve) => {
                         const audio = new Audio(url);
                         audio.addEventListener('canplaythrough', () => resolve());
-                        audio.addEventListener('error', () => resolve()); 
+                        audio.addEventListener('error', () => resolve());
                         setTimeout(() => resolve(), 5000);
                     })
                 );
                 await Promise.all(preloadPromises);
+
             } catch (error) {
-                console.error("Error preloading assets:", error);
+                console.error("Failed to preload assets:", error);
             } finally {
-                 setIsLoading(false);
+                setIsLoading(false);
             }
         };
 
         setupAndPreload();
-    }, [gameData, width, height]);
-
-    // Effect to save game progress
-    useEffect(() => {
-        if (!isLoading && monster) {
-            const gameState = { score, player, cagedWords, monster };
-            localStorage.setItem(SAVE_GAME_KEY, JSON.stringify(gameState));
-        }
-    }, [score, player, cagedWords, monster, isLoading]);
+    // --- FIX: Removed width and height from the dependency array ---
+    // This effect will now only run once when the gameData is first received.
+    }, [gameData]);
 
     return {
         isLoading,
@@ -115,6 +149,6 @@ export const useGameLogic = (gameData, width, height) => {
         cagedWords, setCagedWords,
         monster, setMonster,
         messages, setMessages,
-        fishLogics, setFishLogics, // --- FIX: Export the state and setter
+        fishLogics, setFishLogics,
     };
 };

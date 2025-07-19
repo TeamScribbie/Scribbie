@@ -1,38 +1,42 @@
-import React, { useCallback } from 'react';
-import { Container, Graphics, Text } from '@pixi/react';
-import { TextStyle } from 'pixi.js';
+import React from 'react';
+import { Container, Sprite, Text } from '@pixi/react';
+import { TextStyle, Texture } from 'pixi.js';
 
-const CagedWord = ({ position, word, strength, audioUrl }) => {
-    // Cage colors based on strength
-    const cageColors = {
-        1: 0xcd7f32, // Bronze for 'small'
-        2: 0xc0c0c0, // Silver for 'medium'
-        3: 0xffd700, // Gold for 'large'
-    };
+import Lvl1CageImg from './game/icons/Lvl1Cage.png';
+import Lvl2CageImg from './game/icons/Lvl2Cage.png';
+import Lvl3CageImg from './game/icons/Lvl3Cage.png';
+import BubbleImg from './game/icons/bubble.png';
 
-    const drawCage = useCallback(g => {
-        const cageColor = cageColors[strength] || cageColors[1];
-        g.clear();
-        g.lineStyle(6, cageColor, 1);
-        g.drawRect(-40, -25, 80, 50); // Outer box
-        g.moveTo(-20, -25).lineTo(-20, 25); // Vertical bar
-        g.moveTo(20, -25).lineTo(20, 25);  // Vertical bar
-    }, [strength]);
+const cageTextures = {
+    1: Texture.from(Lvl1CageImg),
+    2: Texture.from(Lvl2CageImg),
+    3: Texture.from(Lvl3CageImg),
+};
+const bubbleTexture = Texture.from(BubbleImg);
+
+const CagedWord = ({ position, word, strength, isBroken }) => {
+    
+    const displayTexture = isBroken ? bubbleTexture : cageTextures[strength];
 
     const textStyle = new TextStyle({
-        fill: 'white',
-        fontSize: 24,
+        fill: isBroken ? 'black' : 'white',
+        fontSize: 20,
         fontFamily: 'Arial',
-        stroke: 'black',
+        fontWeight: 'bold',
+        stroke: isBroken ? 'transparent' : 'black',
         strokeThickness: 4,
     });
 
     return (
         <Container x={position.x} y={position.y}>
-            <Graphics draw={drawCage} />
+            <Sprite
+                texture={displayTexture}
+                anchor={0.5}
+                scale={0.15} // --- FIX: Changed scale to make sprites smaller ---
+            />
             <Text
                 text={word}
-                anchor={{ x: 0.5, y: 0.5 }}
+                anchor={0.5}
                 style={textStyle}
             />
         </Container>

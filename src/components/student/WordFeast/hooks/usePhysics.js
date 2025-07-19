@@ -20,12 +20,23 @@ function isColliding(circle, radius, rect) {
     return (distanceX * distanceX + distanceY * distanceY) < (radius * radius);
 }
 
+// AABB collision check for two rectangles
+function isRectColliding(rect1, rect2) {
+    if (!rect1 || !rect2) return false;
+    return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+    );
+}
+
 export const usePhysics = ({
     player, setPlayer,
     cagedWords, setCagedWords,
     fishLogics, setFishLogics,
     monster,
-    score, // <-- FIX: Accept score as a prop
+    score,
     setScore,
     onGameOver,
     isGameOver,
@@ -42,12 +53,22 @@ export const usePhysics = ({
     const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
 
     const spawnFish = useCallback(() => {
-        const side = Math.floor(Math.random() * 2);
         let position, velocity;
-        switch (side) {
-            case 0: position = { x: width + 30, y: Math.random() * height }; velocity = { x: -1, y: 0 }; break;
-            case 1: position = { x: -30, y: Math.random() * height }; velocity = { x: 1, y: 0 }; break;
-        }
+        const monsterBounds = monster ? {
+            x: monster.position.x - MONSTER_WIDTH / 2,
+            y: monster.position.y - MONSTER_HEIGHT / 2,
+            width: MONSTER_WIDTH,
+            height: MONSTER_HEIGHT
+        } : null;
+
+        do {
+            const side = Math.floor(Math.random() * 2);
+            switch (side) {
+                case 0: position = { x: width + 30, y: Math.random() * height }; velocity = { x: -1, y: 0 }; break;
+                case 1: position = { x: -30, y: Math.random() * height }; velocity = { x: 1, y: 0 }; break;
+            }
+        } while (monsterBounds && (position.x > monsterBounds.x && position.x < monsterBounds.x + monsterBounds.width && position.y > monsterBounds.y && position.y < monsterBounds.y + monsterBounds.height));
+        
         const rand = Math.random();
         const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
 
@@ -59,7 +80,7 @@ export const usePhysics = ({
             velocity,
         };
         setFishLogics(logics => [...logics, new FishLogic(newFishData, width, height)]);
-    }, [width, height, setFishLogics]);
+    }, [width, height, setFishLogics, monster]);
     
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -83,8 +104,7 @@ export const usePhysics = ({
     useTick(delta => {
         if (isGameOver || isPaused || !player) return;
 
-        // --- THIS IS THE FIX ---
-        spawnCooldown.current -= delta; // Decrement the spawn cooldown each frame
+        spawnCooldown.current -= delta;
 
         if (fishLogics && fishLogics.length < gameConfig.fishSpawning.targetPopulation && spawnCooldown.current <= 0) {
             spawnFish();
@@ -141,9 +161,9 @@ export const usePhysics = ({
         let playerBlocked = false;
         
         let newCages = cagedWords.map(c => ({...c, velocity: {...c.velocity}}));
+        const monsterBounds = monster ? { x: monster.position.x - MONSTER_WIDTH/2, y: monster.position.y - MONSTER_HEIGHT/2, width: MONSTER_WIDTH, height: MONSTER_HEIGHT } : null;
 
         if (monster) {
-            const monsterBounds = { x: monster.position.x - MONSTER_WIDTH/2, y: monster.position.y - MONSTER_HEIGHT/2, width: MONSTER_WIDTH, height: MONSTER_HEIGHT };
             if (isColliding(nextPlayerPos, playerRadius, monsterBounds)) {
                 if (boostInfo.current.isBoosting) { velX *= -1.5; velY *= -1.5; boostInfo.current.isBoosting = false; }
                 playerBlocked = true;
@@ -152,6 +172,7 @@ export const usePhysics = ({
 
         newCages.forEach(cage => {
             const cageBounds = { x: cage.position.x - CAGE_WIDTH/2, y: cage.position.y - CAGE_HEIGHT/2, width: CAGE_WIDTH, height: CAGE_HEIGHT };
+            
             if (isColliding(nextPlayerPos, playerRadius, cageBounds)) {
                 if (boostInfo.current.isBoosting) {
                     if (cage.audioUrl) {
@@ -165,6 +186,26 @@ export const usePhysics = ({
                     boostInfo.current.isBoosting = false;
                 }
                 playerBlocked = true;
+            }
+
+            // --- THIS IS THE FIX: Monster-Cage collision with more noticeable recoil ---
+            if (monsterBounds && isRectColliding(cageBounds, monsterBounds)) {
+                const dx = cage.position.x - monster.position.x;
+                const dy = cage.position.y - monster.position.y;
+                const distance = Math.sqrt(dx*dx + dy*dy) || 1;
+                
+                const pushX = dx / distance;
+                const pushY = dy / distance;
+
+                const pushStrength = 2;
+                const recoilDampening = -0.8;
+
+                cage.velocity.x = (cage.velocity.x * recoilDampening) + (pushX * pushStrength);
+                cage.velocity.y = (cage.velocity.y * recoilDampening) + (pushY * pushStrength);
+
+                const minOverlap = 1.0;
+                cage.position.x += pushX * minOverlap;
+                cage.position.y += pushY * minOverlap;
             }
         });
 
@@ -194,7 +235,6 @@ export const usePhysics = ({
                         eatenFishIds.add(logic.id);
                         if (onPlayerEat) onPlayerEat();
                     } else if (canEat(logic.state.size, player.size)) {
-                        // <-- FIX: Use the 'score' variable from props instead of 'player.score'
                         onGameOver({ score: score, status: 'FAILED' });
                     }
                 }

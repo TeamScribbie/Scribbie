@@ -20,7 +20,6 @@ function useInterval(callback, delay) {
     }, [delay]);
 }
 
-// --- THIS IS THE FIX: Adjusted x, y, width, and height for all frames ---
 const spritesheetLayout = {
     frames: {
         'eat_0': { frame: { x: 113, y: 3, w: 274, h: 142 } },
@@ -103,17 +102,15 @@ const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
 
         if (!velocity) return;
 
-        // Determine intended direction
-        let intendedDirection = facingDirection.current;
-        if (velocity.x < -0.2) intendedDirection = 1; // Left
-        else if (velocity.x > 0.2) intendedDirection = -1; // Right
+        const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
 
-        // If intent and facing direction don't match, start a turn.
-        if (intendedDirection !== facingDirection.current) {
+        let intendedDirection = facingDirection.current;
+        if (velocity.x < -0.4) intendedDirection = 1; // Left
+        else if (velocity.x > 0.4) intendedDirection = -1; // Right
+
+        if (intendedDirection !== facingDirection.current && speed > 0.5) {
             setAnimationName('turn');
         } else {
-            // Otherwise, set swim or idle based on speed.
-            const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
             setAnimationName(speed > 0.5 ? 'swim' : 'idle');
         }
     }, [velocity, animationName, onStateChange]);
@@ -149,8 +146,8 @@ const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
     if (!textures) {
         return null;
     }
-
-    const scale = { small: 0.6, medium: 0.9, large: 1.2 }[size];
+    
+    const scale = { small: 0.15, medium: 0.3, large: 0.45 }[size];
     const isLooped = animationName === 'idle' || animationName === 'swim';
 
     return (
