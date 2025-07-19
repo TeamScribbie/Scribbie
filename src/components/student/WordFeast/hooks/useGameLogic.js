@@ -46,6 +46,7 @@ export const useGameLogic = (gameData, width, height) => {
                 setIsLoading(false);
                 return;
             }
+            console.log("useGameLogic - Received gameData:", gameData); 
 
             try {
                 await Assets.load([
@@ -62,6 +63,7 @@ export const useGameLogic = (gameData, width, height) => {
                     position: { x: width / 2, y: height / 2 },
                 };
                 setMonster(activeMonster);
+                console.log("useGameLogic - Created Monster:", activeMonster);
 
                 // --- MODIFIED: Simplified cage assignment logic ---
                 let choices = [...gameData.choices];
@@ -118,6 +120,7 @@ export const useGameLogic = (gameData, width, height) => {
                     });
                 });
                 setCagedWords(activeCagedWords);
+                console.log("useGameLogic - Created Caged Words:", activeCagedWords);
 
                 const allGameObjects = [activeMonster, ...activeCagedWords];
                 const audioUrls = allGameObjects.map(obj => obj?.audioUrl).filter(Boolean);

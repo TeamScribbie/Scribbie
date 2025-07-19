@@ -16,12 +16,12 @@ const WordFeastGame = ({ questions = [], onGameComplete = () => {} }) => {
         const mainQuestion = questions[0];
 
         // Construct the final gameData object
-        return {
+        const data = {
             question: {
                 word: mainQuestion.questionText,
                 // Construct the full URL for the audio file
-                soundSrc: mainQuestion.audioPath 
-                    ? `${MEDIA_BASE_URL}${mainQuestion.audioPath.replace(/^\/+/, '')}` 
+                soundSrc: mainQuestion.questionSoundUrl
+                    ? `${MEDIA_BASE_URL}${mainQuestion.questionSoundUrl.replace(/^\/+/, '')}`
                     : null,
             },
             choices: mainQuestion.choices.map(choice => ({
@@ -30,11 +30,13 @@ const WordFeastGame = ({ questions = [], onGameComplete = () => {} }) => {
                 isCorrect: choice.isCorrect,
                 strength: choice.strength || 1, // Default strength to 1 if not provided
                 // Construct the full URL for the audio file
-                soundSrc: choice.audioPath 
-                    ? `${MEDIA_BASE_URL}${choice.audioPath.replace(/^\/+/, '')}` 
+                soundSrc: choice.audioPath
+                    ? `${MEDIA_BASE_URL}${choice.audioPath.replace(/^\/+/, '')}`
                     : null,
             })),
         };
+        console.log("WordFeastGame - Transformed gameData:", data);
+        return data;
     }, [questions]);
 
     // If gameData hasn't been processed yet, we can show a loading or empty state.

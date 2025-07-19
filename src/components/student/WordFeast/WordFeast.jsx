@@ -19,13 +19,14 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     // --- REMOVED: Resizing logic is no longer needed ---
 
     useEffect(() => {
+        console.log("WordFeast component received gameData:", gameData);
         document.body.style.margin = '0';
         document.body.style.overflow = 'hidden';
         document.body.style.backgroundColor = '#1a1a1a';
         return () => {
             document.body.style.cssText = '';
         };
-    }, []);
+    }, [gameData]);
 
     useEffect(() => {
         const keysPressed = new Set();
