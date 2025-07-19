@@ -15,63 +15,37 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     const [gameOver, setGameOver] = useState(false);
     const [key, setKey] = useState(Date.now());
     const [debugMode, setDebugMode] = useState(false);
-    const [gameSize, setGameSize] = useState({ width: gameConfig.width, height: gameConfig.height });
-    const gameContainerRef = useRef(null);
 
-    // Effect for resizing and other logic
+    // --- REMOVED: Resizing logic is no longer needed ---
+
     useEffect(() => {
-        const handleResize = () => {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const ratio = gameConfig.width / gameConfig.height;
-            let newWidth = screenWidth;
-            let newHeight = newWidth / ratio;
-
-            if (newHeight > screenHeight) {
-                newHeight = screenHeight;
-                newWidth = newHeight * ratio;
-            }
-            setGameSize({ width: newWidth, height: newHeight });
-        };
         document.body.style.margin = '0';
         document.body.style.overflow = 'hidden';
         document.body.style.backgroundColor = '#1a1a1a';
-        window.addEventListener('resize', handleResize);
-        handleResize();
         return () => {
-            window.removeEventListener('resize', handleResize);
             document.body.style.cssText = '';
         };
     }, []);
 
-    // This effect now listens for the 'd', 'b', and 'g' keys to be held down
     useEffect(() => {
         const keysPressed = new Set();
-
         const handleKeyDown = (event) => {
             keysPressed.add(event.key.toLowerCase());
-
-            // Check if all three required keys are in the set
             if (keysPressed.has('d') && keysPressed.has('b') && keysPressed.has('g')) {
-                // Clear the set to prevent this from firing again until the keys are released and re-pressed
                 keysPressed.clear();
                 setDebugMode(prevMode => !prevMode);
             }
         };
-
         const handleKeyUp = (event) => {
             keysPressed.delete(event.key.toLowerCase());
         };
-
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
-
-        // Cleanup: remove the event listeners when the component unmounts
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, []); // Empty dependency array means this effect runs only once
+    }, []);
 
     const handleRestart = () => {
         setGameOver(false);
@@ -88,10 +62,13 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
         justifyContent: 'center', alignItems: 'center', position: 'relative',
     };
 
+    // --- MODIFIED: Wrapper now uses fixed size from config ---
     const gameWrapperStyle = {
-        width: gameSize.width,
-        height: gameSize.height,
-        cursor: 'none'
+        width: gameConfig.width,
+        height: gameConfig.height,
+        cursor: 'none',
+        // This will scale the game to fit the screen, centered via flexbox
+        transform: `scale(min(calc(100vw / ${gameConfig.width}), calc(100vh / ${gameConfig.height})))`,
     };
 
     const overlayStyle = {
@@ -102,13 +79,15 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
 
     return (
         <div style={containerStyle}>
-            <div ref={gameContainerRef} style={gameWrapperStyle}>
-                <Stage width={gameSize.width} height={gameSize.height}>
-                    <Background width={gameSize.width} height={gameSize.height} color={0x0b1d3a} />
+            {/* --- MODIFIED: The wrapper div handles the scaling --- */}
+            <div style={gameWrapperStyle}>
+                {/* --- MODIFIED: Stage now has a fixed size --- */}
+                <Stage width={gameConfig.width} height={gameConfig.height}>
+                    <Background width={gameConfig.width} height={gameConfig.height} color={0x0b1d3a} />
                     <GameStage
                         key={key}
-                        width={gameSize.width}
-                        height={gameSize.height}
+                        width={gameConfig.width}
+                        height={gameConfig.height}
                         onGameOver={handleGameOver}
                         isGameOver={gameOver}
                         debugMode={debugMode}

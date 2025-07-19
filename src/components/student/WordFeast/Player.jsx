@@ -77,11 +77,13 @@ const spritesheetLayout = {
     },
 };
 
-const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
+spritesheetLayout.animations.vomit = [...spritesheetLayout.animations.eat].reverse();
+
+const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete }) => {
     const [textures, setTextures] = useState(null);
     const [animationName, setAnimationName] = useState('idle');
     const spriteRef = useRef(null);
-    const facingDirection = useRef(1); // 1 for left, -1 for right
+    const facingDirection = useRef(1);
 
     const sheet = useMemo(() => {
         const baseTexture = PIXI.BaseTexture.from(playerSpriteImage);
@@ -94,10 +96,9 @@ const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
         });
     }, [sheet]);
 
-    // This is our reliable state machine logic
     useEffect(() => {
-        onStateChange(animationName); // Report current animation state
-        const isBusy = animationName === 'turn' || animationName === 'eat';
+        onStateChange({ name: animationName, facing: facingDirection.current });
+        const isBusy = animationName === 'turn' || animationName === 'eat' || animationName === 'vomit';
         if (isBusy) return;
 
         if (!velocity) return;
@@ -105,8 +106,8 @@ const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
         const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
 
         let intendedDirection = facingDirection.current;
-        if (velocity.x < -0.4) intendedDirection = 1; // Left
-        else if (velocity.x > 0.4) intendedDirection = -1; // Right
+        if (velocity.x < -0.4) intendedDirection = 1;
+        else if (velocity.x > 0.4) intendedDirection = -1;
 
         if (intendedDirection !== facingDirection.current && speed > 0.5) {
             setAnimationName('turn');
@@ -115,21 +116,24 @@ const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
         }
     }, [velocity, animationName, onStateChange]);
 
-    // Effect for the eat trigger, which has top priority
     useEffect(() => {
         if (eatTrigger > 0) {
             setAnimationName('eat');
         }
     }, [eatTrigger]);
+
+    useEffect(() => {
+        if (vomitTrigger > 0) {
+            setAnimationName('vomit');
+        }
+    }, [vomitTrigger]);
     
-    // This effect ensures that the animation restarts whenever the animationName changes.
     useEffect(() => {
         if (spriteRef.current) {
             spriteRef.current.gotoAndPlay(0);
         }
     }, [animationName]);
 
-    // Our reliable animation completion checker
     useInterval(() => {
         const sprite = spriteRef.current;
         if (!sprite || sprite.loop) return;
@@ -138,6 +142,10 @@ const Player = ({ position, size, velocity, eatTrigger, onStateChange }) => {
             if (animationName === 'turn') {
                 if (velocity.x < -0.2) facingDirection.current = 1;
                 else if (velocity.x > 0.2) facingDirection.current = -1;
+            }
+            // --- MODIFIED: Specifically check for vomit animation completion ---
+            if (animationName === 'vomit' && onVomitComplete) {
+                onVomitComplete();
             }
             setAnimationName('idle');
         }

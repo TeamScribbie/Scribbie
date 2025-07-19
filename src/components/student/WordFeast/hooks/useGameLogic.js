@@ -37,10 +37,12 @@ export const useGameLogic = (gameData, width, height) => {
     const [monster, setMonster] = useState(null);
     const [messages, setMessages] = useState([]);
     const [fishLogics, setFishLogics] = useState([]);
+    const [swallowedWords, setSwallowedWords] = useState([]);
 
     useEffect(() => {
         const setupAndPreload = async () => {
-            if (!gameData?.question || !gameData?.choices) {
+            if (!gameData?.question || !gameData?.choices || gameData.choices.length === 0) {
+                console.error("Game data is missing or invalid.");
                 setIsLoading(false);
                 return;
             }
@@ -61,21 +63,20 @@ export const useGameLogic = (gameData, width, height) => {
                 };
                 setMonster(activeMonster);
 
-                const correctChoices = gameData.choices.filter(c => c.isCorrect);
-                const incorrectChoices = gameData.choices.filter(c => !c.isCorrect);
+                // --- MODIFIED: Simplified cage assignment logic ---
+                let choices = [...gameData.choices];
                 let cagesToCreate = [];
 
-                if (correctChoices.length > 0) {
-                    const lvl3ChoiceIndex = Math.floor(Math.random() * correctChoices.length);
-                    const lvl3Choice = correctChoices.splice(lvl3ChoiceIndex, 1)[0];
-                    cagesToCreate.push({ ...lvl3Choice, strength: 3 });
-                }
+                // 1. Assign Level 3 to the very first choice
+                const lvl3Choice = choices.shift(); // Takes the first element out of the array
+                cagesToCreate.push({ ...lvl3Choice, strength: 3 });
 
-                const otherChoices = [...correctChoices, ...incorrectChoices];
-                otherChoices.forEach(choice => {
+                // 2. Assign random strength (1 or 2) to the rest of the choices
+                choices.forEach(choice => {
                     cagesToCreate.push({ ...choice, strength: Math.ceil(Math.random() * 2) });
                 });
 
+                // 3. Shuffle the cages to randomize their positions
                 cagesToCreate.sort(() => Math.random() - 0.5);
 
                 const activeCagedWords = [];
@@ -138,9 +139,7 @@ export const useGameLogic = (gameData, width, height) => {
         };
 
         setupAndPreload();
-    // --- FIX: Removed width and height from the dependency array ---
-    // This effect will now only run once when the gameData is first received.
-    }, [gameData]);
+    }, [gameData, width, height]);
 
     return {
         isLoading,
@@ -150,5 +149,6 @@ export const useGameLogic = (gameData, width, height) => {
         monster, setMonster,
         messages, setMessages,
         fishLogics, setFishLogics,
+        swallowedWords, setSwallowedWords,
     };
 };
