@@ -4,8 +4,8 @@ import { gameConfig } from '../config';
 import { canEat, calculateDistance, sizeHierarchy, canBreakCage } from '../gameUtils';
 import FishLogic from '../FishLogic';
 
-const MONSTER_WIDTH = 120;
-const MONSTER_HEIGHT = 160;
+const MONSTER_WIDTH = 172;
+const MONSTER_HEIGHT = 228;
 const CAGE_WIDTH = 80;
 const CAGE_HEIGHT = 50;
 const turningFriction = 0.92;

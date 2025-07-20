@@ -20,8 +20,8 @@ import Warn1Ogg from './game/audio/monster/Warn1.ogg';
 import Warn2Ogg from './game/audio/monster/Warn2.ogg'; // Assuming similar path
 import Warn3Ogg from './game/audio/monster/Warn3.ogg'; // Assuming similar path
 
-const MONSTER_WIDTH = 120;
-const MONSTER_HEIGHT = 160;
+const MONSTER_WIDTH = 172;
+const MONSTER_HEIGHT = 228;
 
 const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, width, height, gameData }) => {
     const {
