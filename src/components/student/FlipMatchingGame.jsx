@@ -9,7 +9,6 @@ const FlipMatchingGame = ({ questions = [], onGameComplete = () => {} }) => {
         return questions.map(q => {
             const choice = q.choices?.[0];
             if (!choice) return null;
-
             return {
                 src: choice.imagePath ? `${MEDIA_BASE_URL}${choice.imagePath.replace(/^\/+/, '')}` : null,
                 word: choice.choiceText,
