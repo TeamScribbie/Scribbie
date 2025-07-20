@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect } from 'react';
+import PlayerDashMp3 from '../game/audio/player/playerDash.mp3';
 import { useTick } from '@pixi/react';
 import { gameConfig } from '../config';
 import { canEat, calculateDistance, sizeHierarchy, canBreakCage } from '../gameUtils';
@@ -90,6 +91,9 @@ export const usePhysics = ({
                 boostInfo.current.isBoosting = true;
                 boostInfo.current.boostTimer = gameConfig.player.boost.duration;
                 boostInfo.current.cooldownTimer = gameConfig.player.boost.cooldown;
+                // Play dash sound
+                const dashSound = new Audio(PlayerDashMp3);
+                dashSound.play().catch(e => console.error('Error playing dash sound:', e));
             }
         };
         const handleKeyUp = (event) => { if (event.code === 'Space') spacebarDown.current = false; };

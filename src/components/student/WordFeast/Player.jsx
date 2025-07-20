@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+// Import bite sounds
+import Bite1Mp3 from './game/audio/player/bite1.mp3';
+import Bite2Mp3 from './game/audio/player/bite2.mp3';
+import Bite3Mp3 from './game/audio/player/bite3.mp3';
+import Bite4Mp3 from './game/audio/player/bite4.mp3';
 import { AnimatedSprite } from '@pixi/react';
 import * as PIXI from 'pixi.js';
 import playerSpriteImage from './game/spritesheets/Player.png';
@@ -92,9 +97,13 @@ function useInterval(callback, delay) {
 }
 
 
+const biteSounds = [Bite1Mp3, Bite2Mp3, Bite3Mp3, Bite4Mp3];
+
+
 const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete }) => {
     const [textures, setTextures] = useState(null);
     const [animationName, setAnimationName] = useState('idle');
+    const [isEating, setIsEating] = useState(false);
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
 
@@ -108,19 +117,15 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
     }, []);
 
     useEffect(() => {
-        if (!textures) return; // Don't run animation logic until textures are loaded
+        if (!textures) return;
         onStateChange({ name: animationName, facing: facingDirection.current });
-        const isBusy = animationName === 'turn' || animationName === 'eat' || animationName === 'vomit';
-        if (isBusy) return;
-
+        // Only run velocity-based animation if not eating or vomiting
+        if (animationName === 'eat' || animationName === 'vomit') return;
         if (!velocity) return;
-
         const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
-
         let intendedDirection = facingDirection.current;
         if (velocity.x < -0.4) intendedDirection = 1;
         else if (velocity.x > 0.4) intendedDirection = -1;
-
         if (intendedDirection !== facingDirection.current && speed > 0.5) {
             setAnimationName('turn');
         } else {
@@ -128,8 +133,17 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
         }
     }, [velocity, animationName, onStateChange, textures]);
 
+    const biteSoundIndexRef = useRef(0);
     useEffect(() => {
-        if (eatTrigger > 0) setAnimationName('eat');
+        if (eatTrigger > 0) {
+            setAnimationName('eat');
+            setIsEating(true);
+            // Play bite sound, rotating through the array
+            const idx = biteSoundIndexRef.current;
+            const sound = new Audio(biteSounds[idx]);
+            sound.play().catch(e => console.error('Error playing bite sound:', e));
+            biteSoundIndexRef.current = (idx + 1) % biteSounds.length;
+        }
     }, [eatTrigger]);
 
     useEffect(() => {
@@ -145,7 +159,6 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
     useInterval(() => {
         const sprite = spriteRef.current;
         if (!sprite || sprite.loop) return;
-
         if (sprite.currentFrame === sprite.totalFrames - 1) {
             if (animationName === 'turn') {
                 if (velocity.x < -0.2) facingDirection.current = 1;
@@ -153,6 +166,9 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
             }
             if (animationName === 'vomit' && onVomitComplete) {
                 onVomitComplete();
+            }
+            if (animationName === 'eat') {
+                setIsEating(false);
             }
             setAnimationName('idle');
         }

@@ -15,9 +15,14 @@ import background1 from './game/spritesheets/background1.png';
 import IntroAudio from './game/audio/monster/Intro.ogg';
 
 // --- CORRECTED: Import actual audio files ---
+
 import Warn1Ogg from './game/audio/monster/Warn1.ogg';
 import Warn2Ogg from './game/audio/monster/Warn2.ogg';
 import Warn3Ogg from './game/audio/monster/Warn3.ogg';
+
+// Import background music and ambient sound
+import Track1Wav from './game/audio/music/track1.wav';
+import WaterAmb1mp3 from './game/audio/music/WaterAmb1.mp3';
 
 
 const Background = ({ width, height }) => {
@@ -121,15 +126,36 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         messages, setMessages, onMonsterDash: handleMonsterInteraction,
     });
     
+
+    // Play background music and ambient sound
     useEffect(() => {
+        let bgMusic = null;
+        let ambient = null;
         if (!isLoading && monster) {
+            // Start background music
+            bgMusic = new Audio(Track1Wav);
+            bgMusic.loop = true;
+            bgMusic.volume = 1.0;
+            bgMusic.play().catch(e => console.error("Error playing background music:", e));
+
+            // Start ambient sound
+            ambient = new Audio(WaterAmb1mp3);
+            ambient.loop = true;
+            ambient.volume = 0.2;
+            ambient.play().catch(e => console.error("Error playing ambient sound:", e));
+
+            // Monster intro sound logic
             const timer = setTimeout(() => {
                 const introSound = new Audio(IntroAudio);
                 introSound.play().catch(e => console.error("Error playing intro sound:", e));
                 introSound.onended = () => { if (monster.audioUrl) { const monsterSound = new Audio(monster.audioUrl); monsterSound.play().catch(e => console.error("Error playing monster sound:", e)); } };
                 setMessages(currentMessages => [...currentMessages, { id: `monster-dialogue-${Date.now()}`, text: "I'm hungry. I need the word: !#%@ . ", position: { x: monster.position.x, y: monster.position.y - MONSTER_HEIGHT / 2 - 60 }, life: 360 }]);
             }, 2000);
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+                if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
+                if (ambient) { ambient.pause(); ambient.currentTime = 0; }
+            };
         }
     }, [isLoading, monster, setMessages]);
 
