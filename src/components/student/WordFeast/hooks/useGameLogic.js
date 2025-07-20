@@ -19,6 +19,7 @@ export const useGameLogic = (gameData, width, height) => {
     };
 
     const initialState = loadInitialState();
+    const [monsterDashCollisions, setMonsterDashCollisions] = useState(0);
 
     const MONSTER_HEIGHT = 160;
     const PLAYER_SPAWN_BUFFER = 50;
@@ -153,5 +154,6 @@ export const useGameLogic = (gameData, width, height) => {
         messages, setMessages,
         fishLogics, setFishLogics,
         swallowedWords, setSwallowedWords,
+        monsterDashCollisions, setMonsterDashCollisions,
     };
 };

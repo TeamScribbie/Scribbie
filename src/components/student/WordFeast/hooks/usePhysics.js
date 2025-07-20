@@ -44,15 +44,16 @@ export const usePhysics = ({
     onPlayerEat,
     swallowedWords, setSwallowedWords, onVomit,
     playerState,
-    messages, // --- ACCEPT MESSAGES ---
-    setMessages, // --- ACCEPT SETTER ---
+    messages,
+    setMessages,
+    onMonsterDash, // <-- Accept the handler for monster dash interaction
 }) => {
     const mousePosition = useRef({ x: width / 2, y: height / 2 });
     const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
     const lastVelocity = useRef({ x: 1, y: 0 });
     const spacebarDown = useRef(false);
     const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
-    
+
     const spawnFish = useCallback(() => {
         let position;
         let velocity;
@@ -70,7 +71,7 @@ export const usePhysics = ({
                 case 1: position = { x: -30, y: Math.random() * height }; velocity = { x: 1, y: 0 }; break;
             }
         } while (monsterBounds && (position.x > monsterBounds.x && position.x < monsterBounds.x + monsterBounds.width && position.y > monsterBounds.y && position.y < monsterBounds.y + monsterBounds.height));
-        
+
         const rand = Math.random();
         const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
 
@@ -83,12 +84,12 @@ export const usePhysics = ({
         };
         setFishLogics(logics => [...logics, new FishLogic(newFishData, width, height)]);
     }, [width, height, setFishLogics, monster]);
-    
+
     useEffect(() => {
         const handleKeyDown = (event) => {
             if (event.code === 'KeyQ') {
                 event.preventDefault();
-                onVomit(); 
+                onVomit();
             }
             if (event.code === 'Space' && !spacebarDown.current && boostInfo.current.cooldownTimer <= 0) {
                 event.preventDefault();
@@ -110,7 +111,6 @@ export const usePhysics = ({
     useTick(delta => {
         if (isGameOver || isPaused || !player) return;
 
-        // --- ADDED: Logic to update and remove messages ---
         if (messages && messages.length > 0) {
             setMessages(currentMessages =>
                 currentMessages
@@ -125,7 +125,7 @@ export const usePhysics = ({
             spawnFish();
             spawnCooldown.current = gameConfig.fishSpawning.respawnCooldown;
         }
-        
+
         if (fishLogics) {
             setFishLogics(logics => logics.map(l => {
                 l.update(delta);
@@ -147,7 +147,7 @@ export const usePhysics = ({
         } else {
             const dx = mousePosition.current.x - player.position.x;
             const dy = mousePosition.current.y - player.position.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 1) {
                 const angle = Math.atan2(dy, dx);
                 velX += Math.cos(angle) * gameConfig.player.accel * delta;
@@ -157,7 +157,7 @@ export const usePhysics = ({
             const friction = playerState.name === 'turn' ? turningFriction : gameConfig.player.friction;
             velX *= friction;
             velY *= friction;
-            
+
             const speed = Math.sqrt(velX * velX + velY * velY);
             if (speed > gameConfig.player.maxSpeed) {
                 velX = (velX / speed) * gameConfig.player.maxSpeed;
@@ -172,16 +172,21 @@ export const usePhysics = ({
         };
         const playerRadius = sizeHierarchy[player.size] * 10;
         let playerBlocked = false;
-        
-        let newCages = cagedWords.map(c => ({...c, velocity: {...c.velocity}}));
-        const monsterBounds = monster ? { x: monster.position.x - MONSTER_WIDTH/2, y: monster.position.y - MONSTER_HEIGHT/2, width: MONSTER_WIDTH, height: MONSTER_HEIGHT } : null;
+
+        let newCages = cagedWords.map(c => ({ ...c, velocity: { ...c.velocity } }));
+        const monsterBounds = monster ? { x: monster.position.x - MONSTER_WIDTH / 2, y: monster.position.y - MONSTER_HEIGHT / 2, width: MONSTER_WIDTH, height: MONSTER_HEIGHT } : null;
 
         if (monster) {
             if (isColliding(nextPlayerPos, playerRadius, monsterBounds)) {
-                if (boostInfo.current.isBoosting) { 
-                    velX *= -1.5; 
-                    velY *= -1.5; 
-                    boostInfo.current.isBoosting = false; 
+                // --- MODIFIED: Monster Interaction Logic ---
+                if (boostInfo.current.isBoosting) {
+                    if (onMonsterDash) {
+                        onMonsterDash(); // Call the central handler in GameStage
+                    }
+                    // Apply recoil
+                    velX *= -1.5;
+                    velY *= -1.5;
+                    boostInfo.current.isBoosting = false;
                 }
                 playerBlocked = true;
             }
@@ -190,8 +195,8 @@ export const usePhysics = ({
         const swallowedCageIds = new Set();
 
         newCages.forEach(cage => {
-            const cageBounds = { x: cage.position.x - CAGE_WIDTH/2, y: cage.position.y - CAGE_HEIGHT/2, width: CAGE_WIDTH, height: CAGE_HEIGHT };
-            
+            const cageBounds = { x: cage.position.x - CAGE_WIDTH / 2, y: cage.position.y - CAGE_HEIGHT / 2, width: CAGE_WIDTH, height: CAGE_HEIGHT };
+
             if (isColliding(nextPlayerPos, playerRadius, cageBounds)) {
                 if (cage.isBroken) {
                     swallowedCageIds.add(cage.id);
@@ -203,9 +208,9 @@ export const usePhysics = ({
                 } else if (boostInfo.current.isBoosting) {
                     if (canBreakCage(player.size, cage.strength)) {
                         cage.isBroken = true;
-                        velX *= -0.8; 
+                        velX *= -0.8;
                     } else {
-                        velX *= -1.8; 
+                        velX *= -1.8;
                     }
                     boostInfo.current.isBoosting = false;
                     playerBlocked = true;
@@ -217,8 +222,8 @@ export const usePhysics = ({
             if (monsterBounds && isRectColliding(cageBounds, monsterBounds)) {
                 const dx = cage.position.x - monster.position.x;
                 const dy = cage.position.y - monster.position.y;
-                const distance = Math.sqrt(dx*dx + dy*dy) || 1;
-                
+                const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+
                 const pushX = dx / distance;
                 const pushY = dy / distance;
 
@@ -237,7 +242,7 @@ export const usePhysics = ({
         newCages.forEach(cage => {
             cage.position.x += cage.velocity.x * delta;
             cage.position.y += cage.velocity.y * delta;
-            
+
             const friction = cage.isBroken ? 0.90 : 0.95;
             cage.velocity.x *= friction;
             cage.velocity.y *= friction;
@@ -249,11 +254,11 @@ export const usePhysics = ({
             if (cage.position.y < halfCageH) { cage.position.y = halfCageH; cage.velocity.y *= -0.7; }
             else if (cage.y > height - halfCageH) { cage.position.y = height - halfCageH; cage.velocity.y *= -0.7; }
         });
-        
+
         if (playerBlocked) {
             nextPlayerPos = { ...player.position };
         }
-        
+
         const eatenFishIds = new Set();
         if (fishLogics) {
             fishLogics.forEach(logic => {
@@ -273,15 +278,15 @@ export const usePhysics = ({
         if (eatenFishIds.size > 0) {
             setFishLogics(logics => logics.filter(l => !eatenFishIds.has(l.id)));
         }
-        
+
         if (swallowedCageIds.size > 0) {
             setCagedWords(currentCages => currentCages.filter(c => !swallowedCageIds.has(c.id)));
         } else {
             setCagedWords(newCages);
         }
-        
+
         setPlayer(p => ({ ...p, position: nextPlayerPos, velocity: { x: velX, y: velY } }));
     });
-    
+
     return { mousePosition, boostInfo };
 };

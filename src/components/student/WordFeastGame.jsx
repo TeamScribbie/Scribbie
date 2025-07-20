@@ -1,12 +1,9 @@
 import React, { useMemo } from 'react';
-import WordFeast from './WordFeast/WordFeast'; // Import the main game component
+import WordFeast from './WordFeast/WordFeast'; 
 import { MEDIA_BASE_URL } from '../../config/apiConfig.js';
 
-// This is the wrapper/renderer component
 const WordFeastGame = ({ questions = [], onGameComplete = () => {} }) => {
 
-    // useMemo will transform the 'questions' prop into the format 'WordFeast' expects.
-    // This logic runs only when the 'questions' prop changes.
     const gameData = useMemo(() => {
         // We assume the WordFeast data is contained in the first question item.
         if (!questions || questions.length === 0) {

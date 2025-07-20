@@ -1,22 +1,37 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Stage, Graphics } from '@pixi/react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Stage, Graphics, Sprite } from '@pixi/react';
+import * as PIXI from 'pixi.js'; // Import PIXI for Texture and Rectangle
 import GameStage from './GameStage';
 import { gameConfig } from './config';
+import background1 from './game/spritesheets/background1.png'; // Import the background image
 
-const Background = ({ width, height, color }) => (
-    <Graphics
-        draw={useCallback(g => {
-            g.clear().beginFill(color).drawRect(0, 0, width, height).endFill();
-        }, [width, height, color])}
-    />
-);
+// MODIFIED Background component to use a specific frame from the spritesheet
+const Background = ({ width, height }) => {
+    // Create the base texture from the loaded image
+    const baseTexture = useMemo(() => PIXI.BaseTexture.from(background1), []);
+
+    // Define the frame for the desired background part (x, y, width, height)
+    // You mentioned x,y: 0 and size 800*600
+    const backgroundFrame = useMemo(() => new PIXI.Rectangle(0, 0, 800, 600), []);
+
+    // Create a new Texture from the base texture and the defined frame
+    const backgroundTextureRegion = useMemo(() => new PIXI.Texture(baseTexture, backgroundFrame), [baseTexture, backgroundFrame]);
+
+    return (
+        <Sprite
+            texture={backgroundTextureRegion} // Use the texture created from the specific region
+            x={0}
+            y={0}
+            width={width}   // These will stretch the 800x600 region to 1280x720
+            height={height} // which may cause slight distortion due to aspect ratio difference.
+        />
+    );
+};
 
 const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     const [gameOver, setGameOver] = useState(false);
     const [key, setKey] = useState(Date.now());
     const [debugMode, setDebugMode] = useState(false);
-
-    // --- REMOVED: Resizing logic is no longer needed ---
 
     useEffect(() => {
         console.log("WordFeast component received gameData:", gameData);
@@ -63,12 +78,10 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
         justifyContent: 'center', alignItems: 'center', position: 'relative',
     };
 
-    // --- MODIFIED: Wrapper now uses fixed size from config ---
     const gameWrapperStyle = {
         width: gameConfig.width,
         height: gameConfig.height,
         cursor: 'none',
-        // This will scale the game to fit the screen, centered via flexbox
         transform: `scale(min(calc(100vw / ${gameConfig.width}), calc(100vh / ${gameConfig.height})))`,
     };
 
@@ -80,11 +93,9 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
 
     return (
         <div style={containerStyle}>
-            {/* --- MODIFIED: The wrapper div handles the scaling --- */}
             <div style={gameWrapperStyle}>
-                {/* --- MODIFIED: Stage now has a fixed size --- */}
                 <Stage width={gameConfig.width} height={gameConfig.height}>
-                    <Background width={gameConfig.width} height={gameConfig.height} color={0x0b1d3a} />
+                    <Background width={gameConfig.width} height={gameConfig.height} />
                     <GameStage
                         key={key}
                         width={gameConfig.width}

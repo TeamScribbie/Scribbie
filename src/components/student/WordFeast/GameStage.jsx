@@ -1,3 +1,5 @@
+// WordFeast/GameStage.jsx
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Container, Text } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
@@ -13,10 +15,15 @@ import { gameConfig } from './config';
 import { sizeHierarchy } from './gameUtils';
 import IntroAudio from './game/audio/monster/Intro.ogg';
 
+// --- CORRECTED: Import actual audio files ---
+import Warn1Ogg from './game/audio/monster/Warn1.ogg';
+import Warn2Ogg from './game/audio/monster/Warn2.ogg'; // Assuming similar path
+import Warn3Ogg from './game/audio/monster/Warn3.ogg'; // Assuming similar path
+
 const MONSTER_WIDTH = 120;
 const MONSTER_HEIGHT = 160;
 
-const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height, gameData }) => {
+const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, width, height, gameData }) => {
     const {
         isLoading, score, setScore,
         player, setPlayer,
@@ -25,6 +32,7 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
         messages, setMessages,
         fishLogics, setFishLogics,
         swallowedWords, setSwallowedWords,
+        monsterDashCollisions, setMonsterDashCollisions,
     } = useGameLogic(gameData, width, height);
 
     const [eatTrigger, setEatTrigger] = useState(0);
@@ -32,22 +40,70 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
     const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
     const vomitCooldown = useRef(0);
 
-    // useEffect to log game data
-    useEffect(() => {
-        if (gameData) {
-            console.log("Game Data Loaded:", gameData);
-            if (gameData.questions) {
-                console.log("Questions:", gameData.questions);
-            } else {
-                console.log("No questions found in gameData.");
+    // --- The local handleWin function has been removed. This is correct. ---
+
+    const handleMonsterInteraction = useCallback(() => {
+    // 1. CHECK FOR WIN CONDITION
+    const playerSequence = swallowedWords.map(w => w.word).join('');
+    
+    if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
+        console.log("✅ WIN CONDITION MET!");
+        onWin();
+        return;
+    }
+
+    // 2. If not a win, proceed with warnings
+    const newCollisionCount = monsterDashCollisions + 1;
+    setMonsterDashCollisions(newCollisionCount);
+
+    let dialogue = "";
+    let audioSrc = null;
+
+    switch (newCollisionCount) {
+        case 1:
+            dialogue = "I'm Hungry for the Word: @#%1?";
+            audioSrc = Warn1Ogg;
+            break;
+        case 2:
+            dialogue = "I said I'm hungry for the word: **@#?";
+            audioSrc = Warn2Ogg;
+            break;
+        case 3:
+            dialogue = "For the last time, I'm hungry for the word: #!@$";
+            audioSrc = Warn3Ogg;
+            break;
+        case 4:
+            onGameOver({ score, status: 'FAILED_BY_MONSTER' });
+            return;
+    }
+
+    if (dialogue && audioSrc) {
+        // Play warning sound first
+        const warningSound = new Audio(audioSrc);
+        warningSound.play().catch(e => console.error("Error playing warning sound:", e));
+        
+        // Then play question audio after warning finishes
+        warningSound.onended = () => {
+            if (monster.audioUrl) {
+                const questionSound = new Audio(monster.audioUrl);
+                questionSound.play().catch(e => console.error("Error playing question sound:", e));
             }
-            if (gameData.choices) {
-                console.log("Choices:", gameData.choices);
-            } else {
-                console.log("No choices found in gameData.");
+        };
+
+        setMessages(currentMessages => [
+            ...currentMessages,
+            {
+                id: `monster-warning-${Date.now()}`,
+                text: dialogue,
+                position: {
+                    x: monster.position.x,
+                    y: monster.position.y - MONSTER_HEIGHT / 2 - 20
+                },
+                life: 180
             }
-        }
-    }, [gameData]);
+        ]);
+    }
+}, [monster, swallowedWords, monsterDashCollisions, score, onWin, onGameOver, setMessages, setMonsterDashCollisions]);
 
 
     const handleVomit = () => {
@@ -72,6 +128,7 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
         playerState,
         messages,
         setMessages,
+        onMonsterDash: handleMonsterInteraction,
     });
 
     useEffect(() => {
@@ -80,7 +137,6 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
                 const introSound = new Audio(IntroAudio);
                 introSound.play().catch(e => console.error("Error playing intro sound:", e));
 
-                // When the intro sound finishes, play the monster's question sound
                 introSound.onended = () => {
                     if (monster.audioUrl) {
                         const monsterSound = new Audio(monster.audioUrl);
@@ -97,13 +153,13 @@ const GameStage = ({ onGameOver, isGameOver, isPaused, debugMode, width, height,
                             x: monster.position.x + MONSTER_WIDTH / 2,
                             y: monster.position.y - MONSTER_HEIGHT / 2 - 60
                         },
-                        life: 360 // Message lasts for 6 seconds (360 frames / 60fps)
+                        life: 360
                     }
                 ]);
 
-            }, 2000); // 2-second delay before sequence starts
+            }, 2000);
 
-            return () => clearTimeout(timer); // Cleanup on unmount
+            return () => clearTimeout(timer);
         }
     }, [isLoading, monster, setMessages]);
 
