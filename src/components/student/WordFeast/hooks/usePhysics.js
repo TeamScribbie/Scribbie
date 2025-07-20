@@ -128,7 +128,7 @@ export const usePhysics = ({
 
         if (fishLogics) {
             setFishLogics(logics => logics.map(l => {
-                l.update(delta);
+                l.update(delta, player.position, logics); 
                 return l;
             }));
         }
@@ -275,8 +275,25 @@ export const usePhysics = ({
             });
         }
 
+        const fishEatenByOtherFish = new Set();
+        if (fishLogics) {
+            fishLogics.forEach(logic => {
+                // Check the state of each fish
+                if (logic.state.fishToEatId) {
+                    // If a fish has targeted another to eat, add it to the set
+                    fishEatenByOtherFish.add(logic.state.fishToEatId);
+                }
+            });
+        }
+
+        const allEatenFishIds = new Set([...eatenFishIds, ...fishEatenByOtherFish]);
+
         if (eatenFishIds.size > 0) {
             setFishLogics(logics => logics.filter(l => !eatenFishIds.has(l.id)));
+        }
+
+        if (allEatenFishIds.size > 0) {
+            setFishLogics(logics => logics.filter(l => !allEatenFishIds.has(l.id)));
         }
 
         if (swallowedCageIds.size > 0) {

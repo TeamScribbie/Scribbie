@@ -3,22 +3,7 @@ import { AnimatedSprite } from '@pixi/react';
 import * as PIXI from 'pixi.js';
 import playerSpriteImage from './game/spritesheets/Player.png';
 
-// Custom hook for reliable intervals in React
-function useInterval(callback, delay) {
-    const savedCallback = useRef();
-    useEffect(() => {
-        savedCallback.current = callback;
-    }, [callback]);
-    useEffect(() => {
-        function tick() {
-            savedCallback.current();
-        }
-        if (delay !== null) {
-            let id = setInterval(tick, delay);
-            return () => clearInterval(id);
-        }
-    }, [delay]);
-}
+// --- MODIFIED: All spritesheet setup is now done ONCE outside the component ---
 
 const spritesheetLayout = {
     frames: {
@@ -77,7 +62,35 @@ const spritesheetLayout = {
     },
 };
 
+// This line is now safe because spritesheetLayout is defined.
 spritesheetLayout.animations.vomit = [...spritesheetLayout.animations.eat].reverse();
+
+// Create the spritesheet and a promise that resolves when parsing is done.
+const sheet = new PIXI.Spritesheet(PIXI.BaseTexture.from(playerSpriteImage), spritesheetLayout);
+let playerTextures = null;
+const parsingPromise = sheet.parse().then(() => {
+    playerTextures = sheet.animations;
+    return playerTextures;
+});
+
+
+// Custom hook for reliable intervals in React
+function useInterval(callback, delay) {
+    const savedCallback = useRef();
+    useEffect(() => {
+        savedCallback.current = callback;
+    }, [callback]);
+    useEffect(() => {
+        function tick() {
+            savedCallback.current();
+        }
+        if (delay !== null) {
+            let id = setInterval(tick, delay);
+            return () => clearInterval(id);
+        }
+    }, [delay]);
+}
+
 
 const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete }) => {
     const [textures, setTextures] = useState(null);
@@ -85,18 +98,17 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
 
-    const sheet = useMemo(() => {
-        const baseTexture = PIXI.BaseTexture.from(playerSpriteImage);
-        return new PIXI.Spritesheet(baseTexture, spritesheetLayout);
+    // This effect now safely waits for the single parsing promise to complete.
+    useEffect(() => {
+        if (playerTextures) {
+            setTextures(playerTextures);
+        } else {
+            parsingPromise.then(setTextures);
+        }
     }, []);
 
     useEffect(() => {
-        sheet.parse().then(() => {
-            setTextures(sheet.animations);
-        });
-    }, [sheet]);
-
-    useEffect(() => {
+        if (!textures) return; // Don't run animation logic until textures are loaded
         onStateChange({ name: animationName, facing: facingDirection.current });
         const isBusy = animationName === 'turn' || animationName === 'eat' || animationName === 'vomit';
         if (isBusy) return;
@@ -114,18 +126,14 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
         } else {
             setAnimationName(speed > 0.5 ? 'swim' : 'idle');
         }
-    }, [velocity, animationName, onStateChange]);
+    }, [velocity, animationName, onStateChange, textures]);
 
     useEffect(() => {
-        if (eatTrigger > 0) {
-            setAnimationName('eat');
-        }
+        if (eatTrigger > 0) setAnimationName('eat');
     }, [eatTrigger]);
 
     useEffect(() => {
-        if (vomitTrigger > 0) {
-            setAnimationName('vomit');
-        }
+        if (vomitTrigger > 0) setAnimationName('vomit');
     }, [vomitTrigger]);
     
     useEffect(() => {
@@ -143,7 +151,6 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
                 if (velocity.x < -0.2) facingDirection.current = 1;
                 else if (velocity.x > 0.2) facingDirection.current = -1;
             }
-            // --- MODIFIED: Specifically check for vomit animation completion ---
             if (animationName === 'vomit' && onVomitComplete) {
                 onVomitComplete();
             }
@@ -151,6 +158,7 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
         }
     }, 50);
 
+    // Guard clause: Do not render until textures are loaded
     if (!textures) {
         return null;
     }
