@@ -20,3 +20,14 @@ export const canEat = (eaterSize, eatenSize) => {
 export const calculateDistance = (p1, p2) => {
     return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 };
+
+/**
+ * --- NEW: Determines if the player can break a cage. ---
+ * @param {string} playerSize - The size of the player ('small', 'medium', 'large').
+ * @param {number} cageStrength - The level of the cage (1, 2, or 3).
+ * @returns {boolean}
+ */
+export const canBreakCage = (playerSize, cageStrength) => {
+    const playerStrength = sizeHierarchy[playerSize] || 0;
+    return playerStrength >= cageStrength;
+};

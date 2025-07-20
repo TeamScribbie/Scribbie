@@ -1,164 +1,257 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Container, Text, useTick } from '@pixi/react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { Container, Text, useTick, Sprite } from '@pixi/react';
 import { TextStyle } from 'pixi.js';
+import * as PIXI from 'pixi.js';
 
 import Player from './Player';
 import Fish from './Fish';
+import DebugDisplay from './DebugDisplay';
+import Monster from './Monster';
+import CagedWord from './CagedWord';
+import { useGameLogic } from './hooks/useGameLogic';
+import { usePhysics } from './hooks/usePhysics';
 import { gameConfig } from './config';
-import { canEat, calculateDistance, sizeHierarchy } from './gameUtils';
+import background1 from './game/spritesheets/background1.png';
+import IntroAudio from './game/audio/monster/Intro.ogg';
 
-const GameStage = ({ onGameOver, isGameOver, debugMode }) => {
-    const [score, setScore] = useState(0);
-    const [player, setPlayer] = useState({
-        position: { x: 400, y: 300 },
-        velocity: { x: 0, y: 0 },
-        size: 'small',
-    });
-    const fishesRef = useRef([]);
-    const [renderTrigger, setRenderTrigger] = useState(0);
-    const [messages, setMessages] = useState([]);
-    const mousePosition = useRef({ x: 400, y: 300 });
-    const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
-    const dashInfo = useRef({ isDashing: false, dashTimer: 0, cooldownTimer: 0 });
+// --- CORRECTED: Import actual audio files ---
 
-    const forceRender = () => setRenderTrigger(c => c + 1);
+import Warn1Ogg from './game/audio/monster/Warn1.ogg';
+import Warn2Ogg from './game/audio/monster/Warn2.ogg';
+import Warn3Ogg from './game/audio/monster/Warn3.ogg';
 
-    const spawnFish = () => {
-        const side = Math.floor(Math.random() * 2);
-        let position, velocity;
-        switch (side) {
-            case 0: position = { x: gameConfig.width + 30, y: Math.random() * gameConfig.height }; velocity = { x: -1, y: 0 }; break;
-            case 1: position = { x: -30, y: Math.random() * gameConfig.height }; velocity = { x: 1, y: 0 }; break;
+// Import background music and ambient sound
+import Track1Wav from './game/audio/music/track1.wav';
+import WaterAmb1mp3 from './game/audio/music/WaterAmb1.mp3';
+
+
+const Background = ({ width, height }) => {
+    const baseTexture = useMemo(() => PIXI.BaseTexture.from(background1), []);
+    const backgroundFrame = useMemo(() => new PIXI.Rectangle(0, 0, 800, 600), []);
+    const backgroundTextureRegion = useMemo(() => new PIXI.Texture(baseTexture, backgroundFrame), [baseTexture, backgroundFrame]);
+    return (<Sprite texture={backgroundTextureRegion} x={0} y={0} width={width} height={height} />);
+};
+
+const MONSTER_WIDTH = 172;
+const MONSTER_HEIGHT = 228;
+
+const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewportWidth, viewportHeight, worldWidth, worldHeight, gameData }) => {
+    const {
+        isLoading, gameState, setGameState, score, setScore,
+        player, setPlayer, cagedWords, setCagedWords, monster,
+        messages, setMessages, fishLogics, setFishLogics, swallowedWords, setSwallowedWords,
+        monsterDashCollisions, setMonsterDashCollisions,
+    } = useGameLogic(gameData, worldWidth, worldHeight);
+
+    const [eatTrigger, setEatTrigger] = useState(0);
+    const [vomitTrigger, setVomitTrigger] = useState(0);
+    const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
+    const vomitCooldown = useRef(0);
+    const worldContainer = useRef(null);
+
+    const handleMonsterInteraction = useCallback(() => {
+        const playerSequence = swallowedWords.map(w => w.word).join('');
+        
+        // Check for the win condition first
+        if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
+            console.log("✅ WIN CONDITION MET!");
+            if(onWin) onWin(); 
+            return;
         }
-        const rand = Math.random();
-        const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
-        // Add wanderAngle for the new AI
-        fishesRef.current.push({ id: Date.now() * Math.random(), size, points: gameConfig.fishTypes[size].points, position, velocity, wanderAngle: Math.random() * 2 * Math.PI });
+
+        const newCollisionCount = monsterDashCollisions + 1;
+        setMonsterDashCollisions(newCollisionCount);
+
+        let dialogue = "";
+        let audioSrc = null;
+
+        switch (newCollisionCount) {
+            case 1:
+                dialogue = "I'm Hungry for the Word: @#%1?";
+                audioSrc = Warn1Ogg;
+                break;
+            case 2:
+                dialogue = "I said I'm hungry for the word: **@#?";
+                audioSrc = Warn2Ogg;
+                break;
+            case 3:
+                dialogue = "For the last time, I'm hungry for the word: #!@$";
+                audioSrc = Warn3Ogg;
+                break;
+            case 4:
+                onGameOver({ score, status: 'FAILED_BY_MONSTER' });
+                return;
+            default:
+                return;
+        }
+
+        if (dialogue && audioSrc) {
+            const warningSound = new Audio(audioSrc);
+            warningSound.play().catch(e => console.error("Error playing warning sound:", e));
+            
+            warningSound.onended = () => {
+                if (monster.audioUrl) {
+                    const questionSound = new Audio(monster.audioUrl);
+                    questionSound.play().catch(e => console.error("Error playing question sound:", e));
+                }
+            };
+
+            setMessages(currentMessages => [
+                ...currentMessages,
+                {
+                    id: `monster-warning-${Date.now()}`,
+                    text: dialogue,
+                    position: {
+                        x: monster.position.x,
+                        y: monster.position.y - MONSTER_HEIGHT / 2 - 20
+                    },
+                    life: 180
+                }
+            ]);
+        }
+    }, [monster, swallowedWords, monsterDashCollisions, score, onWin, onGameOver, setMessages, setMonsterDashCollisions]);
+
+    const handleVomit = () => {
+        if (swallowedWords.length > 0 && vomitCooldown.current <= 0) {
+            setVomitTrigger(t => t + 1);
+            vomitCooldown.current = 30;
+        }
     };
 
+    const { mousePosition, boostInfo } = usePhysics({
+        gameState, setGameState, player, setPlayer, cagedWords, setCagedWords, fishLogics, setFishLogics, monster,
+        score, setScore, onGameOver, isGameOver, isPaused, width: worldWidth, height: worldHeight,
+        onPlayerEat: () => setEatTrigger(t => t + 1),
+        swallowedWords, setSwallowedWords, onVomit: handleVomit, playerState,
+        messages, setMessages, onMonsterDash: handleMonsterInteraction,
+    });
+    
+
+    // Play background music and ambient sound
     useEffect(() => {
-        if (isGameOver) return;
+        let bgMusic = null;
+        let ambient = null;
+        if (!isLoading && monster) {
+            // Start background music
+            bgMusic = new Audio(Track1Wav);
+            bgMusic.loop = true;
+            bgMusic.volume = 1.0;
+            bgMusic.play().catch(e => console.error("Error playing background music:", e));
+
+            // Start ambient sound
+            ambient = new Audio(WaterAmb1mp3);
+            ambient.loop = true;
+            ambient.volume = 0.2;
+            ambient.play().catch(e => console.error("Error playing ambient sound:", e));
+
+            // Monster intro sound logic
+            const timer = setTimeout(() => {
+                const introSound = new Audio(IntroAudio);
+                introSound.play().catch(e => console.error("Error playing intro sound:", e));
+                introSound.onended = () => { if (monster.audioUrl) { const monsterSound = new Audio(monster.audioUrl); monsterSound.play().catch(e => console.error("Error playing monster sound:", e)); } };
+                setMessages(currentMessages => [...currentMessages, { id: `monster-dialogue-${Date.now()}`, text: "I'm hungry. I need the word: !#%@ . ", position: { x: monster.position.x, y: monster.position.y - MONSTER_HEIGHT / 2 - 60 }, life: 360 }]);
+            }, 2000);
+            return () => {
+                clearTimeout(timer);
+                if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
+                if (ambient) { ambient.pause(); ambient.currentTime = 0; }
+            };
+        }
+    }, [isLoading, monster, setMessages]);
+
+    useTick(() => {
+        if (!player || !worldContainer.current) return;
+        let targetX = -player.position.x + viewportWidth / 2;
+        let targetY = -player.position.y + viewportHeight / 2;
+        targetX = Math.min(0, Math.max(targetX, -(worldWidth - viewportWidth)));
+        targetY = Math.min(0, Math.max(targetY, -(worldHeight - viewportHeight)));
+        worldContainer.current.x += (targetX - worldContainer.current.x) * 0.1;
+        worldContainer.current.y += (targetY - worldContainer.current.y) * 0.1;
+    });
+    
+    const handlePointerMove = useCallback(event => {
+        if (worldContainer.current) {
+            const stagePosition = event.global;
+            mousePosition.current = worldContainer.current.toLocal(stagePosition);
+        }
+    }, [mousePosition]);
+
+    const handleVomitComplete = useCallback(() => {
+        if (swallowedWords.length === 0) return;
+        const lastWord = swallowedWords[swallowedWords.length - 1];
+        const facing = playerState.facing;
+        const playerRadius = {small: 10, medium: 20, large: 30}[player.size] || 10;
+        const vomitDistance = playerRadius + 60;
+        const newVomitedBubble = {
+            ...lastWord,
+            id: `vomited-${Date.now()}`,
+            isBroken: true,
+            position: { x: player.position.x + (facing * -vomitDistance), y: player.position.y, },
+            velocity: { x: facing * -5, y: -1.5, }
+        };
+        setCagedWords(current => [...current, newVomitedBubble]);
+        setSwallowedWords(current => current.slice(0, -1));
+    }, [swallowedWords, playerState, player.position, player.size, setCagedWords, setSwallowedWords]);
+
+    useEffect(() => {
+        if (isGameOver || isLoading || !player) return;
         let newSize = 'small';
-        if (score >= gameConfig.player.largeScore) newSize = 'large';
-        else if (score >= gameConfig.player.mediumScore) newSize = 'medium';
+        if (score >= gameConfig.player.largeScore) {
+            newSize = 'large';
+        } else if (score >= gameConfig.player.mediumScore) {
+            newSize = 'medium';
+        }
         if (newSize !== player.size) {
             setPlayer(p => ({ ...p, size: newSize }));
             setMessages(m => [...m, { id: Date.now(), text: "Level Up!", position: player.position, life: 60 }]);
         }
-    }, [score, player.size, isGameOver]);
+    }, [score, player?.size, player?.position, isLoading, isGameOver, setPlayer, setMessages]);
 
-    useTick(delta => {
-        if (isGameOver) return;
-        spawnCooldown.current -= delta;
-        if (fishesRef.current.length < gameConfig.fishSpawning.targetPopulation && spawnCooldown.current <= 0) {
-            spawnFish();
-            spawnCooldown.current = gameConfig.fishSpawning.respawnCooldown;
-            forceRender();
+    useEffect(() => {
+        if (vomitCooldown.current > 0) {
+            const timer = setInterval(() => {
+                vomitCooldown.current -= 1;
+            }, 1000 / 60);
+            return () => clearInterval(timer);
         }
-        dashInfo.current.cooldownTimer -= delta;
-        dashInfo.current.dashTimer -= delta;
-        if (dashInfo.current.dashTimer <= 0) {
-            dashInfo.current.isDashing = false;
-        }
-        let velX = player.velocity.x;
-        let velY = player.velocity.y;
-        if (dashInfo.current.isDashing) {
-            const currentSpeed = Math.sqrt(velX * velX + velY * velY);
-            if (currentSpeed < gameConfig.player.dash.speed) {
-                const angle = Math.atan2(velY, velX) || 0;
-                velX = Math.cos(angle) * gameConfig.player.dash.speed;
-                velY = Math.sin(angle) * gameConfig.player.dash.speed;
-            }
-        } else {
-            const dx = mousePosition.current.x - player.position.x;
-            const dy = mousePosition.current.y - player.position.y;
-            const angle = Math.atan2(dy, dx);
-            if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-                velX += Math.cos(angle) * gameConfig.player.accel * delta;
-                velY += Math.sin(angle) * gameConfig.player.accel * delta;
-            }
-            velX *= gameConfig.player.friction;
-            velY *= gameConfig.player.friction;
-            const speed = Math.sqrt(velX * velX + velY * velY);
-            if (speed > gameConfig.player.maxSpeed) {
-                velX = (velX / speed) * gameConfig.player.maxSpeed;
-                velY = (velY / speed) * gameConfig.player.maxSpeed;
-            }
-        }
-        const nextPlayerPos = {
-            x: Math.max(0, Math.min(gameConfig.width, player.position.x + velX)),
-            y: Math.max(0, Math.min(gameConfig.height, player.position.y + velY)),
-        };
+    }, [vomitTrigger]);
+    
+    if (isLoading) {
+        return <Text text="Loading..." anchor={{ x: 0.5, y: 0.5 }} x={viewportWidth / 2} y={viewportHeight / 2} style={new TextStyle({ fill: 'white', fontSize: 48 })} />;
+    }
 
-        let wasChanged = false;
-        let scoreToAdd = 0;
-        const remainingFish = [];
-        for (const fish of fishesRef.current) {
-            const distance = calculateDistance(nextPlayerPos, fish.position);
-            if (distance < 40) {
-                if (canEat(player.size, fish.size)) {
-                    wasChanged = true; scoreToAdd += fish.points; continue;
-                } else if (canEat(fish.size, player.size) && fish.size !== player.size) {
-                    onGameOver(); return;
-                }
-            }
-            const fishType = gameConfig.fishTypes[fish.size];
-            let fishVelX = fish.velocity.x;
-            let fishVelY = fish.velocity.y;
-            let status = 'Roaming';
-            const isChasing = fishType.chaseRadius && sizeHierarchy[fish.size] > sizeHierarchy[player.size] && distance < fishType.chaseRadius;
-            
-            // --- NEW NATURAL WANDERING AI ---
-            if (isChasing) {
-                status = 'CHASING';
-                const chaseAngle = Math.atan2(nextPlayerPos.y - fish.position.y, nextPlayerPos.x - fish.position.x);
-                fishVelX = Math.cos(chaseAngle) * fishType.chaseSpeed;
-                fishVelY = Math.sin(chaseAngle) * fishType.chaseSpeed;
-            } else {
-                // Update the wander angle for smooth, continuous turning
-                fish.wanderAngle += (Math.random() - 0.5) * fishType.wandering.turnStrength;
-                
-                // Steer the fish's velocity towards its wander angle
-                const targetAngle = Math.atan2(fishVelY, fishVelX);
-                const newAngle = targetAngle + (fish.wanderAngle - targetAngle) * 0.1;
-                
-                fishVelX = Math.cos(newAngle) * fishType.wandering.speed;
-                fishVelY = Math.sin(newAngle) * fishType.wandering.speed;
-            }
-            
-            fish.position.x += fishVelX * delta;
-            fish.position.y += fishVelY * delta;
-            if (fish.position.x > -50 && fish.position.x < gameConfig.width + 50 && fish.position.y > -50 && fish.position.y < gameConfig.height + 50) {
-                remainingFish.push({ ...fish, velocity: { x: fishVelX, y: fishVelY }, status });
-            } else {
-                wasChanged = true;
-            }
-        }
-        setPlayer({ size: player.size, position: nextPlayerPos, velocity: { x: velX, y: velY } });
-        if (wasChanged) {
-            fishesRef.current = remainingFish;
-            if (scoreToAdd > 0) setScore(s => s + scoreToAdd);
-            forceRender();
-        }
-        setMessages(currentMessages => currentMessages.map(msg => ({ ...msg, life: msg.life - 1 })).filter(msg => msg.life > 0));
-    });
-
-    const handlePointerMove = useCallback(event => { mousePosition.current = event.global; }, []);
-    const handlePointerDown = useCallback((event) => {
-        if (event.data.button === 0 && dashInfo.current.cooldownTimer <= 0) {
-            dashInfo.current.isDashing = true;
-            dashInfo.current.dashTimer = gameConfig.player.dash.duration;
-            dashInfo.current.cooldownTimer = gameConfig.player.dash.cooldown;
-        }
-    }, []);
+    const swallowedText = swallowedWords.map(w => w.word).join(' + ');
 
     return (
-        <Container width={gameConfig.width} height={gameConfig.height} eventMode={'static'} pointermove={handlePointerMove} pointerdown={handlePointerDown}>
-            {fishesRef.current.map(fish => <Fish key={fish.id} {...fish} debugMode={debugMode} />)}
-            <Player position={player.position} size={player.size} velocity={player.velocity} />
-            <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24 })} x={10} y={10} />
-            {messages.map(msg => (<Text key={msg.id} text={msg.text} x={msg.position.x} y={msg.position.y - 40} style={new TextStyle({ fill: 'yellow', fontSize: 20, fontWeight: 'bold' })} />))}
-        </Container>
+        <>
+            <Container ref={worldContainer} eventMode={'static'} pointermove={handlePointerMove}>
+                <Background width={worldWidth} height={worldHeight} />
+                {monster && <Monster {...monster} />}
+                {cagedWords.map(cw => <CagedWord key={cw.id} {...cw} />)}
+                {fishLogics.map(logic => <Fish key={logic.id} {...logic.state} debugMode={debugMode} />)}
+                {player && (
+                    <Player
+                        position={player.position} size={player.size} velocity={player.velocity}
+                        eatTrigger={eatTrigger} vomitTrigger={vomitTrigger}
+                        onStateChange={setPlayerState} onVomitComplete={handleVomitComplete}
+                    />
+                )}
+                {messages.map(msg => (<Text key={msg.id} text={msg.text} x={msg.position.x} y={msg.position.y - 40} style={new TextStyle({ fill: 'yellow', fontSize: 20, fontWeight: 'bold' })} />))}
+            </Container>
+            <Container>
+                <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24 })} x={10} y={10} />
+                <Text text={`Sequence: ${swallowedText}`} style={new TextStyle({ fill: 'yellow', fontSize: 20 })} x={10} y={40} />
+                {debugMode && player && (
+                    <DebugDisplay
+                        playerSpeed={Math.sqrt(player.velocity.x**2 + player.velocity.y**2)}
+                        isBoosting={boostInfo.current.isBoosting}
+                        boostCooldown={boostInfo.current.cooldownTimer}
+                        width={viewportWidth}
+                        playerAnimationName={playerState.name}
+                    />
+                )}
+            </Container>
+        </>
     );
 };
 

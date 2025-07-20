@@ -10,7 +10,7 @@ import ReadingGameComponent from '../../components/student/ReadingGameComponent'
 import FillBlanksGameComponent from '../../components/student/FillBlanksGameComponent';
 import Matching2GameComponent from '../../components/student/Matching2GameComponent';
 import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
-import WordFeastGame from '../../components/student/WordFeast/WordFeast';
+import WordFeastGame from '../../components/student/WordFeastGame';
 import FlipMatchingGame from '../../components/student/FlipMatchingGame';
 import QuizMcqGame from '../../components/student/QuizMcqGame'; // This import was added during the merge resolution
 
@@ -60,22 +60,6 @@ const ActivityPage = () => {
         fetchActivityDetails();
     }, [activityNodeTypeId, authState.token, lessonProgressId]); // Dependencies are now stable primitive values
 
-    // --- EFFECT FOR MUSIC ---
-    useEffect(() => {
-        const audio = new Audio(challengeBGMusic);
-        audio.loop = true;
-        audio.volume = 0.5;
-        let playPromise = audio.play();
-
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.error("Error playing background music:", e));
-        }
-
-        return () => {
-            audio.pause();
-            audio.currentTime = 0;
-        };
-    }, []);
 
     const handleGameComplete = (gameResults) => {
         navigate('/student/activity-summary', {
@@ -158,6 +142,7 @@ const ActivityPage = () => {
                 </Box>
             );
     }
+
 };
 
 export default ActivityPage;
