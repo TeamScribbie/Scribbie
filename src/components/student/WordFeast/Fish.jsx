@@ -86,7 +86,7 @@ const MediumFish = ({ position, velocity, status }) => {
     if (status === 'turning') animationName = 'turn';
     if (status === 'eating') animationName = 'eat';
     const isLooped = animationName === 'swim';
-    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.2} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.7, y: 0.7 }} anchor={{ x: 0.5, y: 0.5 }} />);
+    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.2} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.9, y: 0.9 }} anchor={{ x: 0.5, y: 0.5 }} />);
 };
 
 
@@ -103,7 +103,8 @@ const LargeFish = ({ position, velocity, status }) => {
     if (status === 'turning') animationName = 'turn';
     if (status === 'eating') animationName = 'eat';
     const isLooped = animationName === 'swim';
-    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.15} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.6, y: 0.6 }} anchor={{ x: 0.5, y: 0.5 }} />);
+
+    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.15} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 1.1, y: 1.1 }}  anchor={{ x: 0.5, y: 0.5 }} />);
 };
 
 

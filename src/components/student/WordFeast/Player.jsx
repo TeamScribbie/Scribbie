@@ -163,7 +163,7 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
         return null;
     }
     
-    const scale = { small: 0.15, medium: 0.3, large: 0.45 }[size];
+    const scale = { small: 0.4, medium: 0.6, large: 0.8 }[size];
     const isLooped = animationName === 'idle' || animationName === 'swim';
 
     return (

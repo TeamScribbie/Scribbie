@@ -1,32 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Stage, Graphics, Sprite } from '@pixi/react';
-import * as PIXI from 'pixi.js'; // Import PIXI for Texture and Rectangle
+import React, { useState, useEffect } from 'react';
+import { Stage } from '@pixi/react';
 import GameStage from './GameStage';
 import { gameConfig } from './config';
-import background1 from './game/spritesheets/background1.png'; // Import the background image
-
-// MODIFIED Background component to use a specific frame from the spritesheet
-const Background = ({ width, height }) => {
-    // Create the base texture from the loaded image
-    const baseTexture = useMemo(() => PIXI.BaseTexture.from(background1), []);
-
-    // Define the frame for the desired background part (x, y, width, height)
-    // You mentioned x,y: 0 and size 800*600
-    const backgroundFrame = useMemo(() => new PIXI.Rectangle(0, 0, 800, 600), []);
-
-    // Create a new Texture from the base texture and the defined frame
-    const backgroundTextureRegion = useMemo(() => new PIXI.Texture(baseTexture, backgroundFrame), [baseTexture, backgroundFrame]);
-
-    return (
-        <Sprite
-            texture={backgroundTextureRegion} // Use the texture created from the specific region
-            x={0}
-            y={0}
-            width={width}   // These will stretch the 800x600 region to 1280x720
-            height={height} // which may cause slight distortion due to aspect ratio difference.
-        />
-    );
-};
 
 const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     const [gameOver, setGameOver] = useState(false);
@@ -73,6 +48,12 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
         onGameComplete(results);
     }
 
+    const handleWin = () => {
+        console.log("handleWin called in WordFeast component!");
+        setGameOver(true); 
+        onGameComplete({ status: 'COMPLETED' });
+    }
+
     const containerStyle = {
         width: '100vw', height: '100vh', display: 'flex',
         justifyContent: 'center', alignItems: 'center', position: 'relative',
@@ -95,11 +76,12 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
         <div style={containerStyle}>
             <div style={gameWrapperStyle}>
                 <Stage width={gameConfig.width} height={gameConfig.height}>
-                    <Background width={gameConfig.width} height={gameConfig.height} />
                     <GameStage
                         key={key}
-                        width={gameConfig.width}
-                        height={gameConfig.height}
+                        viewportWidth={gameConfig.width}
+                        viewportHeight={gameConfig.height}
+                        worldWidth={gameConfig.worldWidth}
+                        worldHeight={gameConfig.worldHeight}
                         onGameOver={handleGameOver}
                         isGameOver={gameOver}
                         debugMode={debugMode}
