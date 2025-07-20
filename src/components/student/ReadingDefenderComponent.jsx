@@ -40,6 +40,10 @@ const playWordSound = (soundUrl) => {
 
 const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activityInstructions }) => {
     const getRandom = (arr) => {
+        if (!arr || arr.length === 0) {
+            console.warn("getRandom called with empty or null array, returning null.");
+            return null; // Return null if array is empty
+        }
         return arr[Math.floor(Math.random() * arr.length)];
     };
 
@@ -48,16 +52,31 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const [lives, setLives] = useState(3);
     const [wave, setWave] = useState(1);
     const [words, setWords] = useState([]);
-    const [target, setTarget] = useState(null);
+    const [target, setTarget] = useState(null); // Initial state is null
     const [feedback, setFeedback] = useState('');
     const [highestScore, setHighestScore] = useState(0);
 
-    const wordBank = questions.length > 0
-        ? questions[0].choices.map(c => ({
-            text: c.choiceText,
-            soundUrl: c.audioPath ? `${MEDIA_BASE_URL}/${c.audioPath}` : null
-        }))
-        : [{ text: 'Broke', soundUrl: null }, { text: 'Choice', soundUrl: null }, { text: 'Not Displayed', soundUrl: null }];
+    const wordBank = [];
+    if (questions.length > 0) {
+        questions.forEach(q => {
+            if (q.choices && Array.isArray(q.choices)) {
+                q.choices.forEach(choice => {
+                    wordBank.push({
+                        text: choice.choiceText,
+                        soundUrl: choice.audioPath ? `${MEDIA_BASE_URL}${choice.audioPath}` : null
+                    });
+                });
+            }
+        });
+    }
+
+    if (wordBank.length === 0) {
+        wordBank.push(
+            { text: 'Broke', soundUrl: null },
+            { text: 'Choice', soundUrl: null },
+            { text: 'Not Displayed', soundUrl: null }
+        );
+    }
 
 
     const startTimeRef = useRef(Date.now());
@@ -95,6 +114,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         setLives(3);
         setWave(1);
         setWords([]);
+        setTarget(null); // Ensure target is reset to null
         waveReadyRef.current = true;
         spawnInProgress.current = false;
         if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -110,8 +130,16 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         generateLanes();
 
         const targetWordObject = getRandom(wordBank);
-        setTarget(targetWordObject);
-        playWordSound(targetWordObject.soundUrl);
+        // Ensure targetWordObject is not null before setting state and playing sound
+        if (targetWordObject) {
+            setTarget(targetWordObject);
+            playWordSound(targetWordObject.soundUrl);
+        } else {
+            console.error("Failed to get a target word from wordBank. Check wordBank content.");
+            setGameState('gameOver'); // Or handle this error gracefully
+            return; // Exit if no target word
+        }
+
 
         const totalCount = 20;
         const numTargetWords = getRandom([3, 4, 5]);
@@ -136,18 +164,27 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 if (filteredDistractors.length > 0) {
                     distractorObject = getRandom(filteredDistractors);
                 } else {
-                    // Fallback if no unique distractors are available
-                    // You might want to log a warning here or use a different strategy
                     console.warn("No unique distractors available. Reusing words or using placeholder.");
-                    distractorObject = getRandom(wordBank); // Fallback to any word, even target
+                    distractorObject = getRandom(wordBank);
                 }
 
-                wordQueue[i] = {
-                    id: crypto.randomUUID(),
-                    text: distractorObject.text,
-                    soundUrl: distractorObject.soundUrl,
-                    speed: 1 + waveNum * 0.7,
-                };
+                // Ensure distractorObject is not null before using its properties
+                if (distractorObject) {
+                    wordQueue[i] = {
+                        id: crypto.randomUUID(),
+                        text: distractorObject.text,
+                        soundUrl: distractorObject.soundUrl,
+                        speed: 1 + waveNum * 0.7,
+                    };
+                } else {
+                    // Fallback for distractor if getRandom returns null even from main wordBank
+                    wordQueue[i] = {
+                        id: crypto.randomUUID(),
+                        text: 'ERROR_WORD',
+                        soundUrl: null,
+                        speed: 1 + waveNum * 0.7,
+                    };
+                }
             }
         }
 
@@ -193,7 +230,8 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             laneOccupancy.current[w.x] = null;
                         }
 
-                        if (target && w.text === target.text) {
+                        // Use optional chaining for target.text to prevent error
+                        if (target?.text && w.text === target.text) {
                             setLives(l => {
                                 const newLives = l - 1;
                                 if (newLives <= 0) setGameState('gameOver');
@@ -238,11 +276,20 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
     useEffect(() => {
         if (gameState === 'playing') {
-            spawnWave(wave);
+            // Only call spawnWave if target is null (first time entering playing state)
+            // or if a new wave needs to be spawned explicitly by the game loop.
+            // This prevents re-spawning a wave on every render if target changes.
+            if (!target) {
+                spawnWave(wave);
+            }
             animRef.current = requestAnimationFrame(step);
             return () => cancelAnimationFrame(animRef.current);
         }
-    }, [gameState]);
+        // Cleanup when component unmounts or gameState changes from 'playing'
+        return () => {
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+        };
+    }, [gameState, wave]); // Depend on gameState and wave
 
     useEffect(() => {
         if (gameState === 'gameOver') {
@@ -260,7 +307,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 currentPlayingSound = null;
             }
         }
-    }, [gameState]);
+    }, [gameState, score, highestScore, onGameComplete]); // Added dependencies for useEffect
 
     const shoot = (w) => {
         setWords(prev => prev.filter(p => p.id !== w.id));
@@ -268,7 +315,8 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             laneOccupancy.current[w.x] = null;
         }
 
-        if (target && w.text === target.text) {
+        // Use optional chaining for target.text to prevent error
+        if (target?.text && w.text === target.text) {
             playWordSound(w.soundUrl);
             setScore(s => {
                 const newScore = s + 10;
@@ -294,7 +342,40 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             {activityTitle && <h2>{activityTitle}</h2>}
             {activityInstructions && <p>{activityInstructions}</p>}
 
-            {gameState === 'menu' && <button onClick={startGame}>Start Game</button>}
+            {gameState === 'menu' && (
+                <div className="game-area fullscreen" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <div className="taco-clouds-sky">
+                        {[...Array(12)].map((_, i) => (
+                            <img
+                                key={i}
+                                src="/taco-cloud.png"
+                                alt="Taco Cloud"
+                                className={`taco-cloud animated-cloud cloud-${i % 4}`}
+                                style={{ left: `${i * 10}%` }}
+                            />
+                        ))}
+                    </div>
+                    <h1 style={{ color: 'white', fontSize: '3em', textShadow: '2px 2px 4px rgba(0,0,0,0.5)', zIndex: 1 }}>Taco Game</h1>
+                    <button
+                        onClick={startGame}
+                        style={{
+                            padding: '20px 40px',
+                            fontSize: '2em',
+                            cursor: 'pointer',
+                            backgroundColor: '#FFD700',
+                            color: '#8B4513',
+                            border: '3px solid #8B4513',
+                            borderRadius: '10px',
+                            fontWeight: 'bold',
+                            boxShadow: '4px 4px 8px rgba(0,0,0,0.3)',
+                            zIndex: 1,
+                            marginTop: '20px'
+                        }}
+                    >
+                        Start Game
+                    </button>
+                </div>
+            )}
 
             {gameState === 'playing' && (
                 <div className="game-area fullscreen" ref={containerRef}>
@@ -312,6 +393,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         ))}
                     </div>
 
+                    {/* Use optional chaining for target?.text */}
                     {target && (
                         <div
                             className="target"
@@ -334,7 +416,8 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             style={{ left: `${w.x}px`, top: `${w.y}px` }}
                             onClick={() => shoot(w)}
                         >
-                            <span className={`word-label ${target && w.text === target.text ? 'correct' : 'wrong'}`}>
+                            {/* Use optional chaining for target?.text */}
+                            <span className={`word-label ${target?.text && w.text === target.text ? 'correct' : 'wrong'}`}>
                                 {w.text}
                             </span>
                         </div>
