@@ -18,8 +18,6 @@ class FishLogic {
     this.turnCooldown = 0;
     this.eatDuration = 0;
     this.eatCooldown = 180;
-    
-    // --- ADDED: Property to track which fish to eat ---
     this.fishToEatId = null;
   }
 
@@ -31,9 +29,7 @@ class FishLogic {
   }
 
   update(delta, playerPosition, otherFish) {
-    // --- ADDED: Reset the target ID at the start of each update ---
-    this.fishToEatId = null; 
-    
+    this.fishToEatId = null;
     const fishType = gameConfig.fishTypes[this.size];
     
     this.turnDuration -= delta;
@@ -44,32 +40,33 @@ class FishLogic {
     if (this.eatDuration > 0) {
       this.status = 'eating';
       this.velocity.x *= 0.9;
-      this.velocity.y *= 0.9;
     } else if (this.turnDuration > 0) {
       this.status = 'turning';
       this.velocity.x *= 0.95;
     } else {
         this.status = 'roaming';
         let target = this.targetPosition;
+        let targetSize = null;
 
-        if (this.size === 'medium' && this.eatCooldown <= 0 && otherFish) {
-            const nearbySmallFish = otherFish.find(f => 
-                f.id !== this.id && f.size === 'small' && calculateDistance(this.position, f.position) < fishType.chaseRadius
+        if (this.size === 'medium') targetSize = 'small';
+        if (this.size === 'large') targetSize = 'medium';
+
+        if (targetSize && this.eatCooldown <= 0 && otherFish) {
+            const prey = otherFish.find(f =>
+                f.id !== this.id && f.size === targetSize && calculateDistance(this.position, f.position) < fishType.chaseRadius
             );
 
-            if (nearbySmallFish) {
+            if (prey) {
                 this.status = 'chasing';
-                target = nearbySmallFish.position;
-                if (calculateDistance(this.position, nearbySmallFish.position) < 30) {
+                target = prey.position;
+                if (calculateDistance(this.position, prey.position) < 40) { // Increased distance for larger fish
                     this.eatDuration = 25;
-                    this.eatCooldown = 180;
-                    // --- ADDED: Set the ID of the fish to be eaten ---
-                    this.fishToEatId = nearbySmallFish.id;
+                    this.eatCooldown = 240; // Longer cooldown
+                    this.fishToEatId = prey.id;
                 }
             }
         }
-        
-        // ... (rest of the roaming/chasing logic)
+
         if (this.status === 'roaming' && calculateDistance(this.position, this.targetPosition) < 50) { this.targetPosition = this.getNewTarget(); }
         const angleToTarget = Math.atan2(target.y - this.position.y, target.x - this.position.x);
         const angleDiff = Math.abs(angleToTarget - this.lastAngle);
@@ -88,16 +85,7 @@ class FishLogic {
   }
 
   get state() {
-    return { 
-        id: this.id, 
-        size: this.size, 
-        points: this.points, 
-        position: this.position, 
-        velocity: this.velocity, 
-        status: this.status,
-        // --- ADDED: Expose the target ID in the state ---
-        fishToEatId: this.fishToEatId 
-    };
+    return { id: this.id, size: this.size, points: this.points, position: this.position, velocity: this.velocity, status: this.status, fishToEatId: this.fishToEatId };
   }
 }
 
