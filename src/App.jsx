@@ -35,7 +35,7 @@ import ManageAdminsPage from './page/teacher/ManageAdminsPage.jsx';
 import ActivityNodeEditorPage from './page/teacher/ActivityNodeEditorPage.jsx'; // New import for the new page
 import ChallengeQuestionsEditorPage from './page/teacher/ChallengeQuestionsEditorPage.jsx';
 import LessonManagementPage from "./page/teacher/LessonManagementPage.jsx"; // New Page
-
+import StoryGame from './page/student/StoryGame.jsx';
 import ReadingGameComponent from './components/student/ReadingGameComponent';
 import FillBlanksGameComponent from './components/student/FillBlanksGameComponent';
 import ReadingDefenderComponent from "./components/student/ReadingDefenderComponent.jsx";
@@ -78,6 +78,7 @@ const App = () => {
         <Route path="/teacher-login" element={<TeacherLogin />} />
         <Route path="/teacher-register" element={<TeacherRegistration />} />
         <Route path="/student-memory-game" element={<MemoryGame />} />
+        <Route path="/student-story-game" element={<StoryGame />} />
 
 
         {/* Student Protected Routes */}

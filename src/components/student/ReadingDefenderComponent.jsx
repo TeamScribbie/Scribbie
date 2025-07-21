@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { MEDIA_BASE_URL } from '../../config/apiConfig.js';
 import '../styles/ReadingDefender.css';
 
 function getRandom(arr) {
+    if (!arr || arr.length === 0) return null;
     return arr[Math.floor(Math.random() * arr.length)];
 }
-
-const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    window.speechSynthesis.speak(utterance);
-};
 
 const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activityInstructions }) => {
     const [gameState, setGameState] = useState('menu');
@@ -17,14 +13,21 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const [lives, setLives] = useState(3);
     const [wave, setWave] = useState(1);
     const [words, setWords] = useState([]);
-    const [target, setTarget] = useState('');
+    const [target, setTarget] = useState({ text: '', soundSrc: null });
     const [feedback, setFeedback] = useState('');
     const [highestScore, setHighestScore] = useState(0);
     const [showWaveAnnouncer, setShowWaveAnnouncer] = useState(false);
 
-    const wordBank = questions.length > 0
-        ? questions[0].choices.map(c => c.choiceText)
-        : ['Broke', 'Choice', 'Not Displayed'];
+    const wordBank = useMemo(() => {
+        if (!questions || questions.length === 0 || !questions[0].choices) {
+            return [{ text: 'No Words', soundSrc: null }];
+        }
+        return questions[0].choices.map(choice => ({
+            text: choice.choiceText,
+            soundSrc: choice.audioPath ? `${MEDIA_BASE_URL}${choice.audioPath.replace(/^\/+/, '')}` : null
+        }));
+    }, [questions]);
+
 
     const startTimeRef = useRef(Date.now());
     const animRef = useRef(null);
@@ -68,11 +71,20 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     };
 
     const spawnWave = (waveNum) => {
+        if (waveNum >= 6) {
+            setGameState('gameOver'); // Win condition met
+            return;
+        }
         spawnInProgress.current = true;
         generateLanes();
 
-        const targetWord = getRandom(wordBank);
-        setTarget(targetWord);
+        const targetWordObject = getRandom(wordBank);
+        if (!targetWordObject) {
+            console.error("Could not get a target word from the word bank.");
+            spawnInProgress.current = false;
+            return;
+        }
+        setTarget(targetWordObject);
 
         const totalCount = 20;
         const numTargetWords = getRandom([3, 4, 5]);
@@ -83,19 +95,30 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             const pos = i * spacing;
             wordQueue[pos] = {
                 id: crypto.randomUUID(),
-                text: targetWord,
+                text: targetWordObject.text,
+                soundSrc: targetWordObject.soundSrc,
                 speed: 1 + waveNum * 0.5,
             };
         }
 
         for (let i = 0; i < totalCount; i++) {
             if (!wordQueue[i]) {
-                const distractor = getRandom(wordBank.filter(w => w !== targetWord));
-                wordQueue[i] = {
-                    id: crypto.randomUUID(),
-                    text: distractor,
-                    speed: 1 + waveNum * 0.7,
-                };
+                const distractor = getRandom(wordBank.filter(w => w.text !== targetWordObject.text));
+                if (distractor) {
+                    wordQueue[i] = {
+                        id: crypto.randomUUID(),
+                        text: distractor.text,
+                        soundSrc: distractor.soundSrc,
+                        speed: 1 + waveNum * 0.7,
+                    };
+                } else {
+                    wordQueue[i] = {
+                        id: crypto.randomUUID(),
+                        text: "Distractor",
+                        soundSrc: null,
+                        speed: 1 + waveNum * 0.7,
+                    };
+                }
             }
         }
 
@@ -141,13 +164,13 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             laneOccupancy.current[w.x] = null;
                         }
 
-                        if (w.text === target) {
+                        if (w.text === target.text) {
                             setLives(l => {
                                 const newLives = l - 1;
                                 if (newLives <= 0) setGameState('gameOver');
                                 return newLives;
                             });
-                            setFeedback(`😬 Missed the target word "${target}"!`);
+                            setFeedback(`😬 Missed the target word "${target.text}"!`);
                         } else {
                             setScore(s => {
                                 const newScore = s + 1;
@@ -170,7 +193,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 waveReadyRef.current = false;
                 setTimeout(() => {
                 setShowWaveAnnouncer(true);
-                setTimeout(() => setShowWaveAnnouncer(false), 1500); // Hide after 1.5 seconds
+                setTimeout(() => setShowWaveAnnouncer(false), 1500);
 
                 setWave(prev => {
                     const next = prev + 1;
@@ -193,29 +216,35 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             animRef.current = requestAnimationFrame(step);
             return () => cancelAnimationFrame(animRef.current);
         }
-    }, [gameState]);
+    }, [gameState, wordBank]);
 
+    // This is the corrected section
     useEffect(() => {
-        if (gameState === 'gameOver') {
+        if (gameState === 'gameOver' && wave >= 6) {
             const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
             onGameComplete?.({
                 score,
                 highestScore,
-                status: score >= 10 ? 'COMPLETED' : 'FAILED',
+                status: 'COMPLETED',
                 timeTaken,
-                accuracy: 100,
-                questionsAttempted: score,
+                accuracy: 100, // Placeholder
+                questionsAttempted: score, // Placeholder
             });
         }
-    }, [gameState]);
+    }, [gameState, score, highestScore, onGameComplete, wave]);
 
     const shoot = (w) => {
+        if (w.soundSrc) {
+            const sound = new Audio(w.soundSrc);
+            sound.play().catch(e => console.error("Error playing taco sound:", e));
+        }
+
         setWords(prev => prev.filter(p => p.id !== w.id));
         if (laneOccupancy.current[w.x] === w.id) {
             laneOccupancy.current[w.x] = null;
         }
 
-        if (w.text === target) {
+        if (w.text === target.text) {
             setScore(s => {
                 const newScore = s + 10;
                 if (newScore > highestScore) setHighestScore(newScore);
@@ -233,6 +262,13 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
         setTimeout(() => setFeedback(''), 1200);
     };
+
+    const speak = (audioUrl) => {
+        if (!audioUrl) return;
+        const sound = new Audio(audioUrl);
+        sound.play().catch(e => console.error("Error playing target word sound:", e));
+    };
+
 
     return (
         <div className="game-screen">
@@ -276,10 +312,10 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         <p className="target-instruction">Target Word</p>
                         <div
                             className="target-bubble"
-                            onClick={() => speak(target)}
+                            onClick={() => speak(target.soundSrc)}
                             title="Click to hear the word"
                         >
-                            <div className="target-letter">Click Me!</div>
+                            <div className="target-letter">{"Click Me"}</div>
                         </div>
                     </div>
 
@@ -290,7 +326,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             style={{ left: `${w.x}px`, top: `${w.y}px` }}
                             onClick={() => shoot(w)}
                         >
-                            <span className={`word-label ${w.text === target ? 'correct' : 'wrong'}`}>
+                            <span className={`word-label ${w.text === target.text ? 'correct' : 'wrong'}`}>
                                 {w.text}
                             </span>
                         </div>
@@ -298,7 +334,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 </div>
             )}
 
-            {gameState === 'gameOver' && (
+            {gameState === 'gameOver' && wave < 6 && (
                 <div className="overlay">
                     <h2>Game Over</h2>
                     <p>Your score: {score}</p>
