@@ -2,8 +2,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid, Paper, IconButton } from '@mui/material';
-import LockIcon from '@mui/icons-material/Lock';
-import StarIcon from '@mui/icons-material/Star';
 
 // Import WordFeast assets
 import wordFeastBackground from './AssetsLN/WordFeast/WordFeastBackground.png';
@@ -13,38 +11,16 @@ import nextArrowIcon from './AssetsLN/WordFeast/Next Icon.png';
 import wordFeastLvlIcon from './AssetsLN/WordFeast/WordFeastLvlIcon-Photoroom.png';
 
 
-const StarRating = ({ score }) => {
-    const numStars = score > 90 ? 3 : score > 50 ? 2 : score > 0 ? 1 : 0;
-    if (numStars === 0) return <Box className="star-rating" />;
-    return (
-        <Box className="star-rating">
-            {Array.from({ length: numStars }, (_, i) => (
-                <StarIcon key={i} className="star" />
-            ))}
-        </Box>
-    );
-};
-
-const WordFeastLevelNavigator = ({ lesson, activityNodes, activityNodeProgress, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+const WordFeastLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
     
     const levels = useMemo(() => {
-        const mergedLevels = activityNodes.map((node, index) => {
-            const progress = activityNodeProgress?.find(p => p.activityNodeTypeId === node.activityId);
-            const isCompleted = progress?.completed || false;
-            
-            const isLocked = index > 0 && !activityNodeProgress?.find(p => p.activityNodeTypeId === activityNodes[index - 1].activityId)?.completed;
-
+        return activityNodes.map((node, index) => {
             return {
                 ...node,
                 levelNumber: index + 1,
-                isCompleted,
-                isLocked,
-                score: progress?.totalScore || 0,
             };
         });
-        return mergedLevels;
-
-    }, [activityNodes, activityNodeProgress]);
+    }, [activityNodes]);
 
     const isFirstLesson = currentLessonIdx === 0;
     const isLastLesson = currentLessonIdx === totalLessons - 1;
@@ -125,8 +101,7 @@ const WordFeastLevelNavigator = ({ lesson, activityNodes, activityNodeProgress, 
                     <Grid item key={level.activityId} xs={4} sm={3} md={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <Paper
                             elevation={0}
-                            className={`level-button ${level.isLocked ? 'locked' : ''} ${level.isCompleted ? 'completed' : ''}`}
-                            onClick={() => !level.isLocked && onSelectNode(level)}
+                            onClick={() => onSelectNode(level)}
                             sx={{
                                 width: { xs: '80px', sm: '90px', md: '100px' },
                                 height: { xs: '80px', sm: '90px', md: '100px' },
@@ -146,24 +121,17 @@ const WordFeastLevelNavigator = ({ lesson, activityNodes, activityNodeProgress, 
                                 backgroundPosition: 'center',
                                 color: '#451513',
                                 textShadow: '1px 1px 2px rgba(255, 255, 255, 0.5)',
-                                cursor: level.isLocked ? 'not-allowed' : 'pointer',
+                                cursor: 'pointer',
                                 transition: 'transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease',
                                 
-                                '&:not(.locked):hover': {
+                                '&:hover': {
                                     transform: 'scale(1.15) translateY(-5px)',
                                     filter: 'brightness(1.2) drop-shadow(0 5px 10px rgba(0,0,0,0.5))',
                                 },
-                                
-                                '&.locked': {
-                                    filter: 'grayscale(100%) brightness(0.7) opacity(0.8)',
-                                    color: '#757575',
-                                    pointerEvents: 'none',
-                                },
                             }}
                         >
-                            {level.isLocked ? <LockIcon sx={{ fontSize: '2.5rem', color: '#757575' }} /> : level.levelNumber}
+                            {level.levelNumber}
                         </Paper>
-                        {!level.isLocked && <StarRating score={level.score} />}
                     </Grid>
                 ))}
             </Grid>
@@ -174,7 +142,6 @@ const WordFeastLevelNavigator = ({ lesson, activityNodes, activityNodeProgress, 
 WordFeastLevelNavigator.propTypes = {
     lesson: PropTypes.object.isRequired,
     activityNodes: PropTypes.array.isRequired,
-    activityNodeProgress: PropTypes.array,
     onSelectNode: PropTypes.func.isRequired,
     onPrevLesson: PropTypes.func.isRequired,
     onNextLesson: PropTypes.func.isRequired,

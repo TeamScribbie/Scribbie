@@ -82,7 +82,7 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     const handleMonsterInteraction = useCallback(() => {
         const playerSequence = swallowedWords.map(w => w.word).join('');
         if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
-            if (onWin) onWin({ swallowedWords }); // Pass the necessary data
+            if (onWin) onWin({ swallowedWords, score }); // Pass the necessary data
             return;
         }
         const newCollisionCount = monsterDashCollisions + 1;

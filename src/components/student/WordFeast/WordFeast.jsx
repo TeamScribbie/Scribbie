@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Stage } from '@pixi/react';
 import GameStage from './GameStage';
 import WinAnimation from './WinAnimation'; 
@@ -10,9 +10,11 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     const [winData, setWinData] = useState(null); 
     const [key, setKey] = useState(Date.now());
     const [debugMode, setDebugMode] = useState(false);
+    const startTimeRef = useRef(null);
 
     useEffect(() => {
         console.log("WordFeast component received gameData:", gameData);
+        startTimeRef.current = Date.now();
         document.body.style.margin = '0';
         document.body.style.overflow = 'hidden';
         document.body.style.backgroundColor = '#1a1a1a';
@@ -50,7 +52,6 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
 
     const handleGameOver = (results) => {
         setGameOver(true);
-        // onGameComplete(results); // Removed to prevent immediate redirect
     }
 
     const handleWin = (data) => {
@@ -60,8 +61,17 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     }
 
     const handleWinAnimationComplete = () => {
-        // This is now called by the "Continue" button in WinAnimation
-        onGameComplete({ status: 'COMPLETED' });
+        const endTime = Date.now();
+        const timeTaken = startTimeRef.current ? Math.round((endTime - startTimeRef.current) / 1000) : 0;
+        
+        onGameComplete({
+            status: 'COMPLETED',
+            score: winData?.score+5000 || 0,
+            timeTaken: timeTaken,
+            highestStreak: 0, // WordFeast does not have a streak mechanic
+            accuracy: 100,      // A win implies 100% accuracy
+            questionsAttempted: 1,
+        });
     }
 
     const containerStyle = {
