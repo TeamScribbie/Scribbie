@@ -1,4 +1,5 @@
 // src/components/layout/navbar.jsx
+
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { IconButton, Avatar, Badge, Menu, MenuItem, Chip } from '@mui/material';
@@ -10,10 +11,10 @@ import '../../styles/Navbar.css';
 import { useAuth } from '../../context/AuthContext';
 import ScribbieLogo from '../../assets/ScribbieLogoV2.png';
 
-const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
+const Navbar = ({ sidebarOpen, setSidebarOpen, transparent }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
-  const { authState, logout } = useAuth(); 
+  const { authState, logout } = useAuth();
   const openMenu = Boolean(anchorEl);
 
   const handleProfileClick = (event) => {
@@ -40,15 +41,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   };
 
   return (
-    <div className="navbar-container">
+    <div className={`navbar-container ${transparent ? 'transparent' : ''}`}>
       <div className="navbar-left" style={{ display: 'flex', alignItems: 'center' }}>
-        {/* 🔽 Logo image */}
-        <img
-          src={ScribbieLogo}
-          alt="Scribbie Logo"
-          style={{ height: '40px', marginRight: '16px', cursor: 'pointer' }}
-          onClick={() => navigate('/')} // Optional: navigate to home
-        />
+        {/* 🔽 Logo image with white background */}
+        <div className="navbar-logo-background">
+            <img
+              src={ScribbieLogo}
+              alt="Scribbie Logo"
+              style={{ height: '40px', cursor: 'pointer' }}
+              onClick={() => navigate('/')} // Optional: navigate to home
+            />
+        </div>
         
         {setSidebarOpen && (
           <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} className="navbar-icon-button">
@@ -94,6 +97,11 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
 Navbar.propTypes = {
   sidebarOpen: PropTypes.bool,
   setSidebarOpen: PropTypes.func,
+  transparent: PropTypes.bool,
+};
+
+Navbar.defaultProps = {
+    transparent: false,
 };
 
 export default Navbar;

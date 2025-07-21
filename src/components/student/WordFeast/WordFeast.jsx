@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Stage } from '@pixi/react';
 import GameStage from './GameStage';
+import WinAnimation from './WinAnimation'; 
 import { gameConfig } from './config';
 
 const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
     const [gameOver, setGameOver] = useState(false);
+    const [isWinning, setIsWinning] = useState(false); 
+    const [winData, setWinData] = useState(null); 
     const [key, setKey] = useState(Date.now());
     const [debugMode, setDebugMode] = useState(false);
 
@@ -40,17 +43,24 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
 
     const handleRestart = () => {
         setGameOver(false);
+        setIsWinning(false);
+        setWinData(null);
         setKey(Date.now());
     };
 
     const handleGameOver = (results) => {
         setGameOver(true);
-        onGameComplete(results);
+        // onGameComplete(results); // Removed to prevent immediate redirect
     }
 
-    const handleWin = () => {
+    const handleWin = (data) => {
         console.log("handleWin called in WordFeast component!");
-        setGameOver(true); 
+        setWinData(data);
+        setIsWinning(true);
+    }
+
+    const handleWinAnimationComplete = () => {
+        // This is now called by the "Continue" button in WinAnimation
         onGameComplete({ status: 'COMPLETED' });
     }
 
@@ -83,14 +93,23 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
                         worldWidth={gameConfig.worldWidth}
                         worldHeight={gameConfig.worldHeight}
                         onGameOver={handleGameOver}
-                        isGameOver={gameOver}
+                        onWin={handleWin} 
+                        isGameOver={gameOver || isWinning}
                         debugMode={debugMode}
                         gameData={gameData}
                     />
                 </Stage>
             </div>
+            
+            {isWinning && winData && (
+                <WinAnimation
+                    swallowedWords={winData.swallowedWords}
+                    onComplete={handleWinAnimationComplete}
+                />
+            )}
 
-            {gameOver && (
+
+            {gameOver && !isWinning && ( // Ensure win screen doesn't overlap with game over
                 <div style={overlayStyle}>
                     <h1 style={{ color: 'white' }}>Game Over</h1>
                     <button onClick={handleRestart} style={{ padding: '10px 20px', fontSize: '20px', cursor: 'pointer', borderRadius: '8px', border: 'none' }}>Restart</button>

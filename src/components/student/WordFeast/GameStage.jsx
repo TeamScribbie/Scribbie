@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Container, Text, useTick, Sprite } from '@pixi/react';
-import { TextStyle } from 'pixi.js';
+import { TextStyle, Texture } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 
 import Player from './Player';
@@ -10,26 +10,56 @@ import Monster from './Monster';
 import CagedWord from './CagedWord';
 import { useGameLogic } from './hooks/useGameLogic';
 import { usePhysics } from './hooks/usePhysics';
+import { useCamera } from './hooks/useCamera';
 import { gameConfig } from './config';
 import background1 from './game/spritesheets/background1.png';
 import IntroAudio from './game/audio/monster/Intro.ogg';
-
-// --- CORRECTED: Import actual audio files ---
 
 import Warn1Ogg from './game/audio/monster/Warn1.ogg';
 import Warn2Ogg from './game/audio/monster/Warn2.ogg';
 import Warn3Ogg from './game/audio/monster/Warn3.ogg';
 
-// Import background music and ambient sound
 import Track1Wav from './game/audio/music/track1.wav';
 import WaterAmb1mp3 from './game/audio/music/WaterAmb1.mp3';
+import BubbleImg from './game/icons/bubble.png';
 
+const bubbleTexture = Texture.from(BubbleImg);
 
 const Background = ({ width, height }) => {
     const baseTexture = useMemo(() => PIXI.BaseTexture.from(background1), []);
     const backgroundFrame = useMemo(() => new PIXI.Rectangle(0, 0, 800, 600), []);
     const backgroundTextureRegion = useMemo(() => new PIXI.Texture(baseTexture, backgroundFrame), [baseTexture, backgroundFrame]);
     return (<Sprite texture={backgroundTextureRegion} x={0} y={0} width={width} height={height} />);
+};
+
+const WordBubbleUI = ({ word, position }) => {
+    // --- MODIFIED: Updated text style for red text with a white glow ---
+    const textStyle = new TextStyle({
+        fontFamily: 'Bubblegum Sans', // <-- 1. SET THE NEW FONT
+        fontSize: 24,
+        fill: '#ff4d4d', // <-- 2. SET THE RED COLOR
+        stroke: '#ffffff', // <-- 3. SET THE GLOW/OUTLINE COLOR
+        strokeThickness: 4, // <-- 4. SET THE GLOW THICKNESS
+        dropShadow: true,
+        dropShadowColor: '#ffffff',
+        dropShadowBlur: 5,
+        dropShadowDistance: 0,
+    });
+
+    return (
+        <Container x={position.x} y={position.y}>
+            <Sprite
+                texture={bubbleTexture}
+                anchor={0.5}
+                scale={0.024}
+            />
+            <Text
+                text={word}
+                anchor={0.5}
+                style={textStyle}
+            />
+        </Container>
+    );
 };
 
 const MONSTER_WIDTH = 172;
@@ -48,66 +78,34 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
     const vomitCooldown = useRef(0);
     const worldContainer = useRef(null);
-
+    
     const handleMonsterInteraction = useCallback(() => {
         const playerSequence = swallowedWords.map(w => w.word).join('');
-        
-        // Check for the win condition first
         if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
-            console.log("✅ WIN CONDITION MET!");
-            if(onWin) onWin(); 
+            if (onWin) onWin({ swallowedWords }); // Pass the necessary data
             return;
         }
-
         const newCollisionCount = monsterDashCollisions + 1;
         setMonsterDashCollisions(newCollisionCount);
-
         let dialogue = "";
         let audioSrc = null;
-
         switch (newCollisionCount) {
-            case 1:
-                dialogue = "I'm Hungry for the Word: @#%1?";
-                audioSrc = Warn1Ogg;
-                break;
-            case 2:
-                dialogue = "I said I'm hungry for the word: **@#?";
-                audioSrc = Warn2Ogg;
-                break;
-            case 3:
-                dialogue = "For the last time, I'm hungry for the word: #!@$";
-                audioSrc = Warn3Ogg;
-                break;
-            case 4:
-                onGameOver({ score, status: 'FAILED_BY_MONSTER' });
-                return;
-            default:
-                return;
+            case 1: dialogue = "I'm Hungry for the Word: @#%1?"; audioSrc = Warn1Ogg; break;
+            case 2: dialogue = "I said I'm hungry for the word: **@#?"; audioSrc = Warn2Ogg; break;
+            case 3: dialogue = "For the last time, I'm hungry for the word: #!@$"; audioSrc = Warn3Ogg; break;
+            case 4: onGameOver({ score, status: 'FAILED_BY_MONSTER' }); return;
+            default: return;
         }
-
         if (dialogue && audioSrc) {
             const warningSound = new Audio(audioSrc);
             warningSound.play().catch(e => console.error("Error playing warning sound:", e));
-            
             warningSound.onended = () => {
                 if (monster.audioUrl) {
                     const questionSound = new Audio(monster.audioUrl);
                     questionSound.play().catch(e => console.error("Error playing question sound:", e));
                 }
             };
-
-            setMessages(currentMessages => [
-                ...currentMessages,
-                {
-                    id: `monster-warning-${Date.now()}`,
-                    text: dialogue,
-                    position: {
-                        x: monster.position.x,
-                        y: monster.position.y - MONSTER_HEIGHT / 2 - 20
-                    },
-                    life: 180
-                }
-            ]);
+            setMessages(currentMessages => [...currentMessages, { id: `monster-warning-${Date.now()}`, text: dialogue, position: { x: monster.position.x, y: monster.position.y - MONSTER_HEIGHT / 2 - 20 }, life: 180 }]);
         }
     }, [monster, swallowedWords, monsterDashCollisions, score, onWin, onGameOver, setMessages, setMonsterDashCollisions]);
 
@@ -125,26 +123,26 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         swallowedWords, setSwallowedWords, onVomit: handleVomit, playerState,
         messages, setMessages, onMonsterDash: handleMonsterInteraction,
     });
-    
 
-    // Play background music and ambient sound
+    useCamera(
+        worldContainer, 
+        player, 
+        { width: worldWidth, height: worldHeight },
+        { width: viewportWidth, height: viewportHeight }
+    );
+
     useEffect(() => {
         let bgMusic = null;
         let ambient = null;
         if (!isLoading && monster) {
-            // Start background music
             bgMusic = new Audio(Track1Wav);
             bgMusic.loop = true;
             bgMusic.volume = 1.0;
             bgMusic.play().catch(e => console.error("Error playing background music:", e));
-
-            // Start ambient sound
             ambient = new Audio(WaterAmb1mp3);
             ambient.loop = true;
             ambient.volume = 0.2;
             ambient.play().catch(e => console.error("Error playing ambient sound:", e));
-
-            // Monster intro sound logic
             const timer = setTimeout(() => {
                 const introSound = new Audio(IntroAudio);
                 introSound.play().catch(e => console.error("Error playing intro sound:", e));
@@ -158,16 +156,6 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
             };
         }
     }, [isLoading, monster, setMessages]);
-
-    useTick(() => {
-        if (!player || !worldContainer.current) return;
-        let targetX = -player.position.x + viewportWidth / 2;
-        let targetY = -player.position.y + viewportHeight / 2;
-        targetX = Math.min(0, Math.max(targetX, -(worldWidth - viewportWidth)));
-        targetY = Math.min(0, Math.max(targetY, -(worldHeight - viewportHeight)));
-        worldContainer.current.x += (targetX - worldContainer.current.x) * 0.1;
-        worldContainer.current.y += (targetY - worldContainer.current.y) * 0.1;
-    });
     
     const handlePointerMove = useCallback(event => {
         if (worldContainer.current) {
@@ -182,13 +170,7 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         const facing = playerState.facing;
         const playerRadius = {small: 10, medium: 20, large: 30}[player.size] || 10;
         const vomitDistance = playerRadius + 60;
-        const newVomitedBubble = {
-            ...lastWord,
-            id: `vomited-${Date.now()}`,
-            isBroken: true,
-            position: { x: player.position.x + (facing * -vomitDistance), y: player.position.y, },
-            velocity: { x: facing * -5, y: -1.5, }
-        };
+        const newVomitedBubble = { ...lastWord, id: `vomited-${Date.now()}`, isBroken: true, position: { x: player.position.x + (facing * -vomitDistance), y: player.position.y, }, velocity: { x: facing * -5, y: -1.5, } };
         setCagedWords(current => [...current, newVomitedBubble]);
         setSwallowedWords(current => current.slice(0, -1));
     }, [swallowedWords, playerState, player.position, player.size, setCagedWords, setSwallowedWords]);
@@ -196,11 +178,8 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     useEffect(() => {
         if (isGameOver || isLoading || !player) return;
         let newSize = 'small';
-        if (score >= gameConfig.player.largeScore) {
-            newSize = 'large';
-        } else if (score >= gameConfig.player.mediumScore) {
-            newSize = 'medium';
-        }
+        if (score >= gameConfig.player.largeScore) { newSize = 'large'; } 
+        else if (score >= gameConfig.player.mediumScore) { newSize = 'medium'; }
         if (newSize !== player.size) {
             setPlayer(p => ({ ...p, size: newSize }));
             setMessages(m => [...m, { id: Date.now(), text: "Level Up!", position: player.position, life: 60 }]);
@@ -209,9 +188,7 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
 
     useEffect(() => {
         if (vomitCooldown.current > 0) {
-            const timer = setInterval(() => {
-                vomitCooldown.current -= 1;
-            }, 1000 / 60);
+            const timer = setInterval(() => { vomitCooldown.current -= 1; }, 1000 / 60);
             return () => clearInterval(timer);
         }
     }, [vomitTrigger]);
@@ -219,8 +196,6 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     if (isLoading) {
         return <Text text="Loading..." anchor={{ x: 0.5, y: 0.5 }} x={viewportWidth / 2} y={viewportHeight / 2} style={new TextStyle({ fill: 'white', fontSize: 48 })} />;
     }
-
-    const swallowedText = swallowedWords.map(w => w.word).join(' + ');
 
     return (
         <>
@@ -240,7 +215,22 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
             </Container>
             <Container>
                 <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24 })} x={10} y={10} />
-                <Text text={`Sequence: ${swallowedText}`} style={new TextStyle({ fill: 'yellow', fontSize: 20 })} x={10} y={40} />
+                {swallowedWords.length > 0 ? (
+                    (() => {
+                        const bubbleSpacing = 70;
+                        const totalBubblesWidth = swallowedWords.length * bubbleSpacing;
+                        const startX = (viewportWidth / 2) - (totalBubblesWidth / 2) + (bubbleSpacing / 2);
+                        return swallowedWords.map((word, index) => (
+                            <WordBubbleUI
+                                key={`swallowed-ui-${word.id}-${index}`}
+                                word={word.word}
+                                position={{ x: startX + index * bubbleSpacing, y: 55 }}
+                            />
+                        ));
+                    })()
+                ) : (
+                    <Text text="" style={new TextStyle({ fill: 'yellow', fontSize: 20 })} x={10} y={40} />
+                )}
                 {debugMode && player && (
                     <DebugDisplay
                         playerSpeed={Math.sqrt(player.velocity.x**2 + player.velocity.y**2)}

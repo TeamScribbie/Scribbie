@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 import ClassIcon from '@mui/icons-material/School';
-import GradesIcon from '@mui/icons-material/Assessment';
+// import GradesIcon from '@mui/icons-material/Assessment';
 import ChallengesIcon from '@mui/icons-material/EmojiEvents';
 
 const StudentSidebar = ({ isOpen = true }) => {
@@ -24,15 +24,15 @@ const StudentSidebar = ({ isOpen = true }) => {
       path: '/student-homepage',
     },
     {
-      label: 'Challenges',
+      label: 'Games',
       icon: <ChallengesIcon fontSize="medium" />,
       path: '/student-challenges',
     },
-    {
-      label: 'Grades',
-      icon: <GradesIcon fontSize="medium" />,
-      path: '/student-grades',
-    },
+    // {
+    //   label: 'Grades',
+    //   icon: <GradesIcon fontSize="medium" />,
+    //   path: '/student-grades',
+    // },
   ];
 
   return (

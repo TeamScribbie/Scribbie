@@ -1,4 +1,5 @@
 // src/page/student/LessonPage.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, Alert } from '@mui/material';
@@ -13,12 +14,13 @@ import { getClassroomDetails } from '../../services/classroomService';
 
 import BalloonGameLevelNavigator from '../../components/LevelNavigationRenderers/BalloonGameLevelNavigator';
 import MemoryGameLevelNavigator from '../../components/LevelNavigationRenderers/MemoryGameLevelNavigator';
+import WordFeastLevelNavigator from '../../components/LevelNavigationRenderers/WordFeastLevelNavigator';
 import Navbar from '../../components/layout/navbar';
 
-//AADD GAME MODE FKASJHFKASDHSAHDSHAKKHAGKA KPAOY
 const LESSON_TYPE_TO_RENDERER = {
     BALLOONGAME: BalloonGameLevelNavigator,
     MEMORYGAME: MemoryGameLevelNavigator,
+    WORDFEAST: WordFeastLevelNavigator,
 };
 
 const LessonPage = () => {
@@ -76,9 +78,7 @@ const LessonPage = () => {
                         };
                     })
                 );
-                // highlight-start
                 console.log("Lessons with details received:", lessonsWithDetails);
-                // highlight-end
                 setLessons(lessonsWithDetails);
                 setCurrentLessonIdx(0);
             } catch (err) {
@@ -165,21 +165,16 @@ const LessonPage = () => {
     return (
         <>
             <Navbar transparent={true} /> {/* Pass transparent prop */}
-            <div style={{
-                position: 'fixed', top: '64px', left: 0,
-                width: '100vw', height: 'calc(100vh - 64px)',
-                background: '#111', color: '#fff',
-                zIndex: 1000, overflow: 'auto',
-            }}>
-                <Renderer
-                    lesson={lesson}
-                    activityNodes={lesson.activityNodes}
-                    activityNodeProgress={lesson.activityNodeProgress}
-                    onSelectNode={handleSelectNode}
-                    onPrevLesson={handlePrevLesson}
-                    onNextLesson={handleNextLesson}
-                />
-            </div>
+            <Renderer
+                lesson={lesson}
+                activityNodes={lesson.activityNodes}
+                activityNodeProgress={lesson.activityNodeProgress}
+                onSelectNode={handleSelectNode}
+                onPrevLesson={handlePrevLesson}
+                onNextLesson={handleNextLesson}
+                currentLessonIdx={currentLessonIdx}
+                totalLessons={lessons.length}
+            />
         </>
     );
 };

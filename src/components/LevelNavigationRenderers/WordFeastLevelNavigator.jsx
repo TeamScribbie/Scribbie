@@ -1,16 +1,16 @@
-// src/components/LevelNavigationRenderers/BalloonGameLevelNavigator.jsx
+// src/components/LevelNavigationRenderers/WordFeastLevelNavigator.jsx
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid, Paper, IconButton } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import StarIcon from '@mui/icons-material/Star';
 
-// Import BalloonGame assets
-import balloonGameBackground from './AssetsLN/BalloonGame/RainingTacoBBackround.png';
-import balloonGameLogo from './AssetsLN/BalloonGame/Raining Tacos Logo.png';
-import prevArrowIcon from './AssetsLN/BalloonGame/Prev Icon.png';
-import nextArrowIcon from './AssetsLN/BalloonGame/Next Icon.png';
-import balloonLvlIcon from './AssetsLN/BalloonGame/RainingLvlIcon.png';
+// Import WordFeast assets
+import wordFeastBackground from './AssetsLN/WordFeast/WordFeastBackground.png';
+import wordFeastLogo from './AssetsLN/WordFeast/WordFeastLogo-Photoroom.png';
+import prevArrowIcon from './AssetsLN/WordFeast/Prev Icon.png';
+import nextArrowIcon from './AssetsLN/WordFeast/Next Icon.png';
+import wordFeastLvlIcon from './AssetsLN/WordFeast/WordFeastLvlIcon-Photoroom.png';
 
 
 const StarRating = ({ score }) => {
@@ -25,7 +25,7 @@ const StarRating = ({ score }) => {
     );
 };
 
-const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+const WordFeastLevelNavigator = ({ lesson, activityNodes, activityNodeProgress, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
     
     const levels = useMemo(() => {
         const mergedLevels = activityNodes.map((node, index) => {
@@ -51,7 +51,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress
 
     return (
         <Box sx={{
-            backgroundImage: `url(${balloonGameBackground})`,
+            backgroundImage: `url(${wordFeastBackground})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -92,7 +92,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress
                     flexGrow: 1,
                     textAlign: 'center',
                 }}>
-                    <img src={balloonGameLogo} alt="BalloonGame Logo" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }} />
+                    <img src={wordFeastLogo} alt="WordFeast Logo" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }} />
                 </Box>
 
                 {!isLastLesson && (
@@ -140,7 +140,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress
                                 border: 'none',
                                 boxShadow: 'none',
                                 padding: 0,
-                                backgroundImage: `url(${balloonLvlIcon})`,
+                                backgroundImage: `url(${wordFeastLvlIcon})`,
                                 backgroundSize: 'contain',
                                 backgroundRepeat: 'no-repeat',
                                 backgroundPosition: 'center',
@@ -171,7 +171,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress
     );
 };
 
-BalloonGameLevelNavigator.propTypes = {
+WordFeastLevelNavigator.propTypes = {
     lesson: PropTypes.object.isRequired,
     activityNodes: PropTypes.array.isRequired,
     activityNodeProgress: PropTypes.array,
@@ -182,4 +182,4 @@ BalloonGameLevelNavigator.propTypes = {
     totalLessons: PropTypes.number.isRequired,
 };
 
-export default BalloonGameLevelNavigator;
+export default WordFeastLevelNavigator;
