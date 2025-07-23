@@ -141,6 +141,7 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
             // Play bite sound, rotating through the array
             const idx = biteSoundIndexRef.current;
             const sound = new Audio(biteSounds[idx]);
+            sound.volume = 0.5;
             sound.play().catch(e => console.error('Error playing bite sound:', e));
             biteSoundIndexRef.current = (idx + 1) % biteSounds.length;
         }

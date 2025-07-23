@@ -15,7 +15,7 @@ const WinAnimation = ({ swallowedWords, onComplete }) => {
 
         const wordTimer = setTimeout(() => {
             setShowWords(true);
-        }, 3000);
+        }, 6000);
         
         mermaidSoundRef.current = new Audio(MermaidAudio);
         mermaidSoundRef.current.play().catch(e => console.error("Error playing win sound:", e));

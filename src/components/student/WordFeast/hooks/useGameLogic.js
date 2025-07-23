@@ -8,10 +8,9 @@ import Lvl3CageImg from '../game/icons/Lvl3Cage.png';
 import BubbleImg from '../game/icons/bubble.png';
 import { calculateDistance } from '../gameUtils';
 
-export const useGameLogic = (gameData, width, height) => {
+export const useGameLogic = ({ gameData, width, height, onSuccess, onFail, isChallengeMode }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [gameState, setGameState] = useState('intro');
-
     const [monsterDashCollisions, setMonsterDashCollisions] = useState(0);
 
     const defaultPlayerPosition = {
@@ -52,11 +51,16 @@ export const useGameLogic = (gameData, width, height) => {
 
                 let choices = [...gameData.choices];
                 let cagesToCreate = [];
-                const lvl3Choice = choices.shift();
-                cagesToCreate.push({ ...lvl3Choice, strength: 3 });
+                const correctChoice = choices.find(c => c.isCorrect);
+                if (correctChoice) {
+                    cagesToCreate.push({ ...correctChoice, strength: 3 });
+                    choices = choices.filter(c => c.id !== correctChoice.id);
+                }
+                
                 choices.forEach(choice => {
                     cagesToCreate.push({ ...choice, strength: Math.ceil(Math.random() * 2) });
                 });
+
                 cagesToCreate.sort(() => Math.random() - 0.5);
                 const activeCagedWords = [];
                 const margin = 100; const minDistance = 150; const monsterRadius = 150;
@@ -89,10 +93,22 @@ export const useGameLogic = (gameData, width, height) => {
         setupAndPreload();
     }, [gameData, width, height]);
 
+    const handleCorrectWord = useCallback(() => {
+        if (isChallengeMode) {
+            // In challenge mode, reset player and call success callback
+            setPlayer(prev => ({ ...prev, size: 'small' }));
+            if (onSuccess) onSuccess();
+        } else {
+            // Original game mode behavior
+            setGameState('win');
+        }
+    }, [isChallengeMode, onSuccess]);
+
     return {
         isLoading, gameState, setGameState, score, setScore,
         player, setPlayer, cagedWords, setCagedWords, monster, setMonster,
         messages, setMessages, fishLogics, setFishLogics, swallowedWords, setSwallowedWords,
         monsterDashCollisions, setMonsterDashCollisions,
+        handleCorrectWord // Expose the handler
     };
 };

@@ -33,13 +33,12 @@ const Background = ({ width, height }) => {
 };
 
 const WordBubbleUI = ({ word, position }) => {
-    // --- MODIFIED: Updated text style for red text with a white glow ---
     const textStyle = new TextStyle({
-        fontFamily: 'Bubblegum Sans', // <-- 1. SET THE NEW FONT
+        fontFamily: 'Bubblegum Sans', 
         fontSize: 24,
-        fill: '#ff4d4d', // <-- 2. SET THE RED COLOR
-        stroke: '#ffffff', // <-- 3. SET THE GLOW/OUTLINE COLOR
-        strokeThickness: 4, // <-- 4. SET THE GLOW THICKNESS
+        fill: '#ff4d4d', 
+        stroke: '#ffffff', 
+        strokeThickness: 4, 
         dropShadow: true,
         dropShadowColor: '#ffffff',
         dropShadowBlur: 5,
@@ -78,11 +77,12 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
     const vomitCooldown = useRef(0);
     const worldContainer = useRef(null);
+    const bgMusicRef = useRef(null);
     
     const handleMonsterInteraction = useCallback(() => {
         const playerSequence = swallowedWords.map(w => w.word).join('');
         if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
-            if (onWin) onWin({ swallowedWords, score }); // Pass the necessary data
+            if (onWin) onWin({ swallowedWords, score }); 
             return;
         }
         const newCollisionCount = monsterDashCollisions + 1;
@@ -90,22 +90,24 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         let dialogue = "";
         let audioSrc = null;
         switch (newCollisionCount) {
-            case 1: dialogue = "I'm Hungry for the Word: @#%1?"; audioSrc = Warn1Ogg; break;
-            case 2: dialogue = "I said I'm hungry for the word: **@#?"; audioSrc = Warn2Ogg; break;
-            case 3: dialogue = "For the last time, I'm hungry for the word: #!@$"; audioSrc = Warn3Ogg; break;
+            case 1: dialogue = "I'm Hungry for the Word:"; audioSrc = Warn1Ogg; break;
+            case 2: dialogue = "I said I'm hungry for the word:"; audioSrc = Warn2Ogg; break;
+            case 3: dialogue = "For the last time, I'm hungry for the word: "; audioSrc = Warn3Ogg; break;
             case 4: onGameOver({ score, status: 'FAILED_BY_MONSTER' }); return;
             default: return;
         }
         if (dialogue && audioSrc) {
             const warningSound = new Audio(audioSrc);
+            warningSound.volume = gameConfig.choiceVolume;
             warningSound.play().catch(e => console.error("Error playing warning sound:", e));
             warningSound.onended = () => {
                 if (monster.audioUrl) {
                     const questionSound = new Audio(monster.audioUrl);
+                    questionSound.volume = gameConfig.choiceVolume;
                     questionSound.play().catch(e => console.error("Error playing question sound:", e));
                 }
             };
-            setMessages(currentMessages => [...currentMessages, { id: `monster-warning-${Date.now()}`, text: dialogue, position: { x: monster.position.x, y: monster.position.y - MONSTER_HEIGHT / 2 - 20 }, life: 180 }]);
+            setMessages(currentMessages => [...currentMessages, { id: `monster-warning-${Date.now()}`, text: dialogue, position: { x: monster.position.x, y: monster.position.y - MONSTER_HEIGHT / 2 - 20 }, life: 260 }]);
         }
     }, [monster, swallowedWords, monsterDashCollisions, score, onWin, onGameOver, setMessages, setMonsterDashCollisions]);
 
@@ -135,10 +137,10 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         let bgMusic = null;
         let ambient = null;
         if (!isLoading && monster) {
-            bgMusic = new Audio(Track1Wav);
-            bgMusic.loop = true;
-            bgMusic.volume = 1.0;
-            bgMusic.play().catch(e => console.error("Error playing background music:", e));
+            bgMusicRef.current = new Audio(Track1Wav);
+            bgMusicRef.current.loop = true;
+            bgMusicRef.current.volume = 0.25;
+            bgMusicRef.current.play().catch(e => console.error("Error playing background music:", e));
             ambient = new Audio(WaterAmb1mp3);
             ambient.loop = true;
             ambient.volume = 0.2;
@@ -153,6 +155,10 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
                 clearTimeout(timer);
                 if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
                 if (ambient) { ambient.pause(); ambient.currentTime = 0; }
+                if (bgMusicRef.current) {
+                    bgMusicRef.current.pause();
+                    bgMusicRef.current.currentTime = 0;
+                }
             };
         }
     }, [isLoading, monster, setMessages]);

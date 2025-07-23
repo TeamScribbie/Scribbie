@@ -115,6 +115,7 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
                 <WinAnimation
                     swallowedWords={winData.swallowedWords}
                     onComplete={handleWinAnimationComplete}
+                    
                 />
             )}
 
