@@ -33,6 +33,9 @@ export const getActivityNodeTypeDetails = async (activityNodeTypeId, token) => {
     }
 
     const data = await response.json();
+
+    console.log(`activityService: Received details for ID ${activityNodeTypeId}:`, data);
+
     return data;
 };
 
