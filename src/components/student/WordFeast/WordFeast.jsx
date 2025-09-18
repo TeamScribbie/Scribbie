@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Stage } from '@pixi/react';
 import GameStage from './GameStage';
-import WinAnimation from './WinAnimation'; 
+import WinAnimation from './WinAnimation';
+import LoadingScreen from './LoadingScreen';
 import { gameConfig } from './config';
 
 const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
+    const [assetsLoaded, setAssetsLoaded] = useState(false);
+    const [gameStarted, setGameStarted] = useState(false);
     const [gameOver, setGameOver] = useState(false);
-    const [isWinning, setIsWinning] = useState(false); 
-    const [winData, setWinData] = useState(null); 
+    const [isWinning, setIsWinning] = useState(false);
+    const [winData, setWinData] = useState(null);
     const [key, setKey] = useState(Date.now());
     const [debugMode, setDebugMode] = useState(false);
     const startTimeRef = useRef(null);
 
     useEffect(() => {
-        console.log("WordFeast component received gameData:", gameData);
         startTimeRef.current = Date.now();
         document.body.style.margin = '0';
         document.body.style.overflow = 'hidden';
@@ -66,12 +68,16 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
         
         onGameComplete({
             status: 'COMPLETED',
-            score: winData?.score+5000 || 0,
+            score: winData?.score + 5000 || 0,
             timeTaken: timeTaken,
-            highestStreak: 0, // WordFeast does not have a streak mechanic
-            accuracy: 100,      // A win implies 100% accuracy
+            highestStreak: 0,
+            accuracy: 100,
             questionsAttempted: 1,
         });
+    }
+
+    const handleStartGame = () => {
+        setGameStarted(true);
     }
 
     const containerStyle = {
@@ -92,6 +98,36 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
         backgroundColor: 'rgba(0, 0, 0, 0.7)', cursor: 'default', zIndex: 100
     };
 
+    const buttonStyle = {
+        padding: '12px 24px',
+        fontSize: '22px',
+        cursor: 'pointer',
+        borderRadius: '8px',
+        border: '2px solid #333',
+        backgroundColor: '#f0f0f0',
+        fontWeight: 'bold',
+    };
+
+    if (!assetsLoaded) {
+        return (
+            <div style={containerStyle}>
+                <div style={gameWrapperStyle}>
+                    <LoadingScreen onAssetsLoaded={() => setAssetsLoaded(true)} />
+                </div>
+            </div>
+        );
+    }
+
+    if (!gameStarted) {
+        return (
+            <div style={containerStyle}>
+                <button onClick={handleStartGame} style={buttonStyle}>
+                    Start Game
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div style={containerStyle}>
             <div style={gameWrapperStyle}>
@@ -103,27 +139,27 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
                         worldWidth={gameConfig.worldWidth}
                         worldHeight={gameConfig.worldHeight}
                         onGameOver={handleGameOver}
-                        onWin={handleWin} 
+                        onWin={handleWin}
                         isGameOver={gameOver || isWinning}
                         debugMode={debugMode}
                         gameData={gameData}
                     />
                 </Stage>
             </div>
-            
+
             {isWinning && winData && (
                 <WinAnimation
                     swallowedWords={winData.swallowedWords}
                     onComplete={handleWinAnimationComplete}
-                    
                 />
             )}
 
-
-            {gameOver && !isWinning && ( // Ensure win screen doesn't overlap with game over
+            {gameOver && !isWinning && (
                 <div style={overlayStyle}>
                     <h1 style={{ color: 'white' }}>Game Over</h1>
-                    <button onClick={handleRestart} style={{ padding: '10px 20px', fontSize: '20px', cursor: 'pointer', borderRadius: '8px', border: 'none' }}>Restart</button>
+                    <button onClick={handleRestart} style={{ ...buttonStyle, marginTop: '20px' }}>
+                        Restart
+                    </button>
                 </div>
             )}
         </div>

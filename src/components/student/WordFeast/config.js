@@ -1,12 +1,11 @@
 export const gameConfig = {
-    choiceVolume: 1.0, 
     width: 1280,  
     height: 720, 
     worldWidth: 2560,  
     worldHeight: 1440,
     player: {
         initialSize: 'small',
-        accel: 0.2,
+        accel: 0.5,
         maxSpeed: 5,
         friction: 0.96,
         mediumScore: 50,
@@ -23,8 +22,8 @@ export const gameConfig = {
         }
     },
     fishSpawning: {
-        targetPopulation: 16,
-        respawnCooldown: 60,
+        targetPopulation: 60,
+        respawnCooldown: 10,
     },
     fishTypes: {
         small: {
