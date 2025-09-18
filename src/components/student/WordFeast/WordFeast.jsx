@@ -5,7 +5,7 @@ import WinAnimation from './WinAnimation';
 import LoadingScreen from './LoadingScreen';
 import { gameConfig } from './config';
 
-const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
+const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { medium: 8, large: 3 } }) => { // <-- ADDED PROP
     const [assetsLoaded, setAssetsLoaded] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
     const [gameOver, setGameOver] = useState(false);
@@ -143,6 +143,7 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {} }) => {
                         isGameOver={gameOver || isWinning}
                         debugMode={debugMode}
                         gameData={gameData}
+                        fishLimits={fishLimits} // <-- PASS PROP DOWN
                     />
                 </Stage>
             </div>

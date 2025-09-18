@@ -35,7 +35,7 @@ const Background = ({ width, height }) => {
 const MONSTER_WIDTH = 172;
 const MONSTER_HEIGHT = 228;
 
-const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewportWidth, viewportHeight, worldWidth, worldHeight, gameData }) => {
+const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewportWidth, viewportHeight, worldWidth, worldHeight, gameData, fishLimits }) => { // <-- ADDED PROP
     const {
         isLoading, gameState, setGameState, score, setScore,
         player, setPlayer, cagedWords, setCagedWords, monster,
@@ -124,6 +124,8 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         onPlayerEat: () => setEatTrigger(t => t + 1),
         swallowedWords, setSwallowedWords, onVomit: handleVomit, playerState,
         messages, setMessages, onMonsterDash: handleMonsterInteraction,
+        mediumFishLimit: fishLimits.medium, // <-- PASS PROP
+        largeFishLimit: fishLimits.large,   // <-- PASS PROP
     });
     
 

@@ -20,7 +20,7 @@ const fishSpriteDimensions = {
 const playerSpriteDimensions = {
     width: 274,
     height: 142,
-    scaleMultiplier: 0.8,
+    scaleMultiplier: 1.0, // Adjusted as an example
 };
 
 
@@ -44,6 +44,7 @@ export const usePhysics = ({
     score, setScore, onGameOver, isGameOver, isPaused, width, height,
     onPlayerEat, swallowedWords, setSwallowedWords, onVomit, playerState,
     messages, setMessages, onMonsterDash,
+    mediumFishLimit, largeFishLimit, // <-- ADDED PROPS
 }) => {
     const mousePosition = useRef({ x: width / 2, y: height / 2 });
     const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
@@ -54,6 +55,23 @@ export const usePhysics = ({
     const spawnFish = useCallback(() => {
         if (!player) return; 
 
+        // --- MODIFIED: Check fish counts before spawning ---
+        const currentMediumCount = fishLogics.filter(f => f.size === 'medium').length;
+        const currentLargeCount = fishLogics.filter(f => f.size === 'large').length;
+
+        const rand = Math.random();
+        let size;
+
+        if (rand < 0.6) {
+            size = 'small';
+        } else if (rand < 0.9) {
+            if (currentMediumCount >= mediumFishLimit) return; // Abort if limit is reached
+            size = 'medium';
+        } else {
+            if (currentLargeCount >= largeFishLimit) return; // Abort if limit is reached
+            size = 'large';
+        }
+        
         let position;
         let velocity;
         const viewportWidth = gameConfig.width; 
@@ -80,9 +98,6 @@ export const usePhysics = ({
                 break;
         }
 
-        const rand = Math.random();
-        const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
-
         const newFishData = {
             id: Date.now() * Math.random(),
             size,
@@ -91,7 +106,7 @@ export const usePhysics = ({
             velocity,
         };
         setFishLogics(logics => [...logics, new FishLogic(newFishData, width, height)]);
-    }, [width, height, setFishLogics, player]);
+    }, [width, height, setFishLogics, player, fishLogics, mediumFishLimit, largeFishLimit]); // <-- Added dependencies
 
 
     useEffect(() => {
