@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import bookImage from '../../assets/book.png';
-import RegistrationForm from '../../components/auth/RegistrationForm';
+import scribbieLogo from '../../assets/ScribbieLogoV2.png';
+import studentLoginBg from '../../assets/studentlogin-bg.png';
+import MultiStepRegistration from '../../components/auth/MultiStepRegistration';
 import '../../styles/StudentRegistration.css';
 
 // Import the new API function
@@ -17,7 +19,6 @@ const StudentRegistration = () => {
     firstName: '',
     lastName: '',
     password: '',
-    verifyPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
@@ -39,11 +40,6 @@ const StudentRegistration = () => {
     setIsLoading(true); // Start loading
 
     // 1. Frontend Validation
-    if (formData.password !== formData.verifyPassword) {
-      setError('Passwords do not match.');
-      setIsLoading(false);
-      return; // Stop submission
-    }
 
     // Basic length check (mirroring some API constraints)
     if (formData.password.length < 8) {
@@ -88,16 +84,22 @@ const StudentRegistration = () => {
   };
 
   return (
-    <div className="student-registration-container">
-      <div className="registration-card">
-        <div className="registration-header">
-          Register
-        </div>
-
-        <div className="registration-content">
-          <Typography variant="h5" className="registration-title">
-            Welcome to Scribbie, Student!
-          </Typography>
+    <div 
+      className="student-registration-container"
+      style={{
+        backgroundColor: 'white',
+        backgroundImage: `url(${studentLoginBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="registration-content">
+          <img 
+            src={scribbieLogo} 
+            alt="SCRIBBIE Logo" 
+            className="scribbie-logo"
+          />
 
            {/* Display status messages */}
            {error && (
@@ -105,19 +107,13 @@ const StudentRegistration = () => {
                {error}
              </Alert>
            )}
-           {/* {success && ( // Optional success message
-             <Alert severity="success" sx={{ width: '80%', mt: 1, mb: 1 }}>
-               {success}
-             </Alert>
-           )} */}
 
           {/* Pass onSubmit to the form */}
-          {/* Consider passing isLoading to disable form if needed */}
-          <RegistrationForm
+          <MultiStepRegistration
             formData={formData}
             onChange={handleChange}
             onSubmit={handleRegister}
-            // isLoading={isLoading} // Pass loading state if form component handles disabling fields
+            isLoading={isLoading}
           />
 
           {/* Show loading indicator */}
@@ -127,19 +123,12 @@ const StudentRegistration = () => {
             </Box>
            )}
 
-
           <Typography className="login-link-container">
             <Link href="/student-login" className="login-link">
               Already have an account? <strong>Login here</strong>
             </Link>
           </Typography>
-        </div>
       </div>
-      <img
-        src={bookImage}
-        alt="Books"
-        className="book-image-registration"
-      />
     </div>
   );
 };
