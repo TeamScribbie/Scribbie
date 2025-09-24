@@ -36,6 +36,7 @@ import {
 import AddLessonDialog from '../../components/dialogs/AddLessonDialog';
 import AddActivityNodeDialog from '../../components/dialogs/AddActivityNodeDialog';
 import EditLessonDialog from '../../components/dialogs/EditLessonDialog';
+// ✨ IMPORT THE NEW DIALOG ✨
 import ConfigureChallengeDialog from '../../components/dialogs/ConfigureChallengeDialog';
 import DeleteChallengeDialog from '../../components/dialogs/DeleteChallengeDialog';
 import DeleteLessonDialog from '../../components/dialogs/DeleteLessonDialog';
@@ -73,11 +74,10 @@ const LessonManagementPage = () => {
     const [isSubmittingActivityNode, setIsSubmittingActivityNode] = useState(false);
     const [addActivityNodeError, setAddActivityNodeError] = useState(null);
 
+    // ✨ STATE MANAGEMENT FOR THE NEW DIALOG ✨
     const [isConfigureChallengeDialogOpen, setIsConfigureChallengeDialogOpen] = useState(false);
     const [currentLessonForChallenge, setCurrentLessonForChallenge] = useState(null);
-    const [existingChallengeConfigData, setExistingChallengeConfigData] = useState(null);
-    const [isSubmittingChallengeConfig, setIsSubmittingChallengeConfig] = useState(false);
-    const [configureChallengeError, setConfigureChallengeError] = useState(null);
+
 
     const [isDeleteChallengeDialogOpen, setIsDeleteChallengeDialogOpen] = useState(false);
     const [lessonToDeleteChallengeFrom, setLessonToDeleteChallengeFrom] = useState(null);
@@ -107,6 +107,7 @@ const LessonManagementPage = () => {
     const [editingNodeForDetails, setEditingNodeForDetails] = useState(null);
     const [isSavingNodeDetails, setIsSavingNodeDetails] = useState(false);
     const [editNodeDetailsError, setEditNodeDetailsError] = useState(null);
+
 
     const handleDeleteActivityNode = (node, lessonDefId) => {
         setNodeToDelete({ ...node, lessonDefinitionId: lessonDefId });
@@ -213,22 +214,17 @@ const LessonManagementPage = () => {
         } catch (err) { setErrorCourse(err.message || "Could not load course details.");
         } finally { setIsLoadingCourse(false); }
     }, [courseId, authState.token]);
-
-    // ✨✨✨ THE FIX IS HERE ✨✨✨
+    
     const fetchLessons = useCallback(async () => {
         if (!courseId || !authState.token) return;
         setIsLoadingLessons(true);
         setErrorLessons(null);
-        // The line `setChallengeConfigByLesson({})` was removed from here.
-        // It was incorrectly clearing the detailed challenge configurations
-        // every time the main lesson list was refreshed, causing the UI to "forget"
-        // that a challenge was just added.
         try {
             const lessonDefs = await getLessonDefinitions(courseId, authState.token);
             setLessons(Array.isArray(lessonDefs) ? lessonDefs : []);
         } catch (err) {
             setErrorLessons(err.message || "Could not load lessons.");
-            setLessons([]); // On error, clear lessons to avoid showing stale data.
+            setLessons([]); 
         } finally {
             setIsLoadingLessons(false);
         }
@@ -246,10 +242,13 @@ const LessonManagementPage = () => {
         setIsLoadingChallengeConfig(prev => ({ ...prev, [lessonDefinitionId]: true }));
         try {
             const config = await getChallengeConfigurationForLesson(lessonDefinitionId, authState.token);
-            setChallengeConfigByLesson(prev => ({ ...prev, [lessonDefinitionId]: config }));
+            setChallengeConfigByLesson(prev => ({ ...prev, [lessonDefinitionId]: config.data }));
         } catch (err) {
-            setSnackbarMessage(`Error loading challenge config for lesson ${lessonDefinitionId}: ${err.message}`);
-            setSnackbarOpen(true);
+            // A 404 is expected if no config exists, so we don't show an error for that.
+            if (err.response && err.response.status !== 404) {
+                 setSnackbarMessage(`Error loading challenge config for lesson ${lessonDefinitionId}: ${err.message}`);
+                 setSnackbarOpen(true);
+            }
             setChallengeConfigByLesson(prev => ({ ...prev, [lessonDefinitionId]: null }));
         } finally {
             setIsLoadingChallengeConfig(prev => ({ ...prev, [lessonDefinitionId]: false }));
@@ -263,15 +262,13 @@ const LessonManagementPage = () => {
             if (!activityNodesByLesson[newExpandedLessonId]) {
                 fetchActivityNodes(newExpandedLessonId);
             }
-            const lesson = lessons.find(l => l.lessonDefinitionId === newExpandedLessonId);
-            // This logic now works reliably with the backend fix (sending challengeDefinitionId)
-            // and the frontend fix (not clearing challengeConfigByLesson).
-            if (lesson && lesson.challengeDefinitionId && !challengeConfigByLesson[newExpandedLessonId]) {
-                fetchChallengeConfig(newExpandedLessonId);
+            // Fetch challenge config if we don't have it already
+            if (challengeConfigByLesson[newExpandedLessonId] === undefined) {
+                 fetchChallengeConfig(newExpandedLessonId);
             }
         }
     };
-
+    
     const handleOpenAddLessonDialog = () => { setIsAddLessonDialogOpen(true); setAddLessonError(null); };
     const handleConfirmAddLesson = async (lessonFormData) => {
         if (!authState.token || !courseId) { setAddLessonError("Auth error."); return; }
@@ -283,6 +280,16 @@ const LessonManagementPage = () => {
             setSnackbarMessage("Lesson added successfully!"); setSnackbarOpen(true);
         } catch (err) { setAddLessonError(err.message || "Failed to add lesson.");
         } finally { setIsSubmittingLesson(false); }
+    };
+
+    // ✨ HANDLER FOR AFTER THE DIALOG SUCCEEDS ✨
+    const handleChallengeConfigured = (challengeDef) => {
+        setSnackbarMessage("Challenge saved successfully!");
+        setSnackbarOpen(true);
+        // Refresh the data to show the new configuration
+        fetchChallengeConfig(challengeDef.lessonDefinitionId);
+        // We can also update the main lesson list if the backend adds/removes a challengeDefinitionId
+        fetchLessons(); 
     };
 
     const handleDeleteLesson = (lesson) => {
@@ -300,7 +307,6 @@ const LessonManagementPage = () => {
         setDeleteLessonError(null);
         try {
             await deleteLessonDefinition(courseId, lessonToDelete.lessonDefinitionId, authState.token);
-            // Instead of just filtering, re-fetch to ensure data consistency.
             fetchLessons();
             setIsDeleteLessonDialogOpen(false);
             setSnackbarMessage("Lesson deleted successfully!");
@@ -332,7 +338,6 @@ const LessonManagementPage = () => {
                 lessonUpdateData,
                 authState.token
             );
-            // Re-fetch lessons to show updated data.
             fetchLessons();
             setIsEditLessonDialogOpen(false);
             setSnackbarMessage("Lesson updated successfully!");
@@ -363,33 +368,12 @@ const LessonManagementPage = () => {
         navigate(`/teacher/course/${courseId}/lesson/${lessonDefId}/node/${activityNode.activityNodeTypeId}/edit`);
     };
 
+    // ✨ UPDATED HANDLER TO OPEN THE DIALOG ✨
     const handleOpenConfigureChallengeDialog = (lesson) => {
         setCurrentLessonForChallenge(lesson);
-        setExistingChallengeConfigData(challengeConfigByLesson[lesson.lessonDefinitionId] || null);
         setIsConfigureChallengeDialogOpen(true);
-        setConfigureChallengeError(null);
     };
 
-    const handleSaveChallengeConfiguration = async (configData) => {
-        if (!currentLessonForChallenge || !authState.token) {
-            setConfigureChallengeError("Lesson context or auth token missing."); return;
-        }
-        setIsSubmittingChallengeConfig(true); setConfigureChallengeError(null);
-        try {
-            await configureChallengeForLesson(currentLessonForChallenge.lessonDefinitionId, configData, authState.token);
-            // Fetch the details for the lesson we just configured.
-            await fetchChallengeConfig(currentLessonForChallenge.lessonDefinitionId);
-            // Then, fetch the main lesson list. This will now have the updated challengeDefinitionId from the backend
-            // and will NOT clear the challengeConfigByLesson state.
-            await fetchLessons();
-            setIsConfigureChallengeDialogOpen(false);
-            setSnackbarMessage("Challenge configuration saved!"); setSnackbarOpen(true);
-        } catch (err) {
-            setConfigureChallengeError(err.message || "Failed to save challenge configuration.");
-        } finally {
-            setIsSubmittingChallengeConfig(false);
-        }
-    };
 
     const handleOpenDeleteChallengeDialog = (lesson) => {
         setLessonToDeleteChallengeFrom(lesson);
@@ -404,9 +388,7 @@ const LessonManagementPage = () => {
         setIsDeletingChallenge(true); setDeleteChallengeError(null);
         try {
             await deleteChallengeConfiguration(lessonToDeleteChallengeFrom.lessonDefinitionId, authState.token);
-            // Explicitly set the config for this lesson to null.
             setChallengeConfigByLesson(prev => ({ ...prev, [lessonToDeleteChallengeFrom.lessonDefinitionId]: null }));
-            // Re-fetch lessons to update the list (the lesson's challengeDefinitionId will be null now).
             await fetchLessons();
             setIsDeleteChallengeDialogOpen(false);
             setSnackbarMessage("Challenge configuration deleted."); setSnackbarOpen(true);
@@ -418,12 +400,11 @@ const LessonManagementPage = () => {
     };
 
     const handleManageCustomChallengeQuestions = (lesson) => {
-        // This logic is more robust now with the backend DTO fix.
-        const challengeDefId = lesson.challengeDefinitionId || challengeConfigByLesson[lesson.lessonDefinitionId]?.challengeDefinitionId;
-        if (challengeDefId) {
-            navigate(`/teacher/course/${courseId}/lesson/${lesson.lessonDefinitionId}/challenge/${challengeDefId}/edit-questions`);
+        const challengeDef = challengeConfigByLesson[lesson.lessonDefinitionId];
+        if (challengeDef && challengeDef.challengeDefinitionId) {
+            navigate(`/teacher/course/${courseId}/lesson/${lesson.lessonDefinitionId}/challenge/${challengeDef.challengeDefinitionId}/edit-questions`);
         } else {
-            setSnackbarMessage("Challenge not fully configured or ID missing. Cannot manage custom questions.");
+            setSnackbarMessage("Challenge not fully configured or ID missing.");
             setSnackbarOpen(true);
         }
     };
@@ -464,8 +445,6 @@ const LessonManagementPage = () => {
                     <List sx={{ width: '100%' }}>
                         {lessons.map((lesson, index) => {
                             const currentChallengeConfig = challengeConfigByLesson[lesson.lessonDefinitionId];
-                            // This check is now robust. It's true if we have detailed config.
-                            // The UI to show the 'Add' button vs 'Edit' button relies on this.
                             const lessonHasChallengeConfigured = !!currentChallengeConfig;
 
                             return (
@@ -514,25 +493,21 @@ const LessonManagementPage = () => {
                                             <Button size="small" startIcon={<AddIcon />} onClick={() => handleAddActivityNode(lesson.lessonDefinitionId)} sx={{ mt: 1.5 }} variant="outlined">Add Activity Node</Button>
                                         </Box>
                                         <Divider />
-                                        <Box sx={{ p: 2, bgcolor: lessonHasChallengeConfigured ? '#fffde7' : '#fdfcf7' }}>
+                                        <Box sx={{ p: 2, bgcolor: lessonHasChallengeConfigured ? '#e3f2fd' : '#fdfcf7' }}>
                                             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium', color: '#5d211f' }}>Challenge:</Typography>
                                             {isLoadingChallengeConfig[lesson.lessonDefinitionId] && <CircularProgress size={20} />}
                                             {!isLoadingChallengeConfig[lesson.lessonDefinitionId] && (
                                                 lessonHasChallengeConfigured ? (
                                                     <Box>
                                                         <Typography variant="body2" component="div">
-                                                            Type: <Chip label={currentChallengeConfig.challengeType?.replace('_', ' ') || 'N/A'} size="small" /> <br />
-                                                            {currentChallengeConfig.challengeType === 'HEALTH_BASED' && `Health: ${currentChallengeConfig.initialHealth || 'N/A'}`}
-                                                            {currentChallengeConfig.challengeType === 'HEALTH_BASED' && <br />}
-                                                            Time/Q: {currentChallengeConfig.initialQuestionTimeSeconds || 'N/A'}s | Min Time: {currentChallengeConfig.minQuestionTimeSeconds || 'N/A'}s <br/>
-                                                            Reduction: {currentChallengeConfig.timeReductionPerCorrectSeconds || 0}s/correct
+                                                            Type: <Chip label={currentChallengeConfig.challengeType?.replace('_', ' ') || 'N/A'} size="small" color="primary" />
                                                         </Typography>
                                                         <Button size="small" startIcon={<EditIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1, mr: 1 }} variant="outlined">Edit Settings</Button>
                                                         <Button size="small" startIcon={<DeleteIcon />} onClick={() => handleOpenDeleteChallengeDialog(lesson)} sx={{ mt: 1, mr: 1 }} color="error" variant="outlined">Delete Challenge</Button>
                                                         <Button size="small" startIcon={<EmojiEventsIcon />} onClick={() => handleManageCustomChallengeQuestions(lesson)} sx={{ mt: 1 }} variant="outlined" color="secondary">Manage Custom Questions</Button>
                                                     </Box>
                                                 ) : (
-                                                    <Button size="small" startIcon={<AddIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1 }} variant="contained" color="warning">
+                                                    <Button size="small" startIcon={<AddIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1 }} variant="contained" color="primary">
                                                         Add Challenge to Lesson
                                                     </Button>
                                                 )
@@ -571,17 +546,17 @@ const LessonManagementPage = () => {
                     error={updateLessonError}
                 />
             )}
-
+            
+            {/* ✨ UPDATED DIALOG RENDERING ✨ */}
             {currentLessonForChallenge && (
                 <ConfigureChallengeDialog
                     open={isConfigureChallengeDialogOpen}
                     onClose={() => setIsConfigureChallengeDialogOpen(false)}
-                    onSave={handleSaveChallengeConfiguration}
-                    existingConfig={existingChallengeConfigData}
-                    isLoading={isSubmittingChallengeConfig}
-                    error={configureChallengeError}
+                    lessonDefinitionId={currentLessonForChallenge.lessonDefinitionId}
+                    onConfigured={handleChallengeConfigured}
                 />
             )}
+
             {lessonToDeleteChallengeFrom && (
                 <DeleteChallengeDialog
                     open={isDeleteChallengeDialogOpen}
