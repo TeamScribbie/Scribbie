@@ -1,4 +1,3 @@
-// src/components/LevelNavigationRenderers/BalloonGameLevelNavigator.jsx
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid, Paper, IconButton } from '@mui/material';
@@ -9,9 +8,12 @@ import balloonGameLogo from './AssetsLN/BalloonGame/Raining Tacos Logo.png';
 import prevArrowIcon from './AssetsLN/BalloonGame/Prev Icon.png';
 import nextArrowIcon from './AssetsLN/BalloonGame/Next Icon.png';
 import balloonLvlIcon from './AssetsLN/BalloonGame/RainingLvlIcon.png';
+// ✨ 1. Import the modular button component
+import StartChallengeButton from '../buttons/StartChallengeButton';
 
 
-const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+// ✨ 2. Add challengeDetails to the component's props
+const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons, challengeDetails }) => {
     
     const levels = useMemo(() => {
         return activityNodes.map((node, index) => {
@@ -135,6 +137,13 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrev
                     </Grid>
                 ))}
             </Grid>
+
+            {/* ✨ 3. Add the StartChallengeButton component ✨ */}
+            <StartChallengeButton
+                lessonId={lesson?.lessonDefinitionId}
+                challengeId={challengeDetails?.challengeId}
+                gameType={challengeDetails?.gameType}
+            />
         </Box>
     );
 };
@@ -147,6 +156,13 @@ BalloonGameLevelNavigator.propTypes = {
     onNextLesson: PropTypes.func.isRequired,
     currentLessonIdx: PropTypes.number.isRequired,
     totalLessons: PropTypes.number.isRequired,
+    // ✨ 4. Add challengeDetails to propTypes
+    challengeDetails: PropTypes.object,
+};
+
+// Set a default value for the new prop
+BalloonGameLevelNavigator.defaultProps = {
+    challengeDetails: null,
 };
 
 export default BalloonGameLevelNavigator;

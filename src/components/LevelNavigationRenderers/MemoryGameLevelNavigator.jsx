@@ -1,4 +1,3 @@
-// src/components/LevelNavigationRenderers/MemoryGameLevelNavigator.jsx
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid, Paper, IconButton } from '@mui/material';
@@ -8,9 +7,11 @@ import memoryGameLogo from './AssetsLN/MemoryGame/MemoryPuzzleLogo-Photoroom.png
 import prevArrowIcon from './AssetsLN/MemoryGame/Prev Icon.png';
 import nextArrowIcon from './AssetsLN/MemoryGame/Next Icon.png';
 import memoryGameLvlIcon from './AssetsLN/MemoryGame/MemoryPuzzleLvlIcon-Photoroom.png';
+// ✨ 1. Import the modular button component
+import StartChallengeButton from '../buttons/StartChallengeButton';
 
-
-const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+// ✨ 2. Add challengeDetails to the component's props
+const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons, challengeDetails }) => {
     
     const levels = useMemo(() => {
         return activityNodes.map((node, index) => {
@@ -134,6 +135,13 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
                     </Grid>
                 ))}
             </Grid>
+
+            {/* ✨ 3. Add the StartChallengeButton component ✨ */}
+            <StartChallengeButton
+                lessonId={lesson?.lessonDefinitionId}
+                challengeId={challengeDetails?.challengeId}
+                gameType={challengeDetails?.gameType}
+            />
         </Box>
     );
 };
@@ -146,6 +154,13 @@ MemoryGameLevelNavigator.propTypes = {
     onNextLesson: PropTypes.func.isRequired,
     currentLessonIdx: PropTypes.number.isRequired,
     totalLessons: PropTypes.number.isRequired,
+    // ✨ 4. Add challengeDetails to propTypes
+    challengeDetails: PropTypes.object,
+};
+
+// Set a default value for the new prop
+MemoryGameLevelNavigator.defaultProps = {
+    challengeDetails: null,
 };
 
 export default MemoryGameLevelNavigator;

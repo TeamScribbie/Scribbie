@@ -1,4 +1,3 @@
-// src/components/LevelNavigationRenderers/WordFeastLevelNavigator.jsx
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid, Paper, IconButton } from '@mui/material';
@@ -9,9 +8,12 @@ import wordFeastLogo from './AssetsLN/WordFeast/WordFeastLogo-Photoroom.png';
 import prevArrowIcon from './AssetsLN/WordFeast/Prev Icon.png';
 import nextArrowIcon from './AssetsLN/WordFeast/Next Icon.png';
 import wordFeastLvlIcon from './AssetsLN/WordFeast/WordFeastLvlIcon-Photoroom.png';
+// ✨ 1. Import the modular button component
+import StartChallengeButton from '../buttons/StartChallengeButton';
 
 
-const WordFeastLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+// ✨ 2. Add challengeDetails to the component's props
+const WordFeastLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons}) => {
     
     const levels = useMemo(() => {
         return activityNodes.map((node, index) => {
@@ -135,6 +137,9 @@ const WordFeastLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLe
                     </Grid>
                 ))}
             </Grid>
+
+            {/* ✨ 3. Add the StartChallengeButton component ✨ */}
+            <StartChallengeButton lesson={lesson} />
         </Box>
     );
 };
@@ -147,6 +152,11 @@ WordFeastLevelNavigator.propTypes = {
     onNextLesson: PropTypes.func.isRequired,
     currentLessonIdx: PropTypes.number.isRequired,
     totalLessons: PropTypes.number.isRequired,
+};
+
+// Set a default value for the new prop
+WordFeastLevelNavigator.defaultProps = {
+    challengeDetails: null,
 };
 
 export default WordFeastLevelNavigator;
