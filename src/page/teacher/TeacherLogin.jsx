@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // Import Alert and CircularProgress
 import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../../assets/book.png';
+import scribbieLogo from '../../assets/ScribbieLogoV2.png';
 import UserTypeToggle from '../../components/auth/UserTypeToggle';
 import LoginForm from '../../components/auth/LoginForm';
 import '../../styles/TeacherLogin.css';
@@ -51,62 +51,70 @@ const TeacherLogin = () => {
   };
 
   return (
-    <div className="teacher-login-container">
-      <div className="login-card">
-        <div className="login-header">
-          Login
-        </div>
+    <div 
+      className="teacher-login-container"
+      style={{
+        backgroundColor: 'white',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="scribbie-logo-container">
+        <img src={scribbieLogo} alt="Scribbie Logo" className="ScribbieLogoV2" />
+      </div>
 
-        <div className="login-content">
-          <Typography variant="h5" className="login-title-teacher">
-            Welcome back, Teacher!
-          </Typography>
-
+      <div className="login-grid">
+        <div className="login-form-section">
           <UserTypeToggle activeTab="Teacher" onTabSwitch={handleTabSwitch} />
 
-          {/* Display error message */}
+          {/* Display error message if login failed */}
           {error && (
-            <Alert severity="error" sx={{ width: '80%', mt: 2, mb: 1 }}>
+            <Alert severity="error" sx={{ width: '100%', mt: 2, mb: 1 }}>
               {error}
             </Alert>
           )}
 
-          {/* Use LoginForm, passing the async handler */}
+          {/* Pass onSubmit to LoginForm, which now calls the async handleLogin */}
           <LoginForm
-            idNumber={idNumber} // Keep prop name generic for reuse
+            idNumber={idNumber}
             password={password}
             onIdChange={(e) => setIdNumber(e.target.value)}
             onPasswordChange={(e) => setPassword(e.target.value)}
             onSubmit={handleLogin}
-            // Pass isLoading if LoginForm handles disabling fields
-            // isLoading={isLoading}
           />
 
           {/* Show loading indicator */}
-           {isLoading && (
+          {isLoading && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
               <CircularProgress size={24} />
             </Box>
-           )}
+          )}
 
-          <Typography className="register-link-container-teacher">
-            <Link
-                href="/teacher-register"
-                className="register-link"
-                // Disable link while loading
-                style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+          <div className="button-container">
+            <button
+              onClick={() => navigate('/teacher-register')}
+              className="first-time-button"
+              disabled={isLoading}
             >
-              No Account yet? <strong>Register Here</strong>
-            </Link>
-          </Typography>
+              FIRST TIME HERE?
+            </button>
+            <button
+              onClick={handleLogin}
+              className="login-button"
+              disabled={isLoading}
+            >
+              LOGIN
+            </button>
+          </div>
         </div>
       </div>
-
-      <img
-        src={bookImage}
-        alt="Books"
-        className="book-image-teacher"
-      />
+      
+      <div className="bottom-graphic">
+        <div className="color-bar orange"></div>
+        <div className="color-bar blue"></div>
+        <div className="color-bar red"></div>
+      </div>
     </div>
   );
 };

@@ -24,50 +24,46 @@ const LoginForm = ({
 
   return (
     <form className="login-form-container" onSubmit={onSubmit}>
-      <TextField
-        label={idNumber ? '' : 'ID Number'}
-        value={idNumber}
-        onChange={onIdChange}
-        fullWidth
-        margin="normal"
-        variant="outlined"
-        className="login-input-field"
-        InputLabelProps={{ shrink: false }}
-      />
+      <div className="form-field">
+        <label className="field-label">ID NUMBER:</label>
+        <TextField
+          value={idNumber}
+          onChange={onIdChange}
+          placeholder="00-0000-000"
+          variant="outlined"
+          className="login-input-field"
+          InputProps={{
+            disableUnderline: true,
+          }}
+        />
+      </div>
 
-      <TextField
-        label={password ? '' : 'Password'}
-        type={showPassword ? 'text' : 'password'}
-        value={password}
-        onChange={onPasswordChange}
-        fullWidth
-        margin="normal"
-        variant="outlined"
-        className="login-input-field"
-        InputLabelProps={{ shrink: false }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton
-                onClick={handleClickShowPassword}
-                onMouseDown={handleMouseDownPassword}
-                edge="end"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                {showPassword ? <VisibilityOff /> : <Visibility />}
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
-
-      <Button
-        type="submit"
-        variant="contained"
-        className="login-button"
-      >
-        Login
-      </Button>
+      <div className="form-field">
+        <label className="field-label">PASSWORD:</label>
+        <TextField
+          type={showPassword ? 'text' : 'password'}
+          value={password}
+          onChange={onPasswordChange}
+          placeholder="**********"
+          variant="outlined"
+          className="login-input-field"
+          InputProps={{
+            disableUnderline: true,
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={handleClickShowPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  edge="end"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </div>
     </form>
   );
 };
