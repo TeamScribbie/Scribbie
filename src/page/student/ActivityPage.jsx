@@ -123,6 +123,7 @@ const ActivityPage = () => {
         activityInstructions: activityDetails.instructions || activityInstructions,
         classroomId,
         lessonDefinitionId,
+        difficulty: activityDetails.flagA || 'easy',
     };
 
     switch (activityDetails.activityType) {
