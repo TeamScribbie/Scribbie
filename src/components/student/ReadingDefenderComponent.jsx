@@ -7,7 +7,7 @@ function getRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
-const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activityInstructions }) => {
+const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activityInstructions, difficulty = 'easy' }) => {
     const [gameState, setGameState] = useState('menu');
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
@@ -17,6 +17,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const [feedback, setFeedback] = useState('');
     const [highestScore, setHighestScore] = useState(0);
     const [showWaveAnnouncer, setShowWaveAnnouncer] = useState(false);
+    const [hoveredWord, setHoveredWord] = useState(null);
 
     const wordBank = useMemo(() => {
         if (!questions || questions.length === 0 || !questions[0].choices) {
@@ -36,6 +37,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const spawnInProgress = useRef(false);
     const laneOccupancy = useRef({});
     const lanesRef = useRef([]);
+    const audioRef = useRef(null);
 
     const generateLanes = () => {
         const laneCount = 8;
@@ -72,7 +74,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
     const spawnWave = (waveNum) => {
         if (waveNum >= 6) {
-            setGameState('gameOver'); // Win condition met
+            setGameState('gameOver');
             return;
         }
         spawnInProgress.current = true;
@@ -89,36 +91,26 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         const totalCount = 20;
         const numTargetWords = getRandom([3, 4, 5]);
         const wordQueue = new Array(totalCount);
+        const colors = ['color-1', 'color-2', 'color-3', 'color-4', 'color-5', 'color-6', 'color-7'];
+
+        const createWordObject = (word) => ({
+            id: crypto.randomUUID(),
+            text: word.text,
+            soundSrc: word.soundSrc,
+            speed: 1 + waveNum * (word.text === targetWordObject.text ? 0.5 : 0.7),
+            colorClass: getRandom(colors),
+        });
 
         const spacing = Math.floor(totalCount / numTargetWords);
         for (let i = 0; i < numTargetWords; i++) {
             const pos = i * spacing;
-            wordQueue[pos] = {
-                id: crypto.randomUUID(),
-                text: targetWordObject.text,
-                soundSrc: targetWordObject.soundSrc,
-                speed: 1 + waveNum * 0.5,
-            };
+            wordQueue[pos] = createWordObject(targetWordObject);
         }
 
         for (let i = 0; i < totalCount; i++) {
             if (!wordQueue[i]) {
-                const distractor = getRandom(wordBank.filter(w => w.text !== targetWordObject.text));
-                if (distractor) {
-                    wordQueue[i] = {
-                        id: crypto.randomUUID(),
-                        text: distractor.text,
-                        soundSrc: distractor.soundSrc,
-                        speed: 1 + waveNum * 0.7,
-                    };
-                } else {
-                    wordQueue[i] = {
-                        id: crypto.randomUUID(),
-                        text: "Distractor",
-                        soundSrc: null,
-                        speed: 1 + waveNum * 0.7,
-                    };
-                }
+                const distractor = getRandom(wordBank.filter(w => w.text !== targetWordObject.text)) || { text: "Distractor", soundSrc: null };
+                wordQueue[i] = createWordObject(distractor);
             }
         }
 
@@ -192,16 +184,16 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             ) {
                 waveReadyRef.current = false;
                 setTimeout(() => {
-                setShowWaveAnnouncer(true);
-                setTimeout(() => setShowWaveAnnouncer(false), 1500);
+                    setShowWaveAnnouncer(true);
+                    setTimeout(() => setShowWaveAnnouncer(false), 1500);
 
-                setWave(prev => {
-                    const next = prev + 1;
-                    spawnWave(next);
-                    waveReadyRef.current = true;
-                    return next;
-                });
-            }, 800);
+                    setWave(prev => {
+                        const next = prev + 1;
+                        spawnWave(next);
+                        waveReadyRef.current = true;
+                        return next;
+                    });
+                }, 800);
             }
 
             return updated;
@@ -214,11 +206,15 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         if (gameState === 'playing') {
             spawnWave(wave);
             animRef.current = requestAnimationFrame(step);
-            return () => cancelAnimationFrame(animRef.current);
+            return () => {
+                cancelAnimationFrame(animRef.current);
+                if (audioRef.current) {
+                    audioRef.current.pause();
+                }
+            };
         }
     }, [gameState, wordBank]);
 
-    // This is the corrected section
     useEffect(() => {
         if (gameState === 'gameOver' && wave >= 6) {
             const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
@@ -227,17 +223,14 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 highestScore,
                 status: 'COMPLETED',
                 timeTaken,
-                accuracy: 100, // Placeholder
-                questionsAttempted: score, // Placeholder
+                accuracy: 100,
+                questionsAttempted: score,
             });
         }
     }, [gameState, score, highestScore, onGameComplete, wave]);
 
     const shoot = (w) => {
-        if (w.soundSrc) {
-            const sound = new Audio(w.soundSrc);
-            sound.play().catch(e => console.error("Error playing taco sound:", e));
-        }
+        speak(w.soundSrc);
 
         setWords(prev => prev.filter(p => p.id !== w.id));
         if (laneOccupancy.current[w.x] === w.id) {
@@ -265,8 +258,15 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
     const speak = (audioUrl) => {
         if (!audioUrl) return;
+
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+
         const sound = new Audio(audioUrl);
-        sound.play().catch(e => console.error("Error playing target word sound:", e));
+        audioRef.current = sound;
+        sound.play().catch(e => console.error("Error playing sound:", e));
     };
 
 
@@ -291,11 +291,11 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         )}
                     </div>
                     <div className="bottom-base">TACO TRAY</div>
-                        <div className="wave-hud">🌊 Wave: {wave} </div>
-                        <div className="left-hud">❤️ Lives: {[...Array(lives)].map((_, i) => (
-                            <img key={i} src="/heart.png" alt="life" className="life-icon" />
-                            ))}</div>
-                        <div className="right-hud">⭐ Score: {score}</div>
+                    <div className="wave-hud">🌊 Wave: {wave} </div>
+                    <div className="left-hud">❤️ Lives: {[...Array(lives)].map((_, i) => (
+                        <img key={i} src="/heart.png" alt="life" className="life-icon" />
+                    ))}</div>
+                    <div className="right-hud">⭐ Score: {score}</div>
                     <div className="taco-clouds-sky">
                         {[...Array(12)].map((_, i) => (
                             <img
@@ -309,7 +309,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                     </div>
 
                     <div className="target-bubble-container">
-                        <p className="target-instruction">Target Word</p>
+                        <p className="target-instruction">Target Word: <span className="target-word-display">{difficulty !== 'easy' && target.text}</span></p>
                         <div
                             className="target-bubble"
                             onClick={() => speak(target.soundSrc)}
@@ -325,9 +325,22 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             className="word"
                             style={{ left: `${w.x}px`, top: `${w.y}px` }}
                             onClick={() => shoot(w)}
+                            onMouseEnter={() => {
+                                if (difficulty === 'medium' || difficulty === 'hard') {
+                                    speak(w.soundSrc);
+                                }
+                                if (difficulty === 'hard') {
+                                    setHoveredWord(w.id);
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                if (difficulty === 'hard') {
+                                    setHoveredWord(null);
+                                }
+                            }}
                         >
-                            <span className={`word-label ${w.text === target.text ? 'correct' : 'wrong'}`}>
-                                {w.text}
+                            <span className={`word-label ${w.colorClass} ${difficulty === 'easy' ? (w.text === target.text ? 'correct' : 'wrong') : ''}`}>
+                                {difficulty === 'hard' && hoveredWord !== w.id ? '' : w.text}
                             </span>
                         </div>
                     ))}
