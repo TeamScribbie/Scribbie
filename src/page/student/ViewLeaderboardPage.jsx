@@ -26,7 +26,6 @@ const ViewLeaderboardPage = () => {
             setLoading(true);
             setError(null);
             try {
-                // Fetch a larger number for the full leaderboard, e.g., top 100
                 const data = await getLeaderboardSnapshot(lessonDefinitionId, 100, authState.token);
                 setLeaderboard(data);
             } catch (err) {
@@ -68,10 +67,13 @@ const ViewLeaderboardPage = () => {
                                             <EmojiEventsIcon />
                                         </Avatar>
                                         <ListItemText
-                                            primary={`${index + 1}. ${player.studentName}`}
+                                            primary={`${index + 1}. ${player.studentName || 'Unknown Player'}`}
                                             primaryTypographyProps={{ fontWeight: 'bold' }}
                                         />
-                                        <Typography variant="h6" color="primary">{player.score.toLocaleString()}</Typography>
+                                        {/* ✨ FIXED: Added a check to prevent crash if score is missing ✨ */}
+                                        <Typography variant="h6" color="primary">
+                                            {(player.score ?? 0).toLocaleString()}
+                                        </Typography>
                                     </ListItem>
                                     {index < leaderboard.length - 1 && <Divider />}
                                 </React.Fragment>

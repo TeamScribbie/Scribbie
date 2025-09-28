@@ -4,14 +4,10 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LandingPage from "./components/layout/LandingPage";
 import { Box, CircularProgress } from '@mui/material';
 
-import ChallengePage from './page/student/ChallengePage';
-import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
-
 // Import Authentication Context Provider
-// Ensure useAuth is also exported from AuthContext if ProtectedRoute is in the same file or imported separately
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Import Page Components
+// Import Page Components (Duplicates have been removed)
 import StudentLogin from "./page/student/StudentLogin";
 import StudentRegistration from "./page/student/StudentRegistration";
 import StudentHomepage from "./page/student/StudentHomepage";
@@ -23,21 +19,16 @@ import ChallengePage from './page/student/ChallengePage';
 import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
 import ViewLeaderboardPage from './page/student/ViewLeaderboardPage';
 import MemoryGame from './page/student/MemoryGame';
-
 import TeacherLogin from './page/teacher/TeacherLogin';
 import TeacherRegistration from './page/teacher/TeacherRegistration';
 import TeacherHomepage from './page/teacher/TeacherHomepage';
 import ClassroomStudentProgressOverviewPage from "./page/teacher/ClassroomStudentProgressOverviewPage.jsx";
 import StudentCourseDetailPage from "./page/teacher/StudentCourseDetailPage.jsx";
-// import TeacherProfile from './page/teacher/TeacherProfile'; // Placeholder
-
-// --- CORRECT IMPORT ---
-// Make sure this path points to your actual ManageCoursesPage file
-import ManageCoursesPage from './page/teacher/ManageCoursesPage.jsx'; 
-import ManageAdminsPage from './page/teacher/ManageAdminsPage.jsx'; 
-import ActivityNodeEditorPage from './page/teacher/ActivityNodeEditorPage.jsx'; // New import for the new page
+import ManageCoursesPage from './page/teacher/ManageCoursesPage.jsx';
+import ManageAdminsPage from './page/teacher/ManageAdminsPage.jsx';
+import ActivityNodeEditorPage from './page/teacher/ActivityNodeEditorPage.jsx';
 import ChallengeQuestionsEditorPage from './page/teacher/ChallengeQuestionsEditorPage.jsx';
-import LessonManagementPage from "./page/teacher/LessonManagementPage.jsx"; // New Page
+import LessonManagementPage from "./page/teacher/LessonManagementPage.jsx";
 import StoryGame from './page/student/StoryGame.jsx';
 import ReadingGameComponent from './components/student/ReadingGameComponent';
 import FillBlanksGameComponent from './components/student/FillBlanksGameComponent';
@@ -54,7 +45,8 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     }
 
     if (!authState.isAuthenticated) {
-        return <Navigate to="/teacher-login" replace />;
+        // Redirect to a relevant login page based on role if needed, or a generic one
+        return <Navigate to="/student-login" replace />;
     }
 
     const userHasRequiredRole = authState.user?.roles?.some(role => allowedRoles.includes(role));
@@ -64,7 +56,8 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
             "Access Denied: User with roles", authState.user?.roles,
             "tried to access a route requiring one of:", allowedRoles
         );
-        return <Navigate to="/teacher-homepage" replace />;
+        // Redirect to a safe default page
+        return <Navigate to="/" replace />;
     }
     return children ? children : <Outlet />;
 };
@@ -85,129 +78,32 @@ const App = () => {
 
 
         {/* Student Protected Routes */}
-        <Route path="/student-homepage" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <StudentHomepage />
-            </ProtectedRoute>
-        } />
-
-        <Route path="/student-challenges" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ChallengePage />
-            </ProtectedRoute>
-        } />
-
-        <Route path="/student-grades" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <StudentHomepage />
-            </ProtectedRoute>
-        } />
-        
-        <Route path="/student-profile" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <StudentProfile />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/classroom/:classroomId/lessons" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <LessonPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/lesson/:lessonId/activity/:activityId" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ActivityPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/activity-summary" element={
-             <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ActivitySummaryPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/lesson/:lessonDefinitionId/challenge" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ChallengePage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/challenge-summary" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ChallengeSummaryPage />
-            </ProtectedRoute>
-        } />
-        <Route path="/student/leaderboard/:lessonDefinitionId" element={
-            <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-                <ViewLeaderboardPage />
-            </ProtectedRoute>
-        } />
-
-        {/* Student Activity Play Route (for /student/lesson/:lessonDefinitionId/activity-node/:activityNodeTypeId/play) */}
-        <Route 
-            path="/student/lesson/:lessonDefinitionId/activity-node/:activityNodeTypeId/play" 
-            element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivityPage /></ProtectedRoute>} 
-        />
+        <Route path="/student-homepage" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><StudentHomepage /></ProtectedRoute>} />
+        <Route path="/student-challenges" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ChallengePage /></ProtectedRoute>} />
+        <Route path="/student-grades" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><StudentHomepage /></ProtectedRoute>} />
+        <Route path="/student-profile" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><StudentProfile /></ProtectedRoute>} />
+        <Route path="/student/classroom/:classroomId/lessons" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><LessonPage /></ProtectedRoute>} />
+        <Route path="/student/lesson/:lessonId/activity/:activityId" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivityPage /></ProtectedRoute>} />
+        <Route path="/student/activity-summary" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivitySummaryPage /></ProtectedRoute>} />
+        <Route path="/student/lesson/:lessonDefinitionId/challenge" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ChallengePage /></ProtectedRoute>} />
+        <Route path="/student/challenge-summary" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ChallengeSummaryPage /></ProtectedRoute>} />
+        <Route path="/student/leaderboard/:lessonDefinitionId" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ViewLeaderboardPage /></ProtectedRoute>} />
+        <Route path="/student/lesson/:lessonDefinitionId/activity-node/:activityNodeTypeId/play" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ActivityPage /></ProtectedRoute>} />
 
         {/* Activity Routes */}
-        <Route path="/student/activity/reading/:activityId" element={
-          <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-            <ReadingGameComponent />
-          </ProtectedRoute>
-        } />
-        <Route path="/student/activity/fill-blanks/:activityId" element={
-          <ProtectedRoute allowedRoles={["ROLE_STUDENT"]}>
-            <FillBlanksGameComponent />
-          </ProtectedRoute>
-        } />
-        <Route path="/lesson/:lessonId/challenge" element={<ProtectedRoute role="STUDENT"><ChallengePage /></ProtectedRoute>} />
-        <Route path="/challenge-summary" element={<ProtectedRoute role="STUDENT"><ChallengeSummaryPage /></ProtectedRoute>} />
-
+        <Route path="/student/activity/reading/:activityId" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><ReadingGameComponent /></ProtectedRoute>} />
+        <Route path="/student/activity/fill-blanks/:activityId" element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]}><FillBlanksGameComponent /></ProtectedRoute>} />
+        
         {/* Teacher Protected Routes */}
-        <Route path="/teacher-homepage" element={
-          <ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-            <TeacherHomepage />
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher/manage-courses" element={
-          <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-            <ManageCoursesPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher/manage-admins" element={
-          <ProtectedRoute allowedRoles={["ROLE_SUPERADMIN"]}>
-            <ManageAdminsPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher/course/:courseId/lessons" element={
-          <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-            <LessonManagementPage />
-          </ProtectedRoute>
-        } />
-        {/* highlight-start */}
-        {/* New Route for ActivityNodeEditorPage */}
-        <Route
-          path="/teacher/course/:courseId/lesson/:lessonDefinitionId/node/:activityNodeTypeId/edit"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-              <ActivityNodeEditorPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* highlight-end */}
+        <Route path="/teacher-homepage" element={<ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}><TeacherHomepage /></ProtectedRoute>} />
+        <Route path="/teacher/manage-courses" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ManageCoursesPage /></ProtectedRoute>} />
+        <Route path="/teacher/manage-admins" element={<ProtectedRoute allowedRoles={["ROLE_SUPERADMIN"]}><ManageAdminsPage /></ProtectedRoute>} />
+        <Route path="/teacher/course/:courseId/lessons" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><LessonManagementPage /></ProtectedRoute>} />
+        <Route path="/teacher/course/:courseId/lesson/:lessonDefinitionId/node/:activityNodeTypeId/edit" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ActivityNodeEditorPage /></ProtectedRoute>} />
+        <Route path="/teacher/course/:courseId/lesson/:lessonDefinitionId/challenge/:challengeDefinitionId/edit-questions" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ChallengeQuestionsEditorPage /></ProtectedRoute>} />
+        <Route path="/teacher/classroom/:classroomId/progress" element={<ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ClassroomStudentProgressOverviewPage /></ProtectedRoute>} />
+        <Route path="/teacher/classroom/:classroomId/student/:studentId/progress" element={<ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}><StudentCourseDetailPage /></ProtectedRoute>} />
 
-        <Route
-          path="/teacher/course/:courseId/lesson/:lessonDefinitionId/challenge/:challengeDefinitionId/edit-questions"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_ADMIN", "ROLE_SUPERADMIN"]}>
-              <ChallengeQuestionsEditorPage />
-            </ProtectedRoute>
-          }
-        />
-          <Route
-              path="/teacher/classroom/:classroomId/progress"
-              element={<ClassroomStudentProgressOverviewPage />}
-          />
-          <Route
-              path="/teacher/classroom/:classroomId/student/:studentId/progress"
-              element={<StudentCourseDetailPage />}
-          />
         <Route path="/" element={<Navigate to="/student-login" replace />} />
         <Route path="*" element={
             <div style={{ textAlign: 'center', marginTop: '50px' }}>
@@ -221,4 +117,3 @@ const App = () => {
 };
 
 export default App;
-

@@ -22,20 +22,18 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(30);
     const [maxTime, setMaxTime] = useState(30);
-    const wordBank = useRef([...gameData]); // Holds all possible cards for replacement
+    const wordBank = useRef([...gameData]);
 
     // --- Audio Memos ---
     const backgroundMusic = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/bgmusic.mp3`), []);
     const winSound = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/win.mp3`), []);
-    const loseSound = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/lose.ogg`), []); // Added for challenge timeout
+    const loseSound = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/lose.ogg`), []);
 
     const navigate = useNavigate();
 
     const getNewCard = useCallback((currentCardSrcs) => {
-        // Find a card from the bank that is not currently on the board
         const available = wordBank.current.filter(item => !currentCardSrcs.includes(item.src));
         if (available.length === 0) {
-            // If all unique cards are on the board, just pick a random one from the bank
             return wordBank.current[Math.floor(Math.random() * wordBank.current.length)];
         }
         return available[Math.floor(Math.random() * available.length)];
@@ -50,7 +48,6 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
 
         let initialCards;
         if (isChallengeMode) {
-             // For challenge, take the first 8 unique pairs to start
             const uniqueCards = [...new Map(gameData.map(item => [item.src, item])).values()];
             initialCards = uniqueCards.slice(0, 8);
         } else {
@@ -73,9 +70,9 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
         if (isChallengeMode) {
             setMaxTime(30);
             setTimeLeft(30);
-            setGameStarted(true); // Auto-start challenge mode
+            setGameStarted(true);
         } else {
-            setGameStarted(false); // Require nickname for normal mode
+            setGameStarted(false);
         }
     }, [gameData, isChallengeMode]);
 
@@ -96,14 +93,12 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
         setDisabled(false);
     };
     
-    // --- Initial setup ---
     useEffect(() => {
         if (gameData.length > 0) {
             shuffleCards();
         }
     }, [gameData, shuffleCards]);
 
-    // --- Challenge Mode Timer ---
     useEffect(() => {
         if (!isChallengeMode || !gameStarted || gameWon) return;
 
@@ -111,7 +106,7 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
             setTimeLeft(prev => {
                 if (prev <= 1) {
                     clearInterval(timer);
-                    setGameWon(true); // Use gameWon to show the final screen
+                    setGameWon(true);
                     loseSound.play().catch(e => console.error("Sound error:", e));
                     onGameComplete({
                         score: score,
@@ -127,28 +122,24 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
         return () => clearInterval(timer);
     }, [isChallengeMode, gameStarted, gameWon, score, matchedPairs, onGameComplete, loseSound]);
 
-
-    // --- Match Logic (Updated for Challenge Mode) ---
     useEffect(() => {
         if (choiceOne && choiceTwo) {
             setDisabled(true);
-            if (choiceOne.src === choiceTwo.src) { // A match
+            if (choiceOne.src === choiceTwo.src) {
                 setMatchedPairs(prev => prev + 1);
 
                 if (isChallengeMode) {
                     setScore(prev => prev + 100);
-                    // Decrease max time, but not below 5 seconds
-                    setMaxTime(prev => Math.max(prev - 1.5, 5)); 
-                    setTimeLeft(prev => prev + 3); // Add bonus time
+                    const newMaxTime = Math.max(maxTime - 1.0, 8);
+                    setMaxTime(newMaxTime);
+                    setTimeLeft(newMaxTime); 
 
                     setTimeout(() => {
-                        // Replace the matched cards with new ones
                         const currentCardSrcs = cards.map(c => c.src);
                         const newCard = getNewCard(currentCardSrcs);
                         
                         setCards(prevCards => prevCards.map(card => {
                             if (card.id === choiceOne.id || card.id === choiceTwo.id) {
-                                // Return a new card object, keeping the ID but resetting matched status
                                 return { ...newCard, id: card.id, matched: false };
                             }
                             return card;
@@ -156,7 +147,7 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
                         resetTurn();
                     }, 800);
 
-                } else { // Normal Mode Match
+                } else {
                     setCards((prev) =>
                         prev.map((card) =>
                             card.src === choiceOne.src ? { ...card, matched: true } : card
@@ -164,16 +155,16 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
                     );
                     resetTurn();
                 }
-            } else { // Not a match
+            } else {
                 setTimeout(resetTurn, 1000);
             }
         }
-    }, [choiceOne, choiceTwo, isChallengeMode, getNewCard, cards]);
-
+    }, [choiceOne, choiceTwo, isChallengeMode, getNewCard, cards, maxTime]);
 
     // --- Win Condition (Normal Mode) ---
     useEffect(() => {
-        if (!isChallengeMode && gameData.length > 0 && cards.every((card) => card.matched)) {
+        // ✨ FIXED: Added 'cards.length > 0' to prevent the bug
+        if (!isChallengeMode && gameData.length > 0 && cards.length > 0 && cards.every((card) => card.matched)) {
             setGameWon(true);
             winSound.play().catch(e => console.error("Win sound error:", e));
             const accuracy = turns > 0 ? Math.round((matchedPairs / turns) * 100) : 100;
@@ -184,7 +175,6 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
         }
     }, [cards, isChallengeMode, gameData.length, gameWon, matchedPairs, turns, onGameComplete, winSound]);
     
-    // --- Background Music ---
     useEffect(() => {
         if (gameStarted) {
             backgroundMusic.loop = true;
@@ -196,7 +186,6 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
             backgroundMusic.currentTime = 0;
         };
     }, [gameStarted, backgroundMusic]);
-
 
     return (
         <Box
@@ -214,7 +203,6 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
             }}
         >
             {!gameStarted ? (
-                // Nickname screen (only for normal mode)
                 <Box display="flex" flexDirection="column" alignItems="center" mt={5}>
                     <Typography variant="h3" mb={3} style={{ fontWeight: "bold", color: "#3f51b5" }}>
                         🎮 Enter Your Nickname
@@ -232,7 +220,7 @@ export default function MemoryGame({ gameData = [], onGameComplete = () => {}, i
                 <>
                     <Box display="flex" justifyContent="space-between" alignItems="center" width="100%" maxWidth="1000px" mb={2}>
                         <Button variant="contained" style={{ backgroundColor: "#607d8b", color: "white", fontWeight: "bold", fontSize: "1.1rem", padding: "12px 24px", borderRadius: "8px" }}
-                            onClick={() => navigate("/student-homepage") /* Or back to lessons */}
+                            onClick={() => navigate("/student-homepage")}
                         >
                             ⬅ EXIT
                         </Button>
