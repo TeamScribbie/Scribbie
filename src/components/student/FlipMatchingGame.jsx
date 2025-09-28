@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
-import MemoryGame from '../../page/student/MemoryGame.jsx'; // Make sure this path is correct
-import {MEDIA_BASE_URL} from "../../config/apiConfig.js";
+import MemoryGame from '../../page/student/MemoryGame.jsx';
+import { MEDIA_BASE_URL } from "../../config/apiConfig.js";
 
-const FlipMatchingGame = ({ questions = [], onGameComplete = () => {} }) => {
-    // Transform the 'questions' prop into the format 'MemoryGame' expects.
-    // 'useMemo' prevents this from being recalculated on every render.
+// FIX 1: Add `activityDetails` to the list of props this component accepts.
+const FlipMatchingGame = ({ questions = [], onGameComplete = () => {}, activityDetails = {} }) => {
+
+    // DEBUG: Let's log the details as they arrive in this component.
+    console.log("FlipMatchingGame received these activityDetails:", activityDetails);
+
     const gameData = useMemo(() => {
         return questions.map(q => {
             const choice = q.choices?.[0];
@@ -12,14 +15,17 @@ const FlipMatchingGame = ({ questions = [], onGameComplete = () => {} }) => {
             return {
                 src: choice.imagePath ? `${MEDIA_BASE_URL}${choice.imagePath.replace(/^\/+/, '')}` : null,
                 word: choice.choiceText,
-                // Assuming you have an 'audioPath' in your choice object
                 soundSrc: choice.audioPath ? `${MEDIA_BASE_URL}${choice.audioPath.replace(/^\/+/, '')}` : null,
             };
-        }).filter(Boolean); // Filter out any null entries if a question has no choice
+        }).filter(Boolean);
     }, [questions]);
 
-    // Render the MemoryGame with the processed data
-    return <MemoryGame gameData={gameData} onGameComplete={onGameComplete} />;
+    // FIX 2: Pass the `activityDetails` prop down to the MemoryGame component.
+    return <MemoryGame
+        gameData={gameData}
+        onGameComplete={onGameComplete}
+        activityDetails={activityDetails}
+    />;
 };
 
 export default FlipMatchingGame;
