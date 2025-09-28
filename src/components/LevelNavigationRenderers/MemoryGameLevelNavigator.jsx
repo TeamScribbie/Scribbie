@@ -2,24 +2,21 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Typography, Grid, Paper, IconButton } from '@mui/material';
 
+// Import MemoryGame assets
 import memoryGameBackground from './AssetsLN/MemoryGame/MemoryPuzzleBackground.png';
 import memoryGameLogo from './AssetsLN/MemoryGame/MemoryPuzzleLogo-Photoroom.png';
 import prevArrowIcon from './AssetsLN/MemoryGame/Prev Icon.png';
 import nextArrowIcon from './AssetsLN/MemoryGame/Next Icon.png';
 import memoryGameLvlIcon from './AssetsLN/MemoryGame/MemoryPuzzleLvlIcon-Photoroom.png';
-// ✨ 1. Import the modular button component
-import StartChallengeButton from '../buttons/StartChallengeButton';
+import StartChallengeButton from '../buttons/StartChallengeButton'; // Import the button
 
-// ✨ 2. Add challengeDetails to the component's props
-const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons, challengeDetails }) => {
-    
+const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+
     const levels = useMemo(() => {
-        return activityNodes.map((node, index) => {
-            return {
-                ...node,
-                levelNumber: index + 1,
-            };
-        });
+        return activityNodes.map((node, index) => ({
+            ...node,
+            levelNumber: index + 1,
+        }));
     }, [activityNodes]);
 
     const isFirstLesson = currentLessonIdx === 0;
@@ -30,7 +27,6 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
             backgroundImage: `url(${memoryGameBackground})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
             minHeight: '100vh',
             width: '100vw',
             position: 'fixed',
@@ -39,11 +35,9 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'flex-start',
             pt: '60px',
             pb: '40px',
             boxSizing: 'border-box',
-            zIndex: 1,
             overflowY: 'auto',
         }}>
             <Box sx={{
@@ -56,33 +50,28 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
                 maxWidth: '400px',
             }}>
                 {!isFirstLesson && (
-                    <IconButton onClick={onPrevLesson} sx={{ p: 0, '&:hover img': { filter: 'brightness(1.1)' } }}>
-                        <img src={prevArrowIcon} alt="Previous Lesson" style={{ width: '60px', height: '60px', display: 'block' }} />
+                    <IconButton onClick={onPrevLesson} sx={{ p: 0 }}>
+                        <img src={prevArrowIcon} alt="Previous" style={{ width: '60px', height: '60px' }} />
                     </IconButton>
                 )}
-                {isFirstLesson && <Box sx={{ width: '60px', height: '60px' }} />} 
+                 {isFirstLesson && <Box sx={{ width: '60px', height: '60px' }} />}
 
-                <Box sx={{
-                    width: 'clamp(150px, 40vw, 300px)',
-                    height: 'auto',
-                    flexGrow: 1,
-                    textAlign: 'center',
-                }}>
-                    <img src={memoryGameLogo} alt="MemoryGame Logo" style={{ width: '100%', height: 'auto', display: 'block', margin: '0 auto' }} />
+                <Box sx={{ width: 'clamp(150px, 40vw, 300px)', flexGrow: 1, textAlign: 'center' }}>
+                    <img src={memoryGameLogo} alt="Memory Puzzle Logo" style={{ width: '100%', height: 'auto' }} />
                 </Box>
 
                 {!isLastLesson && (
-                    <IconButton onClick={onNextLesson} sx={{ p: 0, '&:hover img': { filter: 'brightness(1.1)' } }}>
-                        <img src={nextArrowIcon} alt="Next Lesson" style={{ width: '60px', height: '60px', display: 'block' }} />
+                    <IconButton onClick={onNextLesson} sx={{ p: 0 }}>
+                        <img src={nextArrowIcon} alt="Next" style={{ width: '60px', height: '60px' }} />
                     </IconButton>
                 )}
-                {isLastLesson && <Box sx={{ width: '60px', height: '60px' }} />}
+                 {isLastLesson && <Box sx={{ width: '60px', height: '60px' }} />}
             </Box>
 
             <Typography variant="h5" component="span" sx={{
                 color: 'white',
                 fontWeight: 'bold',
-                textShadow: '1px 1px 3px rgba(0,0,0,0.5)',
+                textShadow: '1px 1px 3px rgba(0,0,0,0.7)',
                 mb: 4,
                 textAlign: 'center',
                 fontSize: 'clamp(1.2rem, 3vw, 2rem)',
@@ -90,43 +79,32 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
                 {lesson.lessonTitle}
             </Typography>
 
-            <Grid container spacing={2} sx={{
-                width: '90%',
-                maxWidth: '800px',
-                mx: 'auto',
-                justifyContent: 'center',
-                flexGrow: 1,
-            }}>
+            <Grid container spacing={2} sx={{ width: '90%', maxWidth: '800px', mx: 'auto', justifyContent: 'center' }}>
                 {levels.map(level => (
-                    <Grid item key={level.activityId} xs={4} sm={3} md={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Grid item key={level.activityId} xs={4} sm={3} md={2.4} sx={{ display: 'flex', justifyContent: 'center' }}>
                         <Paper
-                            elevation={0}
                             onClick={() => onSelectNode(level)}
                             sx={{
-                                width: { xs: '80px', sm: '90px', md: '100px' },
-                                height: { xs: '80px', sm: '90px', md: '100px' },
-                                borderRadius: '12px',
+                                width: { xs: '80px', sm: '100px' },
+                                height: { xs: '80px', sm: '100px' },
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 fontSize: '2.2rem',
                                 fontWeight: 'bold',
-                                background: 'transparent',
-                                border: 'none',
-                                boxShadow: 'none',
-                                padding: 0,
                                 backgroundImage: `url(${memoryGameLvlIcon})`,
                                 backgroundSize: 'contain',
                                 backgroundRepeat: 'no-repeat',
                                 backgroundPosition: 'center',
-                                color: 'white',
-                                textShadow: '1px 1px 4px rgba(0,0,0,0.7)',
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                boxShadow: 'none',
+                                color: '#4a2c5a',
                                 cursor: 'pointer',
-                                transition: 'transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease',
-                                
+                                transition: 'transform 0.2s ease, filter 0.2s ease',
                                 '&:hover': {
-                                    transform: 'scale(1.15) translateY(-5px)',
-                                    filter: 'brightness(1.2) drop-shadow(0 5px 10px rgba(0,0,0,0.5))',
+                                    transform: 'scale(1.1)',
+                                    filter: 'brightness(1.2)',
                                 },
                             }}
                         >
@@ -135,13 +113,10 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
                     </Grid>
                 ))}
             </Grid>
+            
+            {/* ✨ FIXED: Passing the 'lesson' prop correctly to the button ✨ */}
+            <StartChallengeButton lesson={lesson} />
 
-            {/* ✨ 3. Add the StartChallengeButton component ✨ */}
-            <StartChallengeButton
-                lessonId={lesson?.lessonDefinitionId}
-                challengeId={challengeDetails?.challengeId}
-                gameType={challengeDetails?.gameType}
-            />
         </Box>
     );
 };
@@ -154,13 +129,6 @@ MemoryGameLevelNavigator.propTypes = {
     onNextLesson: PropTypes.func.isRequired,
     currentLessonIdx: PropTypes.number.isRequired,
     totalLessons: PropTypes.number.isRequired,
-    // ✨ 4. Add challengeDetails to propTypes
-    challengeDetails: PropTypes.object,
-};
-
-// Set a default value for the new prop
-MemoryGameLevelNavigator.defaultProps = {
-    challengeDetails: null,
 };
 
 export default MemoryGameLevelNavigator;

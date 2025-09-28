@@ -122,6 +122,7 @@ const ActivityPage = () => {
         activityInstructions: activityDetails.instructions || activityInstructions,
         classroomId,
         lessonDefinitionId,
+        isChallengeMode: false, // Explicitly false for normal activities
     };
 
     switch (activityDetails.activityType) {

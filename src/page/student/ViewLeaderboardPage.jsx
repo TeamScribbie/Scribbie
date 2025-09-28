@@ -1,37 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Container, Paper, Avatar, Button, CircularProgress, Alert } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import { getLeaderboardByLessonDef } from '../../services/challengeService';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import WhatshotIcon from '@mui/icons-material/Whatshot';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { getLeaderboardSnapshot } from '../../services/challengeService';
+import { Box, Typography, CircularProgress, Alert, Paper, List, ListItem, ListItemText, Divider, Button, Avatar } from '@mui/material';
 import Navbar from '../../components/layout/navbar';
-import StudentSidebar from '../../components/layout/StudentSidebar';
-import '../../styles/StudentHomepage.css';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 const ViewLeaderboardPage = () => {
     const { lessonDefinitionId } = useParams();
     const navigate = useNavigate();
     const { authState } = useAuth();
-    const [leaderboardData, setLeaderboardData] = useState([]);
+
+    const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     useEffect(() => {
-        const fetchLeaderboard = async () => {
-            if (!lessonDefinitionId || !authState.token) {
-                setError('Missing required data to fetch leaderboard.');
-                setLoading(false);
-                return;
-            }
+        if (!lessonDefinitionId || !authState.token) {
+            setError("Missing lesson ID or authentication.");
+            setLoading(false);
+            return;
+        }
 
+        const fetchLeaderboard = async () => {
+            setLoading(true);
+            setError(null);
             try {
-                const data = await getLeaderboardByLessonDef(lessonDefinitionId, authState.token);
-                setLeaderboardData(data);
+                // Fetch a larger number for the full leaderboard, e.g., top 100
+                const data = await getLeaderboardSnapshot(lessonDefinitionId, 100, authState.token);
+                setLeaderboard(data);
             } catch (err) {
-                setError(err.message || 'Failed to load leaderboard data');
+                console.error("Error fetching leaderboard:", err);
+                setError(err.message || "Could not load the leaderboard.");
             } finally {
                 setLoading(false);
             }
@@ -40,161 +40,53 @@ const ViewLeaderboardPage = () => {
         fetchLeaderboard();
     }, [lessonDefinitionId, authState.token]);
 
-    const handleBack = () => {
-        navigate(-1);
+    const getTrophyColor = (rank) => {
+        if (rank === 0) return '#FFD700'; // Gold
+        if (rank === 1) return '#C0C0C0'; // Silver
+        if (rank === 2) return '#CD7F32'; // Bronze
+        return 'grey';
     };
-
-    if (loading) {
-        return (
-            <div className="student-homepage-container">
-                <div className={`student-sidebar ${sidebarOpen ? '' : 'closed'}`}>
-                    <StudentSidebar isOpen={sidebarOpen} />
-                </div>
-                <div className={`student-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                    <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-                    <Box sx={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        minHeight: 'calc(100vh - 64px)',
-                        p: 3
-                    }}>
-                        <CircularProgress />
-                        <Typography sx={{ mt: 2 }}>Loading Leaderboard...</Typography>
-                    </Box>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="student-homepage-container">
-                <div className={`student-sidebar ${sidebarOpen ? '' : 'closed'}`}>
-                    <StudentSidebar isOpen={sidebarOpen} />
-                </div>
-                <div className={`student-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                    <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-                    <Box sx={{ p: 3 }}>
-                        <Alert severity="error" sx={{ maxWidth: 600, mx: 'auto' }}>
-                            {error}
-                            <Button 
-                                onClick={handleBack}
-                                sx={{ mt: 2, display: 'block' }}
-                            >
-                                Go Back
-                            </Button>
-                        </Alert>
-                    </Box>
-                </div>
-            </div>
-        );
-    }
-
+    
     return (
-        <div className="student-homepage-container">
-            <div className={`student-sidebar ${sidebarOpen ? '' : 'closed'}`}>
-                <StudentSidebar isOpen={sidebarOpen} />
-            </div>
-            <div className={`student-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-                <Box className="student-main-content">
-                    <Container maxWidth="md" sx={{ pt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-                            <Button
-                                onClick={handleBack}
-                                startIcon={<ArrowBackIcon />}
-                                sx={{ color: '#451513' }}
-                            >
-                                Back
-                            </Button>
-                        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
+            <Navbar />
+            <Box component="main" sx={{ flexGrow: 1, p: 3, mt: '60px', display: 'flex', justifyContent: 'center' }}>
+                <Paper elevation={4} sx={{ p: 4, borderRadius: 3, width: '100%', maxWidth: '800px' }}>
+                    <Typography variant="h4" component="h1" gutterBottom textAlign="center" fontWeight="bold">
+                        🏆 Leaderboard 🏆
+                    </Typography>
+                    
+                    {loading && <Box textAlign="center" my={4}><CircularProgress /></Box>}
+                    {error && <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>}
+                    
+                    {!loading && !error && (
+                        <List>
+                            {leaderboard.length > 0 ? leaderboard.map((player, index) => (
+                                <React.Fragment key={index}>
+                                    <ListItem>
+                                        <Avatar sx={{ mr: 2, bgcolor: getTrophyColor(index) }}>
+                                            <EmojiEventsIcon />
+                                        </Avatar>
+                                        <ListItemText
+                                            primary={`${index + 1}. ${player.studentName}`}
+                                            primaryTypographyProps={{ fontWeight: 'bold' }}
+                                        />
+                                        <Typography variant="h6" color="primary">{player.score.toLocaleString()}</Typography>
+                                    </ListItem>
+                                    {index < leaderboard.length - 1 && <Divider />}
+                                </React.Fragment>
+                            )) : (
+                                <Typography textAlign="center" my={4}>No scores submitted yet. Be the first!</Typography>
+                            )}
+                        </List>
+                    )}
 
-                        <Typography 
-                            variant="h4" 
-                            sx={{ 
-                                textAlign: 'center', 
-                                mb: 4, 
-                                color: '#451513',
-                                fontWeight: 'bold',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 2
-                            }}
-                        >
-                            <EmojiEventsIcon sx={{ fontSize: 40 }} />
-                            Challenge Leaderboard
-                        </Typography>
-                        
-                        {leaderboardData.map((entry, index) => (
-                            <Paper
-                                key={entry.studentId}
-                                elevation={3}
-                                sx={{
-                                    mb: 2,
-                                    p: 2,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    bgcolor: index < 3 ? 'rgba(255, 217, 102, 0.3)' : 'white',
-                                    border: index < 3 ? '2px solid #FFD966' : 'none',
-                                }}
-                            >
-                                <Typography 
-                                    sx={{ 
-                                        minWidth: 40, 
-                                        fontWeight: 'bold',
-                                        color: index < 3 ? '#FF6D00' : '#451513'
-                                    }}
-                                >
-                                    #{index + 1}
-                                </Typography>
-                                <Avatar 
-                                    sx={{ 
-                                        bgcolor: index < 3 ? '#FF6D00' : '#451513',
-                                        mx: 2
-                                    }}
-                                >
-                                    {entry.studentName?.charAt(0) || '?'}
-                                </Avatar>
-                                <Box sx={{ flexGrow: 1 }}>
-                                    <Typography sx={{ fontWeight: 'bold' }}>
-                                        {entry.studentName || 'Anonymous'}
-                                    </Typography>                            <Typography variant="body2" color="text.secondary">
-                                        Score: {entry.totalScore.toLocaleString()}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    gap: 1
-                                }}>
-                                    <WhatshotIcon sx={{ color: '#FF6D00' }} />
-                                    <Typography sx={{ color: '#FF6D00', fontWeight: 'bold' }}>
-                                        {entry.highestStreak}x
-                                    </Typography>
-                                </Box>
-                            </Paper>
-                        ))}
-
-                        {leaderboardData.length === 0 && (
-                            <Paper 
-                                sx={{ 
-                                    p: 3, 
-                                    textAlign: 'center',
-                                    bgcolor: 'rgba(255, 255, 255, 0.9)'
-                                }}
-                            >
-                                <Typography color="text.secondary">
-                                    No scores recorded yet. Be the first to complete this challenge!
-                                </Typography>
-                            </Paper>
-                        )}
-                    </Container>
-                </Box>
-            </div>
-        </div>
+                    <Box textAlign="center" mt={4}>
+                         <Button variant="outlined" onClick={() => navigate(-1)}>Go Back</Button>
+                    </Box>
+                </Paper>
+            </Box>
+        </Box>
     );
 };
 

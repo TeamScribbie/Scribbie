@@ -1,226 +1,140 @@
-import React, { useState } from 'react';
-import { Box, Typography, Button, Grid, Modal } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Navbar from '../../components/layout/navbar';
-import StudentSidebar from '../../components/layout/StudentSidebar';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
+import { getChallengeQuestions, getChallengeConfigurationForLesson } from '../../services/challengeService';
+import challengeBGMusic from '../../assets/sounds/challengeBGMusic.ogg';
 
-const challenges = [
-  {
-    image: '/src/assets/reading-bg.png',
-    label: 'Reading',
-    to: null,
-    startImage: '/src/assets/start-reading.png',
-  },
-  {
-    image: '/src/assets/stories-bg.png',
-    to: '/student-story-game',
-    label: 'Tell Me A Story',
-    startImage: '/src/assets/start-story.png',
-  },
-  {
-    image: '/src/assets/memory-bg.png',
-    to: '/student-memory-game',
-    label: '🧠 Match Game',
-    startImage: '/src/assets/start-memory.png',
-  },
-];
+// Import all your game components
+import ReadingDefenderComponent from '../../components/student/ReadingDefenderComponent';
+import ReadingGameComponent from '../../components/student/ReadingGameComponent';
+import FlipMatchingGame from '../../components/student/FlipMatchingGame'; // ✨ Import the Memory Game wrapper
 
-const StudentChallenges = () => {
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [selectedChallenge, setSelectedChallenge] = useState(null);
+const ChallengePage = () => {
+    const { lessonDefinitionId } = useParams();
+    const navigate = useNavigate();
+    const { authState } = useAuth();
 
-  const handleOpen = (challenge) => {
-    setSelectedChallenge(challenge);
-    setOpen(true);
-  };
+    const [questions, setQuestions] = useState([]);
+    const [challengeConfig, setChallengeConfig] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedChallenge(null);
-  };
+    // --- EFFECT TO FETCH DATA ---
+    useEffect(() => {
+        const fetchChallengeData = async () => {
+            if (!lessonDefinitionId || !authState.token) {
+                setError("Lesson ID or authentication token is missing.");
+                setIsLoading(false);
+                return;
+            }
 
-  const handleStart = () => {
-    if (selectedChallenge?.to) {
-      navigate(selectedChallenge.to);
-      handleClose();
-    }
-  };
+            setIsLoading(true);
+            setError(null);
 
-  return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#ffffff' }}>
-      <StudentSidebar />
+            try {
+                // Fetch challenge configuration first to know which game to load
+                const config = await getChallengeConfigurationForLesson(lessonDefinitionId, authState.token);
+                if (!config || !config.challengeType) {
+                    throw new Error("This lesson does not have a challenge configured.");
+                }
+                setChallengeConfig(config);
 
-      <Box sx={{ flex: 1, ml: '100px' }}>
-        <Navbar />
+                // Fetch the aggregated list of questions for the challenge
+                const challengeQuestions = await getChallengeQuestions(lessonDefinitionId, authState.token);
+                if (!challengeQuestions || challengeQuestions.length === 0) {
+                     console.warn("No questions found for this challenge, but rendering game anyway.");
+                     setQuestions([]); // Set to empty array if no questions
+                } else {
+                    setQuestions(challengeQuestions);
+                }
 
-        <Box
-          sx={{
-            overflow: 'auto',
-            p: 10,
-            backgroundImage: 'url(/src/assets/challengepage-bg.png)',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            minHeight: 'calc(100vh - 64px)',
-            width: '100%',
-          }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 5 }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 'bold',
-                background: 'linear-gradient(270deg, #FF6B6B, #FFD93D, #6BCB77, #4D96FF, #FF6B6B)',
-                backgroundSize: '1000% 100%',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'gradientShift 8s ease infinite',
-                display: 'inline-block',
-                '@keyframes gradientShift': {
-                  '0%': { backgroundPosition: '0% 50%' },
-                  '50%': { backgroundPosition: '100% 50%' },
-                  '100%': { backgroundPosition: '0% 50%' },
-                },
-              }}
-            >
-              It's time for fun!
-            </Typography>
-            <Typography variant="subtitle1" sx={{ color: '#444' }}>
-              Learn English through games and fun tasks!
-            </Typography>
-          </Box>
+            } catch (err) {
+                console.error("Error fetching challenge data:", err);
+                setError(err.message || "An error occurred while fetching challenge details.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-          <Grid container spacing={20} justifyContent="center">
-            {challenges.map((challenge, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Box
-                  sx={{
-                    height: '450px',
-                    width: '155%',
-                    backgroundImage: `url(${challenge.image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    borderRadius: 5,
-                    boxShadow: 5,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    '&:hover': {
-                      transform: 'scale(1.03)',
-                      boxShadow: 10,
-                    },
-                    p: 2,
-                    m: 1,
-                  }}
-                >
-                  <Box sx={{ zIndex: 100, display: 'flex', justifyContent: 'right', pb: 1 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<PlayArrowIcon />}
-                      onClick={() => handleOpen(challenge)}
-                      sx={{
-                        borderRadius: '50px',
-                        backgroundColor: '#4CAF50',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        px: 4,
-                        py: 1.5,
-                        fontSize: '1.1rem',
-                        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
-                        '&:hover': {
-                          backgroundColor: '#43A047',
-                        },
-                      }}
-                    >
-                      PLAY
-                    </Button>
-                  </Box>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
+        fetchChallengeData();
+    }, [lessonDefinitionId, authState.token]);
 
-          {/* Modal Popup */}
-          <Modal
-            open={open}
-            onClose={handleClose}
-            closeAfterTransition
-            BackdropProps={{
-              timeout: 300,
-              sx: { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
-            }}
-          >
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 700,
-                height: 500,
-                outline: 'none',
-                borderRadius: 4,
-                overflow: 'hidden',
-                animation: 'popupFade 0.4s ease-out forwards',
-                '@keyframes popupFade': {
-                  from: { opacity: 0, transform: 'scale(0.8) translate(-50%, -50%)' },
-                  to: { opacity: 1, transform: 'scale(1) translate(-50%, -50%)' },
-                },
-              }}
-            >
-              {selectedChallenge && (
-                <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
-                  <img
-                    src={selectedChallenge.startImage}
-                    alt="Start Game"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      filter: selectedChallenge.to ? 'none' : 'grayscale(70%)',
-                      transition: 'filter 0.3s',
-                    }}
-                  />
-                  <Button
-                    onClick={handleStart}
-                    disabled={!selectedChallenge.to}
-                    sx={{
-                      position: 'absolute',
-                      bottom: 30,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      px: 6,
-                      py: 1.8,
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      borderRadius: '30px',
-                      backgroundColor: selectedChallenge.to ? '#ea5546' : '#ccc',
-                      color: selectedChallenge.to ? '#fff' : '#666',
-                      boxShadow: selectedChallenge.to ? '0px 4px 12px rgba(0,0,0,0.3)' : 'none',
-                      transition: 'all 0.1s ease',
-                      '&:hover': {
-                        backgroundColor: selectedChallenge.to ? '#d4493c' : '#ccc',
-                        transform: selectedChallenge.to
-                          ? 'translateX(-50%) scale(1.05)'
-                          : 'translateX(-50%)',
-                      },
-                    }}
-                  >
-                    {selectedChallenge.to ? 'Start' : 'Coming Soon'}
-                  </Button>
-                </Box>
-              )}
+
+    const handleGameComplete = (gameResults) => {
+        navigate('/student/challenge-summary', {
+            state: {
+                ...gameResults,
+                lessonDefinitionId: parseInt(lessonDefinitionId),
+                 totalScore: gameResults.score, // Pass the score for the summary page
+                 highestStreak: gameResults.highestStreak,
+                 questionsAnswered: gameResults.questionsAnswered,
+            }
+        });
+    };
+    
+    const handleBackNavigation = () => {
+        navigate('/student-homepage');
+    };
+
+    if (isLoading) {
+        return (
+            <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100vw', height: '100vh', bgcolor: '#FFFBE0' }}>
+                <CircularProgress size={50} />
+                <Typography sx={{ mt: 2, color: '#451513' }}>Loading Challenge...</Typography>
             </Box>
-          </Modal>
-        </Box>
-      </Box>
-    </Box>
-  );
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100vw', height: '100vh', p:2, bgcolor: '#FFFBE0' }}>
+                <Alert severity="error" sx={{ width: '100%', maxWidth: '600px' }}>
+                    <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>Oops!</Typography>
+                    <Typography variant="body2" component="div" sx={{ mt: 1 }}>{error}</Typography>
+                    <Button onClick={handleBackNavigation} variant="contained" sx={{ mt: 2, bgcolor: '#451513', '&:hover': {bgcolor: '#5d211f'} }}>
+                        Go Back
+                    </Button>
+                </Alert>
+            </Box>
+        );
+    }
+
+    if (!challengeConfig) {
+        return (
+             <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100%', height: '100%', p:2 }}>
+               <Alert severity="info" sx={{ width: '100%', maxWidth: '600px' }}>
+                    <Typography variant="h6">Challenge Not Available</Typography>
+                    <Typography>The challenge data could not be retrieved.</Typography>
+                    <Button onClick={handleBackNavigation} variant="outlined" sx={{ mt: 2 }}>Go Back</Button>
+               </Alert>
+           </Box>
+        );
+    }
+
+    // --- RENDER THE CORRECT GAME COMPONENT IN CHALLENGE MODE ---
+    const gameProps = {
+        questions: questions,
+        onGameComplete: handleGameComplete,
+        isChallengeMode: true, // Crucial prop!
+    };
+
+    // Determine which game to render based on the challenge configuration
+    switch (challengeConfig.challengeType) {
+        case 'BALLOONGAME': return <ReadingDefenderComponent {...gameProps} />;
+        case 'READING':     return <ReadingGameComponent {...gameProps} />;
+        case 'MEMORYGAME':  return <FlipMatchingGame {...gameProps} />;
+        // Add other cases as you adapt more games for challenge mode
+        default:
+            return (
+                <Box sx={{ display:'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <Alert severity="warning" sx={{ m: 2 }}>
+                        Unsupported challenge type: "{challengeConfig.challengeType}".
+                        <Button onClick={handleBackNavigation} variant="outlined" sx={{ mt: 2, ml:1 }}>Go Back</Button>
+                    </Alert>
+                </Box>
+            );
+    }
 };
 
-export default StudentChallenges;
+export default ChallengePage;

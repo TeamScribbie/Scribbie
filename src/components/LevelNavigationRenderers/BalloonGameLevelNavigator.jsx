@@ -8,12 +8,12 @@ import balloonGameLogo from './AssetsLN/BalloonGame/Raining Tacos Logo.png';
 import prevArrowIcon from './AssetsLN/BalloonGame/Prev Icon.png';
 import nextArrowIcon from './AssetsLN/BalloonGame/Next Icon.png';
 import balloonLvlIcon from './AssetsLN/BalloonGame/RainingLvlIcon.png';
-// ✨ 1. Import the modular button component
+// Import the modular button component
 import StartChallengeButton from '../buttons/StartChallengeButton';
 
 
-// ✨ 2. Add challengeDetails to the component's props
-const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons, challengeDetails }) => {
+// The 'challengeDetails' prop is removed, as it was incorrect.
+const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
     
     const levels = useMemo(() => {
         return activityNodes.map((node, index) => {
@@ -138,12 +138,8 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrev
                 ))}
             </Grid>
 
-            {/* ✨ 3. Add the StartChallengeButton component ✨ */}
-            <StartChallengeButton
-                lessonId={lesson?.lessonDefinitionId}
-                challengeId={challengeDetails?.challengeId}
-                gameType={challengeDetails?.gameType}
-            />
+            {/* ✨ CORRECTED: Pass the entire 'lesson' object to the button ✨ */}
+            <StartChallengeButton lesson={lesson} />
         </Box>
     );
 };
@@ -156,13 +152,6 @@ BalloonGameLevelNavigator.propTypes = {
     onNextLesson: PropTypes.func.isRequired,
     currentLessonIdx: PropTypes.number.isRequired,
     totalLessons: PropTypes.number.isRequired,
-    // ✨ 4. Add challengeDetails to propTypes
-    challengeDetails: PropTypes.object,
-};
-
-// Set a default value for the new prop
-BalloonGameLevelNavigator.defaultProps = {
-    challengeDetails: null,
 };
 
 export default BalloonGameLevelNavigator;

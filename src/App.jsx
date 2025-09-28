@@ -4,6 +4,9 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import LandingPage from "./components/layout/LandingPage";
 import { Box, CircularProgress } from '@mui/material';
 
+import ChallengePage from './page/student/ChallengePage';
+import ChallengeSummaryPage from './page/student/ChallengeSummaryPage';
+
 // Import Authentication Context Provider
 // Ensure useAuth is also exported from AuthContext if ProtectedRoute is in the same file or imported separately
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -153,6 +156,8 @@ const App = () => {
             <FillBlanksGameComponent />
           </ProtectedRoute>
         } />
+        <Route path="/lesson/:lessonId/challenge" element={<ProtectedRoute role="STUDENT"><ChallengePage /></ProtectedRoute>} />
+        <Route path="/challenge-summary" element={<ProtectedRoute role="STUDENT"><ChallengeSummaryPage /></ProtectedRoute>} />
 
         {/* Teacher Protected Routes */}
         <Route path="/teacher-homepage" element={
