@@ -97,7 +97,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             id: crypto.randomUUID(),
             text: word.text,
             soundSrc: word.soundSrc,
-            speed: 1 + waveNum * (word.text === targetWordObject.text ? 0.5 : 0.7),
+            speed: .09 + waveNum * (word.text === targetWordObject.text ? 0.1 : 0.3),
             colorClass: getRandom(colors),
         });
 
@@ -132,9 +132,9 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                 if (lane !== null) {
                     const y = -100;
                     setWords(prev => [...prev, { ...nextWord, x: lane, y }]);
-                    setTimeout(spawnNext, 1200);
+                    setTimeout(spawnNext, 3500);
                 } else {
-                    setTimeout(trySpawn, 500);
+                    setTimeout(trySpawn, 5000);
                 }
             };
 
