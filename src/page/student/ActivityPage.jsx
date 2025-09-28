@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
 import { getActivityNodeTypeDetails } from '../../services/activityService';
+import MemoryGame from '../../page/student/MemoryGame';
 import challengeBGMusic from '../../assets/sounds/activitybgmusic.ogg';
 
 // Import all your game components
@@ -130,7 +131,11 @@ const ActivityPage = () => {
         case 'FILL_BLANKS': return <FillBlanksGameComponent activityData={activityDetails} {...gameProps} />;
         case 'MATCHING2':   return <Matching2GameComponent {...gameProps} />;
         case 'BALLOONGAME': return <ReadingDefenderComponent {...gameProps} />;
-        case 'MEMORYGAME':  return <FlipMatchingGame {...gameProps} />;
+        case 'MEMORYGAME':
+            return <MemoryGame
+                onGameComplete={handleGameComplete}
+                activityDetails={activityDetails}
+            />;
         case 'WORDFEAST':   return <WordFeastGame {...gameProps} />;
         default:
             return (

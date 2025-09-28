@@ -16,9 +16,6 @@ const AddActivityNodeDialog = ({ open, onClose, onConfirm, isLoading, error }) =
     // highlight-end
     const [activityType, setActivityType] = useState('');
     const [instructions, setInstructions] = useState('');
-    const [flagA, setFlagA] = useState('');
-    const [flagB, setFlagB] = useState('');
-    const [flagC, setFlagC] = useState('');
 
     useEffect(() => {
         if (open) {
@@ -27,9 +24,6 @@ const AddActivityNodeDialog = ({ open, onClose, onConfirm, isLoading, error }) =
             // highlight-end
             setActivityType('');
             setInstructions('');
-            setFlagA('');
-            setFlagB('');
-            setFlagC('');
         }
     }, [open]);
 
@@ -50,9 +44,6 @@ const AddActivityNodeDialog = ({ open, onClose, onConfirm, isLoading, error }) =
             // highlight-end
             activityType,
             instructions,
-            flagA: flagA.trim(),
-            flagB: flagB.trim(),
-            flagC: flagC.trim(),
         });
     };
 
@@ -109,40 +100,6 @@ const AddActivityNodeDialog = ({ open, onClose, onConfirm, isLoading, error }) =
                     disabled={isLoading}
                     sx={{ mb: 2 }}
                 />
-
-                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                    <TextField
-                        name="flagA"
-                        label="Game Flag A"
-                        value={flagA}
-                        onChange={(e) => setFlagA(e.target.value)}
-                        variant="outlined"
-                        helperText="Custom game parameter"
-                        fullWidth
-                        disabled={isLoading}
-                    />
-                    <TextField
-                        name="flagB"
-                        label="Game Flag B"
-                        value={flagB}
-                        onChange={(e) => setFlagB(e.target.value)}
-                        variant="outlined"
-                        helperText="Custom game parameter"
-                        fullWidth
-                        disabled={isLoading}
-                    />
-                    <TextField
-                        name="flagC"
-                        label="Game Flag C"
-                        value={flagC}
-                        onChange={(e) => setFlagC(e.target.value)}
-                        variant="outlined"
-                        helperText="Custom game parameter"
-                        fullWidth
-                        disabled={isLoading}
-                    />
-                </Box>
-
                 {error && <Typography color="error" sx={{ mt: 1, mb: 1 }}>{error}</Typography>}
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
