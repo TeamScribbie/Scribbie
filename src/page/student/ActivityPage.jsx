@@ -81,9 +81,8 @@ const ActivityPage = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100vw', height: '100vh', bgcolor: '#FFFBE0' }}>
-                <CircularProgress size={50} />
-                <Typography sx={{ mt: 2, color: '#451513' }}>Loading Activity...</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <CircularProgress />
             </Box>
         );
     }

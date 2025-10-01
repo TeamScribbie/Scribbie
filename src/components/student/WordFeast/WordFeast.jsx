@@ -99,13 +99,18 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { me
     };
 
     const buttonStyle = {
-        padding: '12px 24px',
-        fontSize: '22px',
-        cursor: 'pointer',
-        borderRadius: '8px',
-        border: '2px solid #333',
-        backgroundColor: '#f0f0f0',
+        padding: '20px 50px',
+        fontSize: '1.8rem',
         fontWeight: 'bold',
+        color: '#fff',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        border: 'none',
+        borderRadius: '50px',
+        cursor: 'pointer',
+        boxShadow: '0 10px 30px rgba(102, 126, 234, 0.4)',
+        transition: 'all 0.3s ease',
+        textTransform: 'uppercase',
+        letterSpacing: '2px',
     };
 
     if (!assetsLoaded) {
@@ -121,8 +126,19 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { me
     if (!gameStarted) {
         return (
             <div style={containerStyle}>
-                <button onClick={handleStartGame} style={buttonStyle}>
-                    Start Game
+                <button 
+                    onClick={handleStartGame}
+                    style={buttonStyle}
+                    onMouseEnter={(e) => {
+                        e.target.style.transform = 'translateY(-3px) scale(1.05)';
+                        e.target.style.boxShadow = '0 15px 40px rgba(102, 126, 234, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.transform = 'translateY(0) scale(1)';
+                        e.target.style.boxShadow = '0 10px 30px rgba(102, 126, 234, 0.4)';
+                    }}
+                >
+                    🎮 Start Game
                 </button>
             </div>
         );
