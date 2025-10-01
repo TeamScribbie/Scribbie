@@ -23,11 +23,11 @@ const StudentSidebar = ({ isOpen = true }) => {
       icon: <ClassIcon fontSize="medium" />,
       path: '/student-homepage',
     },
-    {
-      label: 'Games',
-      icon: <ChallengesIcon fontSize="medium" />,
-      path: '/student-challenges',
-    },
+    // {
+    //   label: 'Games',
+    //   icon: <ChallengesIcon fontSize="medium" />,
+    //   path: '/student-challenges',
+    // },
     // {
     //   label: 'Grades',
     //   icon: <GradesIcon fontSize="medium" />,
