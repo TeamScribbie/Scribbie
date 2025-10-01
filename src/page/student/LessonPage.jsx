@@ -16,6 +16,8 @@ import BalloonGameLevelNavigator from '../../components/LevelNavigationRenderers
 import MemoryGameLevelNavigator from '../../components/LevelNavigationRenderers/MemoryGameLevelNavigator';
 import WordFeastLevelNavigator from '../../components/LevelNavigationRenderers/WordFeastLevelNavigator';
 import Navbar from '../../components/layout/navbar';
+import BackArrowIcon from '../../assets/Button-Arrow-Left-icon.png';
+import CloudAnimation from '../../assets/cloud-animation.png';
 
 const LESSON_TYPE_TO_RENDERER = {
     BALLOONGAME: BalloonGameLevelNavigator,
@@ -33,6 +35,8 @@ const LessonPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentLessonIdx, setCurrentLessonIdx] = useState(0);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const [transitionDirection, setTransitionDirection] = useState('next');
 
     useEffect(() => {
         const fetchLessons = async () => {
@@ -91,16 +95,26 @@ const LessonPage = () => {
     }, [authState.token, classroomId, location.state, authState.user?.identifier]);
 
     const handlePrevLesson = useCallback(() => {
-        if (currentLessonIdx > 0) {
-            setCurrentLessonIdx(idx => idx - 1);
+        if (currentLessonIdx > 0 && !isTransitioning) {
+            setTransitionDirection('prev');
+            setIsTransitioning(true);
+            setTimeout(() => {
+                setCurrentLessonIdx(idx => idx - 1);
+                setTimeout(() => setIsTransitioning(false), 50);
+            }, 300);
         }
-    }, [currentLessonIdx]);
+    }, [currentLessonIdx, isTransitioning]);
 
     const handleNextLesson = useCallback(() => {
-        if (currentLessonIdx < lessons.length - 1) {
-            setCurrentLessonIdx(idx => idx + 1);
+        if (currentLessonIdx < lessons.length - 1 && !isTransitioning) {
+            setTransitionDirection('next');
+            setIsTransitioning(true);
+            setTimeout(() => {
+                setCurrentLessonIdx(idx => idx + 1);
+                setTimeout(() => setIsTransitioning(false), 50);
+            }, 300);
         }
-    }, [currentLessonIdx, lessons.length]);
+    }, [currentLessonIdx, lessons.length, isTransitioning]);
 
     const handleSelectNode = useCallback(async (node) => {
         const lesson = lessons[currentLessonIdx];
@@ -156,26 +170,96 @@ const LessonPage = () => {
             </Box>
         );
     }
-
     const lesson = lessons[currentLessonIdx];
     if (!lesson) return null;
     
     const Renderer = LESSON_TYPE_TO_RENDERER[lesson.type] || BalloonGameLevelNavigator;
 
     return (
-        <>
-            <Navbar transparent={true} /> {/* Pass transparent prop */}
-            <Renderer
-                lesson={lesson}
-                activityNodes={lesson.activityNodes}
-                activityNodeProgress={lesson.activityNodeProgress}
-                onSelectNode={handleSelectNode}
-                onPrevLesson={handlePrevLesson}
-                onNextLesson={handleNextLesson}
-                currentLessonIdx={currentLessonIdx}
-                totalLessons={lessons.length}
+        <Box sx={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+            {/* Back Button */}
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: 16,
+                    left: 16,
+                    zIndex: 1000,
+                }}
+            >
+                <img
+                    src={BackArrowIcon}
+                    alt="Back"
+                    onClick={() => navigate('/student-homepage')}
+                    style={{
+                        width: '60px',
+                        height: '60px',
+                        cursor: 'pointer',
+                        transition: 'transform 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.transform = 'scale(1.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.transform = 'scale(1)';
+                    }}
+                />
+            </Box>
+
+            {/* Cloud Transition Overlay - Natural Fade & Drift Effect */}
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #87CEEB 0%, #B0E0E6 50%, #87CEEB 100%)',
+                    opacity: isTransitioning ? 1 : 0,
+                    transform: isTransitioning ? 'scale(1)' : 'scale(0.9)',
+                    transition: 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out',
+                    zIndex: 999,
+                    pointerEvents: 'none',
+                    backgroundImage: `url(${CloudAnimation})`,
+                    backgroundSize: '400px',
+                    backgroundRepeat: 'repeat',
+                    backgroundPosition: isTransitioning ? '0 0' : '-100px -100px',
+                    animation: isTransitioning ? 'cloudDrift 0.5s ease-in-out' : 'none',
+                    '@keyframes cloudDrift': {
+                        '0%': {
+                            backgroundPosition: '-50px -50px',
+                            opacity: 0,
+                        },
+                        '50%': {
+                            backgroundPosition: '0 0',
+                            opacity: 1,
+                        },
+                        '100%': {
+                            backgroundPosition: '50px 50px',
+                            opacity: 1,
+                        },
+                    },
+                }}
             />
-        </>
+
+            {/* Lesson Content */}
+            <Box
+                sx={{
+                    width: '100%',
+                    height: '100%',
+                }}
+            >
+                <Renderer
+                    lesson={lesson}
+                    activityNodes={lesson.activityNodes}
+                    activityNodeProgress={lesson.activityNodeProgress}
+                    onSelectNode={handleSelectNode}
+                    onPrevLesson={handlePrevLesson}
+                    onNextLesson={handleNextLesson}
+                    currentLessonIdx={currentLessonIdx}
+                    totalLessons={lessons.length}
+                />
+            </Box>
+        </Box>
     );
 };
 

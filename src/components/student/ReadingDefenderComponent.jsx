@@ -282,21 +282,23 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                     {showWaveAnnouncer && (
                         <div className="wave-announcer">🌊 Wave {wave}!</div>
                     )}
+                    
+                    {/* Mascot with Feedback */}
                     <div className="mascot-wrapper">
-                        <img src="/mascot.png" className="mascot-img" alt="Mascot" />
                         {feedback && (
                             <div className="mascot-speech">
                                 {feedback}
                             </div>
                         )}
+                        <img
+                            src="/mascot.png"
+                            alt="Mascot"
+                            className="mascot-img"
+                        />
                     </div>
-                    <div className="bottom-base">TACO TRAY</div>
-                        <div className="wave-hud">🌊 Wave: {wave} </div>
-                        <div className="left-hud">❤️ Lives: {[...Array(lives)].map((_, i) => (
-                            <img key={i} src="/heart.png" alt="life" className="life-icon" />
-                            ))}</div>
-                        <div className="right-hud">⭐ Score: {score}</div>
-                    <div className="taco-clouds-sky">
+
+                    {/* Taco Clouds */}
+                    <div className="taco-clouds-row">
                         {[...Array(12)].map((_, i) => (
                             <img
                                 key={i}
@@ -308,6 +310,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         ))}
                     </div>
 
+                    {/* Target Word Bubble */}
                     <div className="target-bubble-container">
                         <p className="target-instruction">Target Word</p>
                         <div
@@ -319,6 +322,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         </div>
                     </div>
 
+                    {/* Falling Words */}
                     {words.map(w => (
                         <div
                             key={w.id}

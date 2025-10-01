@@ -1,11 +1,16 @@
 //PARA INYOHA NI
-// export const API_BASE_URL = 'http://152.42.254.129:8080/api';
-// export const MEDIA_BASE_URL = 'http://152.42.254.129:8080/';
+export const API_BASE_URL = 'http://152.42.254.129:8080/api';
+export const MEDIA_BASE_URL = 'http://152.42.254.129:8080/';
 
 
 //FOR BACKEND DEVELOPERS NI
+<<<<<<< HEAD
+//export const API_BASE_URL = 'http://localhost:8080/api';
+//export const MEDIA_BASE_URL = 'http://localhost:8080/';
+=======
 // export const API_BASE_URL = 'http://localhost:8080/api';
 // export const MEDIA_BASE_URL = 'http://localhost:8080/';
+>>>>>>> 5edde7cd1a15055892ef66613c33ca7323e37d4b
 
 //FOR DEPLOYMENT
 // export const API_BASE_URL = 'https://scribbiealpha.serveblog.net/api';
