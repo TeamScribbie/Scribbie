@@ -4,6 +4,7 @@ import GameStage from './GameStage';
 import WinAnimation from './WinAnimation';
 import LoadingScreen from './LoadingScreen';
 import { gameConfig } from './config';
+import wordFeastBg from '../../../assets/word-feast.jpg';
 
 const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { medium: 8, large: 3 } }) => { // <-- ADDED PROP
     const [assetsLoaded, setAssetsLoaded] = useState(false);
@@ -83,6 +84,10 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { me
     const containerStyle = {
         width: '100vw', height: '100vh', display: 'flex',
         justifyContent: 'center', alignItems: 'center', position: 'relative',
+        backgroundImage: `url(${wordFeastBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
     };
 
     const gameWrapperStyle = {
@@ -126,20 +131,80 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { me
     if (!gameStarted) {
         return (
             <div style={containerStyle}>
-                <button 
-                    onClick={handleStartGame}
-                    style={buttonStyle}
-                    onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-3px) scale(1.05)';
-                        e.target.style.boxShadow = '0 15px 40px rgba(102, 126, 234, 0.6)';
-                    }}
-                    onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0) scale(1)';
-                        e.target.style.boxShadow = '0 10px 30px rgba(102, 126, 234, 0.4)';
-                    }}
-                >
-                    🎮 Start Game
-                </button>
+                <div style={{ position: 'relative' }}>
+                    {/* Glow effect behind button - Ocean Blue */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '120%',
+                        height: '120%',
+                        background: 'radial-gradient(circle, rgba(0,191,255,0.4) 0%, transparent 70%)',
+                        animation: 'pulse 2s ease-in-out infinite',
+                        pointerEvents: 'none',
+                    }}></div>
+                    
+                    <button 
+                        onClick={handleStartGame}
+                        style={{
+                            position: 'relative',
+                            padding: '25px 70px',
+                            fontSize: '2.2rem',
+                            fontWeight: 900,
+                            color: '#FFF',
+                            background: 'linear-gradient(145deg, #006994 0%, #00a8cc 50%, #4dd0e1 100%)',
+                            border: '4px solid #00d4ff',
+                            borderRadius: '20px',
+                            cursor: 'pointer',
+                            boxShadow: '0 8px 0 #004d6d, 0 15px 30px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.3)',
+                            transition: 'all 0.15s ease',
+                            textTransform: 'uppercase',
+                            letterSpacing: '3px',
+                            fontFamily: 'Arial Black, sans-serif',
+                            textShadow: '0 3px 5px rgba(0,0,0,0.5), 0 0 10px rgba(0,191,255,0.6)',
+                            transform: 'translateY(0)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-5px) scale(1.05)';
+                            e.target.style.boxShadow = '0 12px 0 #004d6d, 0 20px 40px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4)';
+                            e.target.style.background = 'linear-gradient(145deg, #0088b8 0%, #00bfff 50%, #5ddef4 100%)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0) scale(1)';
+                            e.target.style.boxShadow = '0 8px 0 #004d6d, 0 15px 30px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.3)';
+                            e.target.style.background = 'linear-gradient(145deg, #006994 0%, #00a8cc 50%, #4dd0e1 100%)';
+                        }}
+                        onMouseDown={(e) => {
+                            e.target.style.transform = 'translateY(4px)';
+                            e.target.style.boxShadow = '0 4px 0 #004d6d, 0 5px 10px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3)';
+                        }}
+                        onMouseUp={(e) => {
+                            e.target.style.transform = 'translateY(-5px) scale(1.05)';
+                            e.target.style.boxShadow = '0 12px 0 #004d6d, 0 20px 40px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4)';
+                        }}
+                    >
+                        <span style={{ 
+                            position: 'relative',
+                            zIndex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px',
+                            justifyContent: 'center'
+                        }}>
+                            <span style={{ fontSize: '2.5rem' }}>▶</span>
+                            START GAME
+                        </span>
+                    </button>
+                    
+                    {/* Animated sparkles */}
+                    <style>{
+                        `@keyframes pulse {
+                            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+                            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+                        }`
+                    }</style>
+                </div>
             </div>
         );
     }
