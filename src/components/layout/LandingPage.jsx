@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/landing.css";
+import scribbieLogoV2 from "../../assets/ScribbieLogoV2.png";
+import landingFace from "../../assets/landingface.png";
 
 // Icons (You can replace with actual icon components)
 const FeatureIcon = ({ children }) => (
@@ -59,7 +61,7 @@ const LandingPage = () => {
         <div className="container">
           <a href="#" className="nav-logo">
             <img
-              src="/src/assets/ScribbieLogoV2.png"
+              src={scribbieLogoV2}
               alt="Scribbie Logo"
               className="navlogo-img"
             />
@@ -96,7 +98,7 @@ const LandingPage = () => {
                 <div className="shape shape-3"></div>
               </div>
               <img
-                src="/src/assets/landingface.png"
+                src={landingFace}
                 alt="Happy students learning"
                 className="hero-img animate-float"
               />
@@ -156,7 +158,7 @@ const LandingPage = () => {
           <div className="footer-content">
             <div className="footer-brand">
               <img 
-                src="/src/assets/ScribbieLogoV2.png" 
+                src={scribbieLogoV2} 
                 alt="Scribbie Logo" 
                 className="footer-logo"
               />
