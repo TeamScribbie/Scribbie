@@ -1,7 +1,3 @@
-:root {
-    --taco-img: url('/taco.png'); 
-}
-
 body {
     margin: 0;
     font-family: 'Comic Neue', cursive;
@@ -29,7 +25,6 @@ body {
     z-index: 1;
     overflow: hidden;
     background: linear-gradient(to bottom, #f5e347, #ffb347);
-    background-image: url('/cartoon-bg.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -182,7 +177,6 @@ body {
 
 .word {
     position: absolute;
-    background-image: var(--taco-img);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
