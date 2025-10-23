@@ -76,6 +76,7 @@ const ActivitySummaryPage = () => {
             console.log("ActivitySummaryPage: Submitting Activity Progress:", submissionData);
             await submitActivityProgress(submissionData, authState.token);
             console.log("ActivitySummaryPage: Submission successful!");
+            // Backend automatically unlocks next activity node via unlockNextActivityNode()
 
             if (classroomId && lessonDefinitionId) {
                 navigate(`/student/classroom/${classroomId}/lessons`);

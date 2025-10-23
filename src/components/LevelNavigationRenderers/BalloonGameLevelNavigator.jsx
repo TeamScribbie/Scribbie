@@ -13,16 +13,46 @@ import StartChallengeButton from '../buttons/StartChallengeButton';
 
 
 // The 'challengeDetails' prop is removed, as it was incorrect.
-const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress = [], onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+    
+    // Helper function to check if a level is unlocked
+    const isLevelUnlocked = (activityId, nodeIndex) => {
+        // First activity node is always unlocked
+        if (nodeIndex === 0) {
+            return true;
+        }
+        
+        // For subsequent nodes, check if the previous node is finished
+        const previousNode = activityNodes[nodeIndex - 1];
+        if (!previousNode) return false;
+        
+        const previousProgressData = activityNodeProgress.find(
+            p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === previousNode.activityId
+        );
+        
+        return previousProgressData?.isFinished || previousProgressData?.finished || false;
+    };
+    
+    // Just pass through to original handler
+    const handleSelectNode = React.useCallback((node) => {
+        onSelectNode(node);
+    }, [onSelectNode]);
     
     const levels = useMemo(() => {
         return activityNodes.map((node, index) => {
+            const progressData = activityNodeProgress.find(
+                p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === node.activityId
+            );
+            
             return {
                 ...node,
                 levelNumber: index + 1,
+                isLocked: !isLevelUnlocked(node.activityId, index),
+                isCompleted: progressData?.isFinished || progressData?.finished || false,
+                hasProgress: !!progressData,
             };
         });
-    }, [activityNodes]);
+    }, [activityNodes, activityNodeProgress]);
 
     const isFirstLesson = currentLessonIdx === 0;
     const isLastLesson = currentLessonIdx === totalLessons - 1;
@@ -100,10 +130,10 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrev
                 flexGrow: 1,
             }}>
                 {levels.map(level => (
-                    <Grid item key={level.activityId} xs={4} sm={3} md={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Grid item key={level.activityId} xs={4} sm={3} md={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
                         <Paper
                             elevation={0}
-                            onClick={() => onSelectNode(level)}
+                            onClick={() => !level.isLocked && handleSelectNode(level)}
                             sx={{
                                 width: { xs: '80px', sm: '90px', md: '100px' },
                                 height: { xs: '80px', sm: '90px', md: '100px' },
@@ -121,19 +151,43 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrev
                                 backgroundSize: 'contain',
                                 backgroundRepeat: 'no-repeat',
                                 backgroundPosition: 'center',
-                                color: '#451513',
-                                textShadow: '1px 1px 2px rgba(255, 255, 255, 0.5)',
-                                cursor: 'pointer',
+                                color: level.isLocked ? '#999' : '#451513',
+                                textShadow: level.isLocked ? 'none' : '1px 1px 2px rgba(255, 255, 255, 0.5)',
+                                cursor: level.isLocked ? 'not-allowed' : 'pointer',
+                                opacity: level.isLocked ? 0.5 : 1,
+                                filter: level.isLocked ? 'grayscale(1)' : 'none',
                                 transition: 'transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease',
+                                position: 'relative',
                                 
-                                '&:hover': {
+                                '&:hover': level.isLocked ? {} : {
                                     transform: 'scale(1.15) translateY(-5px)',
                                     filter: 'brightness(1.2) drop-shadow(0 5px 10px rgba(0,0,0,0.5))',
                                 },
                             }}
                         >
-                            {level.levelNumber}
+                            {level.isLocked ? '🔒' : level.levelNumber}
                         </Paper>
+                        {/* Show checkmark for completed levels */}
+                        {level.isCompleted && !level.isLocked && (
+                            <Box sx={{
+                                position: 'absolute',
+                                top: -5,
+                                right: -5,
+                                backgroundColor: '#4caf50',
+                                borderRadius: '50%',
+                                width: '24px',
+                                height: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '14px',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                            }}>
+                                ✓
+                            </Box>
+                        )}
                     </Grid>
                 ))}
             </Grid>
@@ -147,6 +201,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrev
 BalloonGameLevelNavigator.propTypes = {
     lesson: PropTypes.object.isRequired,
     activityNodes: PropTypes.array.isRequired,
+    activityNodeProgress: PropTypes.array,
     onSelectNode: PropTypes.func.isRequired,
     onPrevLesson: PropTypes.func.isRequired,
     onNextLesson: PropTypes.func.isRequired,

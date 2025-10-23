@@ -69,8 +69,8 @@ const SmallFish = ({ position, velocity, status, debugMode }) => {
     const draw = useCallback(g => {
         g.clear();
         if (debugMode) {
-            const width = smFrameWidth * 0.8;
-            const height = smSwimHeight * 0.8;
+            const width = smFrameWidth * 0.6;
+            const height = smSwimHeight * 0.6;
             g.lineStyle(2, 0x0000ff, 1); // Blue hitbox
             g.drawRect(-width / 2, -height / 2, width, height);
         }
@@ -100,8 +100,8 @@ const MediumFish = ({ position, velocity, status, debugMode }) => {
     const draw = useCallback(g => {
         g.clear();
         if (debugMode) {
-            const width = mdFrameWidth * 0.9;
-            const height = mdFrameHeight * 0.9;
+            const width = mdFrameWidth * 0.7;
+            const height = mdFrameHeight * 0.7;
             g.lineStyle(2, 0x0000ff, 1); // Blue hitbox
             g.drawRect(-width / 2, -height / 2, width, height);
 
@@ -110,7 +110,6 @@ const MediumFish = ({ position, velocity, status, debugMode }) => {
             g.drawRect(-chaseRadius, -chaseRadius, chaseRadius * 2, chaseRadius * 2);
         }
     }, [debugMode]);
-
 
     if (!textures) return null;
     if (velocity.x < -0.1) facingDirection.current = 1; else if (velocity.x > 0.1) facingDirection.current = -1;
@@ -138,8 +137,8 @@ const LargeFish = ({ position, velocity, status, debugMode }) => {
     const draw = useCallback(g => {
         g.clear();
         if (debugMode) {
-            const width = lgFrameWidth * 1.1;
-            const height = lgFrameHeight * 1.1;
+            const width = lgFrameWidth * 0.8;
+            const height = lgFrameHeight * 0.8;
             g.lineStyle(2, 0x0000ff, 1); // Blue hitbox
             g.drawRect(-width / 2, -height / 2, width, height);
 

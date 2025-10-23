@@ -101,10 +101,11 @@ function useInterval(callback, delay) {
 
 const biteSounds = [Bite1Mp3, Bite2Mp3, Bite3Mp3, Bite4Mp3];
 
-const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete, debugMode }) => {
+const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete, debugMode, isInvulnerable = false }) => {
     const [textures, setTextures] = useState(null);
     const [animationName, setAnimationName] = useState('idle');
     const [isEating, setIsEating] = useState(false);
+    const [blinkVisible, setBlinkVisible] = useState(true);
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
 
@@ -153,6 +154,18 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
             spriteRef.current.gotoAndPlay(0);
         }
     }, [animationName]);
+
+    // Blinking effect during invulnerability
+    useEffect(() => {
+        if (isInvulnerable) {
+            const blinkInterval = setInterval(() => {
+                setBlinkVisible(prev => !prev);
+            }, 150); // Blink every 150ms
+            return () => clearInterval(blinkInterval);
+        } else {
+            setBlinkVisible(true);
+        }
+    }, [isInvulnerable]);
 
     useInterval(() => {
         const sprite = spriteRef.current;
@@ -204,6 +217,7 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
                 y={position.y}
                 scale={{ x: facingDirection.current * scale, y: scale }}
                 anchor={{ x: 0.5, y: 0.5 }}
+                alpha={blinkVisible ? 1 : 0.3}
             />
             <Graphics draw={draw} x={position.x} y={position.y} />
         </>

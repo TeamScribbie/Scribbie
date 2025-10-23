@@ -19,7 +19,7 @@ const CagedWord = ({ position, word, strength, isBroken }) => {
     
     const textStyle = new TextStyle({
         fill: 'black',
-        fontSize: 20,
+        fontSize: 28,
         fontFamily: 'Arial',
         fontWeight: 'bold',
     });
@@ -30,7 +30,7 @@ const CagedWord = ({ position, word, strength, isBroken }) => {
             <Sprite
                 texture={bubbleTexture}
                 anchor={0.5}
-                scale={0.015} 
+                scale={0.018} 
                 visible={isBroken} 
             />
             <Text
