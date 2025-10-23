@@ -13,9 +13,9 @@ const turningFriction = 0.92;
 
 // --- ADDED: Fish sprite dimensions for accurate hitboxes ---
 const fishSpriteDimensions = {
-    small: { width: 62, height: 45, scale: 0.8 },
-    medium: { width: 167, height: 102, scale: 0.9 },
-    large: { width: 177, height: 157, scale: 1.1 },
+    small: { width: 62, height: 45, scale: 0.6 },
+    medium: { width: 167, height: 102, scale: 0.7 },
+    large: { width: 177, height: 157, scale: 0.8 },
 };
 const playerSpriteDimensions = {
     width: 274,

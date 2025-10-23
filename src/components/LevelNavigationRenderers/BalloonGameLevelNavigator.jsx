@@ -15,32 +15,31 @@ import StartChallengeButton from '../buttons/StartChallengeButton';
 // The 'challengeDetails' prop is removed, as it was incorrect.
 const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress = [], onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
     
-    // Helper function to check if a level is unlocked
-    const isLevelUnlocked = (levelIndex) => {
-        // First level is always unlocked
-        if (levelIndex === 0) return true;
-        
-        // Check if previous level has progress (has been attempted)
-        const previousNode = activityNodes[levelIndex - 1];
-        const hasProgress = activityNodeProgress.some(
-            progress => progress.activityNodeType?.activityNodeTypeId === previousNode.activityId
+    // Helper function to check if a level is unlocked (reads from backend)
+    const isLevelUnlocked = (activityId) => {
+        const progressData = activityNodeProgress.find(
+            p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === activityId
         );
-        
-        return hasProgress;
+        // Backend manages unlock status - first node always unlocked on lesson start
+        return progressData?.isUnlocked ?? false;
     };
+    
+    // Just pass through to original handler
+    const handleSelectNode = React.useCallback((node) => {
+        onSelectNode(node);
+    }, [onSelectNode]);
     
     const levels = useMemo(() => {
         return activityNodes.map((node, index) => {
-            const unlocked = isLevelUnlocked(index);
             const progressData = activityNodeProgress.find(
-                p => p.activityNodeType?.activityNodeTypeId === node.activityId
+                p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === node.activityId
             );
             
             return {
                 ...node,
                 levelNumber: index + 1,
-                isLocked: !unlocked,
-                isCompleted: progressData?.finished || false,
+                isLocked: !isLevelUnlocked(node.activityId),
+                isCompleted: progressData?.isFinished || progressData?.finished || false,
                 hasProgress: !!progressData,
             };
         });
@@ -125,7 +124,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress
                     <Grid item key={level.activityId} xs={4} sm={3} md={2} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
                         <Paper
                             elevation={0}
-                            onClick={() => !level.isLocked && onSelectNode(level)}
+                            onClick={() => !level.isLocked && handleSelectNode(level)}
                             sx={{
                                 width: { xs: '80px', sm: '90px', md: '100px' },
                                 height: { xs: '80px', sm: '90px', md: '100px' },

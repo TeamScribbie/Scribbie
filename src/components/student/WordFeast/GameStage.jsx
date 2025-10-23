@@ -54,8 +54,8 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         
         // Check for the win condition first
         if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
-            console.log("✅ WIN CONDITION MET!");
-            if(onWin) onWin({ swallowedWords }); // Pass the swallowedWords here
+            console.log(" WIN CONDITION MET!");
+            if(onWin) onWin({ swallowedWords, score }); // Pass the swallowedWords and score
             return;
         }
 

@@ -69,7 +69,7 @@ const WordFeast = ({ gameData = [], onGameComplete = () => {}, fishLimits = { me
         
         onGameComplete({
             status: 'COMPLETED',
-            score: winData?.score + 5000 || 0,
+            score: (winData?.score || 0) + 5000,
             timeTaken: timeTaken,
             highestStreak: 0,
             accuracy: 100,
