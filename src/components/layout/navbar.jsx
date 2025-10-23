@@ -1,6 +1,6 @@
 // src/components/layout/navbar.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { IconButton, Avatar, Badge, Menu, MenuItem, Chip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -11,11 +11,22 @@ import '../../styles/Navbar.css';
 import { useAuth } from '../../context/AuthContext';
 import ScribbieLogo from '../../assets/ScribbieLogoV2.png';
 
-const Navbar = ({ sidebarOpen, setSidebarOpen, transparent }) => {
+const Navbar = ({ sidebarOpen, setSidebarOpen, transparent, onMobileMenuToggle }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const { authState, logout } = useAuth();
   const openMenu = Boolean(anchorEl);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleProfileClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -42,52 +53,50 @@ const Navbar = ({ sidebarOpen, setSidebarOpen, transparent }) => {
 
   return (
     <div className={`navbar-container ${transparent ? 'transparent' : ''}`}>
-      <div className="navbar-left" style={{ display: 'flex', alignItems: 'center' }}>
-        {/* 🔽 Logo image with white background */}
+      <div className="navbar-left">
+        {/* Mobile Hamburger Menu */}
+        {isMobile && onMobileMenuToggle && (
+          <IconButton 
+            onClick={onMobileMenuToggle} 
+            className="navbar-icon-button mobile-menu-btn"
+            aria-label="Toggle mobile menu"
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+        
+        {/* Logo */}
         <div className="navbar-logo-background">
             <img
               src={ScribbieLogo}
               alt="Scribbie Logo"
-              style={{ height: '40px', cursor: 'pointer' }}
-              onClick={() => navigate('/')} // Optional: navigate to home
+              style={{ height: isMobile ? '32px' : '40px', cursor: 'pointer' }}
+              onClick={() => navigate('/')} 
             />
         </div>
         
-        {setSidebarOpen && (
-          <IconButton onClick={() => setSidebarOpen(!sidebarOpen)} className="navbar-icon-button">
-            <MenuIcon />
-          </IconButton>
-        )}
       </div>
 
       <div className="navbar-right">
-        {authState.isAuthenticated && authState.userType && (
-          <Chip label={authState.userType.toUpperCase()} size="small" className="user-type-indicator" />
-        )}
-
         {authState.isAuthenticated && (
-          <>
-            <IconButton color="inherit" className="navbar-icon-button">
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-
-            <IconButton onClick={handleProfileClick} className="navbar-avatar-button">
-              <Avatar className="navbar-avatar">
-                {authState.user?.name ? authState.user.name.charAt(0).toUpperCase() : <AccountCircle />}
-              </Avatar>
-            </IconButton>
-
-            <Menu
-              anchorEl={anchorEl}
-              open={openMenu}
-              onClose={handleCloseMenu}
-            >
-              <MenuItem onClick={handleAccount}>My Account</MenuItem>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </Menu>
-          </>
+          <div className="navbar-user-section">
+            {authState.userType && (
+              <Chip label={authState.userType.toUpperCase()} size="small" className="user-type-indicator" />
+            )}
+            
+            <div className="navbar-user-info">
+              <p className="navbar-user-name">
+                {authState.user?.name || 'Test Student'}
+              </p>
+              <p className="navbar-user-email">
+                {authState.user?.email || 'john.doe@student.edu'}
+              </p>
+            </div>
+            
+            <Avatar className="navbar-avatar">
+              {authState.user?.name ? authState.user.name.charAt(0).toUpperCase() : 'SN'}
+            </Avatar>
+          </div>
         )}
       </div>
     </div>
@@ -98,6 +107,7 @@ Navbar.propTypes = {
   sidebarOpen: PropTypes.bool,
   setSidebarOpen: PropTypes.func,
   transparent: PropTypes.bool,
+  onMobileMenuToggle: PropTypes.func,
 };
 
 Navbar.defaultProps = {
