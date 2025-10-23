@@ -27,7 +27,7 @@ const questions = [
   { question: "Is Bear ready for winter?", options: ["Yes", "No", "Maybe"], answer: "Yes" },
 ];
 
-const audioFile = "/sounds/whole_story.mp3";
+const audioFile = `${import.meta.env.BASE_URL}sounds/whole_story.mp3`;
 
 export default function ColdBearStory() {
   const [activeWord, setActiveWord] = useState({ line: null, word: null });
@@ -75,7 +75,7 @@ export default function ColdBearStory() {
 
   const playLine = (lineIndex) => {
     stopAudio();
-    const lineAudio = new Audio(`/sounds/lines/bearline${lineIndex}.mp3`);
+    const lineAudio = new Audio(`${import.meta.env.BASE_URL}sounds/lines/bearline${lineIndex}.mp3`);
     audioRef.current = lineAudio;
     setReading(true);
     lineAudio.play();
@@ -146,7 +146,7 @@ export default function ColdBearStory() {
           }}
         >
           <video controls width="100%">
-            <source src="/video/watch-bear.mp4" type="video/mp4" />
+            <source src={`${import.meta.env.BASE_URL}video/watch-bear.mp4`} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </Box>

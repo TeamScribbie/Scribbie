@@ -2,6 +2,10 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MEDIA_BASE_URL } from '../../config/apiConfig.js';
 import '../styles/ReadingDefender.css';
 import readingDefenderBg from '../../assets/reading-defender.jpg';
+import mascotImg from '../../assets/mascot.png';
+import tacoCloudImg from '../../assets/taco-cloud.png';
+import tacoImg from '../../assets/taco.png';
+import cartoonBg from '../../assets/cartoon-bg.jpg';
 
 function getRandom(arr) {
     if (!arr || arr.length === 0) return null;
@@ -365,7 +369,11 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             )}
 
             {gameState === 'playing' && (
-                <div className="game-area fullscreen" ref={containerRef}>
+                <div 
+                    className="game-area fullscreen" 
+                    ref={containerRef}
+                    style={{ backgroundImage: `url(${cartoonBg})` }}
+                >
                     {showWaveAnnouncer && (
                         <div className="wave-announcer">🌊 Wave {wave}!</div>
                     )}
@@ -378,7 +386,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             </div>
                         )}
                         <img
-                            src="/mascot.png"
+                            src={mascotImg}
                             alt="Mascot"
                             className="mascot-img"
                         />
@@ -389,7 +397,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         {[...Array(12)].map((_, i) => (
                             <img
                                 key={i}
-                                src="/taco-cloud.png"
+                                src={tacoCloudImg}
                                 alt="Taco Cloud"
                                 className={`taco-cloud animated-cloud cloud-${i % 4}`}
                                 style={{ left: `${i * 10}%` }}
@@ -414,7 +422,11 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         <div
                             key={w.id}
                             className="word"
-                            style={{ left: `${w.x}px`, top: `${w.y}px` }}
+                            style={{ 
+                                left: `${w.x}px`, 
+                                top: `${w.y}px`,
+                                backgroundImage: `url(${tacoImg})`
+                            }}
                             onClick={() => shoot(w)}
                         >
                             <span className={`word-label ${w.text === target.text ? 'correct' : 'wrong'}`}>
