@@ -42,9 +42,9 @@ const LifeBar = ({ lives, maxLives = 3, x = 10, y = 70 }) => {
             />
             {Array.from({ length: maxLives }).map((_, index) => (
                 <Graphics
-                    key={index}
+                    key={`${index}-${lives}`}
                     draw={(g) => drawHeart(g, index < lives)}
-                    x={60 + index * (heartSize + heartSpacing)}
+                    x={100 + index * (heartSize + heartSpacing)}
                     y={12}
                 />
             ))}

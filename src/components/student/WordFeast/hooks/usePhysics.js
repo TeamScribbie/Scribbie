@@ -45,13 +45,14 @@ export const usePhysics = ({
     onPlayerEat, swallowedWords, setSwallowedWords, onVomit, playerState,
     messages, setMessages, onMonsterDash,
     mediumFishLimit, largeFishLimit, // <-- ADDED PROPS
-    lives, onPlayerDeath, isInvulnerable, // <-- HEALTH SYSTEM PROPS
+    lives, onPlayerDeath, isInvulnerable, isDying, // <-- HEALTH SYSTEM PROPS
 }) => {
     const mousePosition = useRef({ x: width / 2, y: height / 2 });
     const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
     const lastVelocity = useRef({ x: 1, y: 0 });
     const spacebarDown = useRef(false);
     const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
+    const deathProcessed = useRef(false); // Track if death has been processed
 
     const spawnFish = useCallback(() => {
         if (!player) return; 
@@ -130,7 +131,7 @@ export const usePhysics = ({
     }, [onVomit]);
 
     useTick(delta => {
-        if (isGameOver || isPaused || !player) return;
+        if (isGameOver || isPaused || !player || isDying) return;
 
         if (messages?.length > 0) {
             setMessages(currentMessages => currentMessages.map(msg => ({ ...msg, life: msg.life - delta })).filter(msg => msg.life > 0));
@@ -261,6 +262,11 @@ export const usePhysics = ({
             nextPlayerPos = { x: Math.max(0, Math.min(width, nextPlayerPos.x)), y: Math.max(0, Math.min(height, nextPlayerPos.y)), };
         }
 
+        // Reset death flag when invulnerable (player has respawned)
+        if (isInvulnerable) {
+            deathProcessed.current = false;
+        }
+        
         const eatenFishIds = new Set();
         if (fishLogics) {
             const playerScale = { small: 0.4, medium: 0.6, large: 0.8 }[player.size];
@@ -292,14 +298,10 @@ export const usePhysics = ({
                         if (onPlayerEat) onPlayerEat();
                     } else if (canEat(fishState.size, player.size)) {
                         // Health system: check invulnerability before dealing damage
-                        if (!isInvulnerable) {
-                            if (lives > 1) {
-                                // Player has lives remaining, trigger death/respawn
-                                if (onPlayerDeath) onPlayerDeath();
-                            } else {
-                                // No lives remaining, game over
-                                onGameOver({ score: score, status: 'FAILED' });
-                            }
+                        if (!isInvulnerable && !deathProcessed.current) {
+                            deathProcessed.current = true;
+                            // Always call death handler - it will check if game over is needed
+                            if (onPlayerDeath) onPlayerDeath();
                         }
                     }
                 }
