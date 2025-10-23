@@ -9,6 +9,7 @@ import StudentSidebar from '../../components/layout/StudentSidebar'; //
 import ClassroomCard from '../../components/cards/ClassroomCard'; // Reused, will be modified
 import JoinClassCard from '../../components/cards/JoinClassCard'; //
 import JoinClassDialog from '../../components/dialogs/JoinClassDialog'; //
+import puzzleIcon from '../../assets/puzzle.png';
 
 // Import service functions
 import { getStudentClassrooms, joinClassroom } from '../../services/classroomService'; //
@@ -26,7 +27,7 @@ const StudentHomepage = () => {
   // Add state for Join Class feedback if needed
   const [joinError, setJoinError] = useState(null);
   const [joinSuccess, setJoinSuccess] = useState(null);
-
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Function to fetch student's classrooms
   const fetchJoinedClassrooms = async () => {
@@ -105,52 +106,176 @@ const StudentHomepage = () => {
     }
 };
 
+  const handleMobileMenuToggle = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  };
+
+  const handleMobileSidebarClose = () => {
+    setIsMobileSidebarOpen(false);
+  };
+
   return (
     <div className="student-homepage-container">
+      {/* Interactive Background Elements */}
+      <div className="floating-bubble bubble-1"></div>
+      <div className="floating-bubble bubble-2"></div>
+      <div className="floating-bubble bubble-3"></div>
+      <div className="floating-bubble bubble-4"></div>
+      <div className="floating-bubble bubble-5"></div>
+      
+      <div className="sparkle sparkle-1"></div>
+      <div className="sparkle sparkle-2"></div>
+      <div className="sparkle sparkle-3"></div>
+      <div className="sparkle sparkle-4"></div>
+      <div className="sparkle sparkle-5"></div>
+
       {/* Sidebar */}
       <div className="student-sidebar">
-        <StudentSidebar />
+        <StudentSidebar 
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={handleMobileSidebarClose}
+        />
       </div>
 
       <div className="student-content-area">
         {/* Navbar */}
-        <Navbar />
+        <Navbar onMobileMenuToggle={handleMobileMenuToggle} />
 
         <div className="student-main-content">
-          <Typography variant="h5" className="student-main-content-heading">
-            Active Classes
-          </Typography>
+          {/* Header */}
+          <div className="header-section">
+            <h1 className="student-main-content-heading">
+              My Fun Classes!
+            </h1>
+          </div>
+          
+          {/* Typewriter Description */}
+          <div className="typewriter-section">
+            <p className="header-description">
+              Hi there! Let's learn and play together! 🌟
+            </p>
+          </div>
 
-          {/* Loading and Error Display for Classroom Fetching */}
-          {isLoading && <CircularProgress size={24} />}
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {/* Success Message Display */}
+          {joinSuccess && (
+            <div className="success-message">
+              {joinSuccess}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p className="loading-text">Loading your classes...</p>
+            </div>
+          )}
+          {error && (
+            <div className="error-container">
+              <Alert severity="error" sx={{ 
+                backgroundColor: 'transparent !important',
+                border: 'none !important',
+                padding: '0 !important',
+                '& .MuiAlert-message': {
+                  color: '#d32f2f',
+                  fontWeight: 500
+                }
+              }}>
+                {error}
+              </Alert>
+            </div>
+          )}
 
           {/* Classroom Cards Display */}
           {!isLoading && !error && authState.isAuthenticated && (
               <div className="card-container">
                 {/* Map over joined classes data */}
                 {joinedClasses.map((enrollment) => (
-                    <ClassroomCard
-                    key={enrollment.classroomId}
-                    classroomId={enrollment.classroomId}
-                    name={enrollment.classroomName ?? 'Unnamed Class'}
-                    status={enrollment.status}
-                    // Pass the whole enrollment object or just the necessary parts
-                    onClick={() => handleClassCardClick(enrollment)} // Ensure this calls the updated handler
-                />
+                    <div key={enrollment.classroomId} 
+                         className={`classroom-card ${enrollment.status === 'PENDING' ? 'classroom-card-pending' : ''}`}
+                         onClick={() => handleClassCardClick(enrollment)}>
+                      <div className="classroom-card-header">
+                        <div className="classroom-card-icon">
+                          <img src={puzzleIcon} alt="Class" style={{ width: '36px', height: '36px' }} />
+                        </div>
+                        {enrollment.status === 'PENDING' && (
+                          <span className="pending-badge">
+                            🕐 Pending
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="classroom-card-title">
+                        {enrollment.classroomName ?? 'Unnamed Class'}
+                      </h3>
+                      <p className="classroom-card-description">
+                        {enrollment.status === 'PENDING' ? '⏰ Getting ready for you!' : '🚀 Click to start learning!'}
+                      </p>
+                      {enrollment.status !== 'PENDING' && (
+                        <div className="classroom-card-accent"></div>
+                      )}
+                    </div>
                 ))}
 
                 {/* Add the Join Class card */}
-                <JoinClassCard onClick={() => { setJoinError(null); setJoinSuccess(null); setIsJoinClassDialogOpen(true); }} />
+                <div className="join-class-card" onClick={() => { 
+                  setJoinError(null); 
+                  setJoinSuccess(null); 
+                  setIsJoinClassDialogOpen(true); 
+                }}>
+                  <div className="join-class-card-icon">
+                    ➕
+                  </div>
+                  <h3 className="join-class-card-title">
+                    Join a Class
+                  </h3>
+                  <p className="join-class-card-description">
+                    Enter a class code to join
+                  </p>
+                  <div className="join-class-card-accent"></div>
+                </div>
               </div>
           )}
-          {/* Message if logged in but no classes */}
+          {/* Enhanced Empty State */}
           {!isLoading && !error && authState.isAuthenticated && joinedClasses.length === 0 && (
-            <Typography sx={{ mt: 2 }}>You haven't joined any classes yet. Click '+' to join one!</Typography>
+            <div className="empty-state">
+              <div className="empty-state-icon-container">
+                <div className="empty-state-icon">📚</div>
+              </div>
+              <h2 className="empty-state-title">No Classes Yet</h2>
+              <p className="empty-state-description">
+                You haven't joined any classes yet. Click the card below to join your first class and start learning!
+              </p>
+              <div className="empty-state-card-container">
+                <div className="join-class-card" onClick={() => { 
+                  setJoinError(null); 
+                  setJoinSuccess(null); 
+                  setIsJoinClassDialogOpen(true); 
+                }}>
+                  <div className="join-class-card-icon">
+                    ➕
+                  </div>
+                  <h3 className="join-class-card-title">
+                    Join a Class
+                  </h3>
+                  <p className="join-class-card-description">
+                    Enter a class code to join
+                  </p>
+                  <div className="join-class-card-accent"></div>
+                </div>
+              </div>
+            </div>
           )}
-          {/* Message if not logged in */}
+          {/* Enhanced Not Logged In State */}
           {!authState.isAuthenticated && !isLoading && (
-             <Typography sx={{ mt: 2 }}>Please log in to view or join classes.</Typography>
+            <div className="empty-state">
+              <div className="empty-state-icon-container">
+                <div className="empty-state-icon">🔐</div>
+              </div>
+              <h2 className="empty-state-title">Let's Get Started! 🌈</h2>
+              <p className="empty-state-description">
+                Ask a grown-up to help you log in so we can start learning together! 👨‍👩‍👧‍👦
+              </p>
+            </div>
           )}
 
         </div> {/* End student-main-content */}

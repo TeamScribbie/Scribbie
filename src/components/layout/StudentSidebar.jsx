@@ -1,21 +1,48 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Typography } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import '../../styles/StudentSidebar.css';
 
 import ClassIcon from '@mui/icons-material/School';
-// import GradesIcon from '@mui/icons-material/Assessment';
 import ChallengesIcon from '@mui/icons-material/EmojiEvents';
+import ProfileIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/ExitToApp';
 
-const StudentSidebar = ({ isOpen = true }) => {
+const StudentSidebar = ({ isOpen = true, isMobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { authState } = useAuth();
+  const { authState, logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
 
-  if (!isOpen || !authState.isAuthenticated) {
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  if (!authState.isAuthenticated) {
     return null;
   }
+
+  const handleLogout = () => {
+    logout();
+    navigate('/student-login');
+    if (isMobile && onMobileClose) {
+      onMobileClose();
+    }
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile && onMobileClose) {
+      onMobileClose();
+    }
+  };
 
   const menuItems = [
     {
@@ -23,89 +50,75 @@ const StudentSidebar = ({ isOpen = true }) => {
       icon: <ClassIcon fontSize="medium" />,
       path: '/student-homepage',
     },
-    // {
-    //   label: 'Games',
-    //   icon: <ChallengesIcon fontSize="medium" />,
-    //   path: '/student-challenges',
-    // },
-    // {
-    //   label: 'Grades',
-    //   icon: <GradesIcon fontSize="medium" />,
-    //   path: '/student-grades',
-    // },
+    {
+      label: 'Profile',
+      icon: <ProfileIcon fontSize="medium" />,
+      path: '/student-profile',
+    },
   ];
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0, // ✅ Align to the very left
-        height: '100vh',
-        width: '80px',
-        backgroundColor: '#f9b121',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        paddingTop: '80px',
-        zIndex: 10, // optional for stacking order
-        // Removed boxShadow to eliminate the border look
-      }}
-    >
-      {menuItems.map((item) => {
-        const isActive = location.pathname.startsWith(item.path);
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && isMobileOpen && (
+        <div 
+          className={`sidebar-overlay ${isMobileOpen ? 'active' : ''}`}
+          onClick={onMobileClose}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div 
+        className={`student-sidebar ${
+          isMobile 
+            ? isMobileOpen 
+              ? 'mobile-open' 
+              : 'mobile-hidden'
+            : ''
+        }`}
+      >
+        {/* Menu Items */}
+        {menuItems.map((item) => {
+          const isActive = location.pathname.startsWith(item.path);
 
-        return (
-          <Box
-            key={item.label}
-            onClick={() => navigate(item.path)}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              mb: 3,
-              cursor: 'pointer',
-              transition: 'transform 0.2s',
-              '&:hover': {
-                transform: 'scale(1.1)',
-              },
-            }}
-          >
-            <Box
-              sx={{
-                backgroundColor: isActive ? '#fff' : '#ffffff55',
-                color: isActive ? '#f9b121' : '#2d2d2d',
-                borderRadius: '50%',
-                padding: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+          return (
+            <div
+              key={item.label}
+              className={`sidebar-menu-item ${isActive ? 'active' : ''}`}
+              onClick={() => handleNavigation(item.path)}
             >
-              {item.icon}
-            </Box>
-            <Typography
-              variant="caption"
-              sx={{
-                mt: 1,
-                color: isActive ? '#fff' : '#2d2d2d',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: '11px',
-                textAlign: 'center',
-              }}
-            >
-              {item.label}
-            </Typography>
-          </Box>
-        );
-      })}
-    </Box>
+              <div className="sidebar-menu-icon">
+                {item.icon}
+              </div>
+              <span className="sidebar-menu-label">
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
+        
+        {/* Logout Button */}
+        <div 
+          className="sidebar-menu-item"
+          onClick={handleLogout}
+          style={{ marginTop: 'auto', marginBottom: '20px' }}
+        >
+          <div className="sidebar-menu-icon">
+            <LogoutIcon fontSize="medium" />
+          </div>
+          <span className="sidebar-menu-label">
+            Logout
+          </span>
+        </div>
+      </div>
+    </>
   );
 };
 
 StudentSidebar.propTypes = {
   isOpen: PropTypes.bool,
+  isMobileOpen: PropTypes.bool,
+  onMobileClose: PropTypes.func,
 };
 
 export default StudentSidebar;
