@@ -8,6 +8,8 @@ import Fish from './Fish';
 import DebugDisplay from './DebugDisplay';
 import Monster from './Monster';
 import CagedWord from './CagedWord';
+import LifeBar from './LifeBar';
+import BeCarefulMessage from './BeCarefulMessage';
 import { useGameLogic } from './hooks/useGameLogic';
 import { usePhysics } from './hooks/usePhysics';
 import { gameConfig } from './config';
@@ -48,6 +50,13 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
     const vomitCooldown = useRef(0);
     const worldContainer = useRef(null);
+    
+    // Health system states
+    const [lives, setLives] = useState(3);
+    const [isInvulnerable, setIsInvulnerable] = useState(false);
+    const [showWarningMessage, setShowWarningMessage] = useState(false);
+    const invulnerabilityTimerRef = useRef(null);
+    const respawnTimerRef = useRef(null);
 
     const handleMonsterInteraction = useCallback(() => {
         const playerSequence = swallowedWords.map(w => w.word).join('');
@@ -118,6 +127,46 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         }
     };
 
+    const handlePlayerDeath = useCallback(() => {
+        // Deduct a life
+        setLives(prevLives => prevLives - 1);
+        
+        // Show warning message
+        setShowWarningMessage(true);
+        
+        // Hide warning message and respawn after 1 second
+        respawnTimerRef.current = setTimeout(() => {
+            setShowWarningMessage(false);
+            
+            // Respawn player in the middle of the map
+            setPlayer(p => ({
+                ...p,
+                position: { x: worldWidth / 2, y: worldHeight / 2 },
+                velocity: { x: 0, y: 0 }
+            }));
+            
+            // Make player invulnerable
+            setIsInvulnerable(true);
+            
+            // Remove invulnerability after 2 seconds
+            invulnerabilityTimerRef.current = setTimeout(() => {
+                setIsInvulnerable(false);
+            }, 2000);
+        }, 1000);
+    }, [setPlayer, worldWidth, worldHeight]);
+
+    // Cleanup timers on unmount
+    useEffect(() => {
+        return () => {
+            if (invulnerabilityTimerRef.current) {
+                clearTimeout(invulnerabilityTimerRef.current);
+            }
+            if (respawnTimerRef.current) {
+                clearTimeout(respawnTimerRef.current);
+            }
+        };
+    }, []);
+
     const { mousePosition, boostInfo } = usePhysics({
         gameState, setGameState, player, setPlayer, cagedWords, setCagedWords, fishLogics, setFishLogics, monster,
         score, setScore, onGameOver, isGameOver, isPaused, width: worldWidth, height: worldHeight,
@@ -126,6 +175,7 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         messages, setMessages, onMonsterDash: handleMonsterInteraction,
         mediumFishLimit: fishLimits.medium, // <-- PASS PROP
         largeFishLimit: fishLimits.large,   // <-- PASS PROP
+        lives, onPlayerDeath: handlePlayerDeath, isInvulnerable, // <-- HEALTH SYSTEM PROPS
     });
     
 
@@ -237,6 +287,7 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
                         eatTrigger={eatTrigger} vomitTrigger={vomitTrigger}
                         onStateChange={setPlayerState} onVomitComplete={handleVomitComplete}
                         debugMode={debugMode}
+                        isInvulnerable={isInvulnerable}
                     />
                 )}
                 {messages.map(msg => (<Text key={msg.id} text={msg.text} x={msg.position.x} y={msg.position.y - 40} style={new TextStyle({ fill: 'yellow', fontSize: 20, fontWeight: 'bold' })} />))}
@@ -244,6 +295,14 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
             <Container>
                 <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24 })} x={10} y={10} />
                 <Text text={`Sequence: ${swallowedText}`} style={new TextStyle({ fill: 'yellow', fontSize: 20 })} x={10} y={40} />
+                <LifeBar lives={lives} maxLives={3} x={10} y={70} />
+                {showWarningMessage && (
+                    <BeCarefulMessage 
+                        x={viewportWidth / 2} 
+                        y={viewportHeight / 2} 
+                        visible={true} 
+                    />
+                )}
                 {debugMode && player && (
                     <DebugDisplay
                         playerSpeed={Math.sqrt(player.velocity.x**2 + player.velocity.y**2)}

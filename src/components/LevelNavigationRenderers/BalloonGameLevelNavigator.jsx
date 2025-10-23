@@ -15,13 +15,22 @@ import StartChallengeButton from '../buttons/StartChallengeButton';
 // The 'challengeDetails' prop is removed, as it was incorrect.
 const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress = [], onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
     
-    // Helper function to check if a level is unlocked (reads from backend)
-    const isLevelUnlocked = (activityId) => {
-        const progressData = activityNodeProgress.find(
-            p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === activityId
+    // Helper function to check if a level is unlocked
+    const isLevelUnlocked = (activityId, nodeIndex) => {
+        // First activity node is always unlocked
+        if (nodeIndex === 0) {
+            return true;
+        }
+        
+        // For subsequent nodes, check if the previous node is finished
+        const previousNode = activityNodes[nodeIndex - 1];
+        if (!previousNode) return false;
+        
+        const previousProgressData = activityNodeProgress.find(
+            p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === previousNode.activityId
         );
-        // Backend manages unlock status - first node always unlocked on lesson start
-        return progressData?.isUnlocked ?? false;
+        
+        return previousProgressData?.isFinished || previousProgressData?.finished || false;
     };
     
     // Just pass through to original handler
@@ -38,7 +47,7 @@ const BalloonGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress
             return {
                 ...node,
                 levelNumber: index + 1,
-                isLocked: !isLevelUnlocked(node.activityId),
+                isLocked: !isLevelUnlocked(node.activityId, index),
                 isCompleted: progressData?.isFinished || progressData?.finished || false,
                 hasProgress: !!progressData,
             };

@@ -45,6 +45,7 @@ export const usePhysics = ({
     onPlayerEat, swallowedWords, setSwallowedWords, onVomit, playerState,
     messages, setMessages, onMonsterDash,
     mediumFishLimit, largeFishLimit, // <-- ADDED PROPS
+    lives, onPlayerDeath, isInvulnerable, // <-- HEALTH SYSTEM PROPS
 }) => {
     const mousePosition = useRef({ x: width / 2, y: height / 2 });
     const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
@@ -290,7 +291,16 @@ export const usePhysics = ({
                         eatenFishIds.add(logic.id);
                         if (onPlayerEat) onPlayerEat();
                     } else if (canEat(fishState.size, player.size)) {
-                        onGameOver({ score: score, status: 'FAILED' });
+                        // Health system: check invulnerability before dealing damage
+                        if (!isInvulnerable) {
+                            if (lives > 1) {
+                                // Player has lives remaining, trigger death/respawn
+                                if (onPlayerDeath) onPlayerDeath();
+                            } else {
+                                // No lives remaining, game over
+                                onGameOver({ score: score, status: 'FAILED' });
+                            }
+                        }
                     }
                 }
             });
