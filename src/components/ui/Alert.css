@@ -1,0 +1,150 @@
+/* Alert Component Styles */
+.alert-ui {
+  position: relative;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border, #e5e7eb);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Icon positioning */
+.alert-ui.with-icon {
+  padding-left: 2.75rem;
+}
+
+.alert-ui.with-icon .alert-icon {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  width: 1rem;
+  height: 1rem;
+  color: currentColor;
+}
+
+/* Variants */
+.alert-default {
+  background: var(--background, white);
+  color: var(--foreground, var(--text));
+  border-color: var(--border, #e5e7eb);
+}
+
+.alert-destructive {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.alert-destructive .alert-icon {
+  color: #dc2626;
+}
+
+.alert-success {
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #059669;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.alert-success .alert-icon {
+  color: #059669;
+}
+
+.alert-warning {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.alert-warning .alert-icon {
+  color: #d97706;
+}
+
+.alert-info {
+  border-color: rgba(54, 184, 228, 0.5);
+  color: var(--primary);
+  background: rgba(54, 184, 228, 0.05);
+}
+
+.alert-info .alert-icon {
+  color: var(--primary);
+}
+
+/* Alert components */
+.alert-title {
+  margin: 0 0 0.25rem 0;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-size: 0.875rem;
+}
+
+.alert-description {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.alert-description p {
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Dismissible alerts */
+.alert-ui.dismissible {
+  padding-right: 2.75rem;
+}
+
+.alert-dismiss {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.alert-dismiss:hover {
+  opacity: 1;
+}
+
+/* Animation */
+.alert-ui {
+  animation: alertSlideIn 0.3s ease-out;
+}
+
+@keyframes alertSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .alert-ui {
+    padding: 0.75rem;
+  }
+  
+  .alert-ui.with-icon {
+    padding-left: 2.25rem;
+  }
+  
+  .alert-ui.dismissible {
+    padding-right: 2.25rem;
+  }
+}
