@@ -187,7 +187,7 @@ const StudentHomepage = () => {
           )}
 
           {/* Classroom Cards Display */}
-          {!isLoading && !error && authState.isAuthenticated && (
+          {!isLoading && !error && authState.isAuthenticated && joinedClasses.length > 0 && (
               <div className="card-container">
                 {/* Map over joined classes data */}
                 {joinedClasses.map((enrollment) => (
@@ -223,13 +223,13 @@ const StudentHomepage = () => {
                   setIsJoinClassDialogOpen(true); 
                 }}>
                   <div className="join-class-card-icon">
-                    ➕
+                    🎉
                   </div>
                   <h3 className="join-class-card-title">
-                    Join a Class
+                    Join a New Class!
                   </h3>
                   <p className="join-class-card-description">
-                    Enter a class code to join
+                    Ask your teacher for a special code to join! 🔑
                   </p>
                   <div className="join-class-card-accent"></div>
                 </div>

@@ -1,0 +1,108 @@
+/* Separator Component Styles */
+.separator {
+  flex-shrink: 0;
+  background: var(--border, #e5e7eb);
+}
+
+.separator-horizontal {
+  height: 1px;
+  width: 100%;
+}
+
+.separator-vertical {
+  height: 100%;
+  width: 1px;
+}
+
+/* Variants */
+.separator.separator-dashed {
+  border-style: dashed;
+  background: none;
+  border-color: var(--border, #e5e7eb);
+}
+
+.separator-horizontal.separator-dashed {
+  border-top: 1px dashed;
+  height: 0;
+}
+
+.separator-vertical.separator-dashed {
+  border-left: 1px dashed;
+  width: 0;
+}
+
+.separator.separator-dotted {
+  border-style: dotted;
+  background: none;
+  border-color: var(--border, #e5e7eb);
+}
+
+.separator-horizontal.separator-dotted {
+  border-top: 1px dotted;
+  height: 0;
+}
+
+.separator-vertical.separator-dotted {
+  border-left: 1px dotted;
+  width: 0;
+}
+
+/* Thickness variants */
+.separator.separator-thick {
+  background: var(--border, #e5e7eb);
+}
+
+.separator-horizontal.separator-thick {
+  height: 2px;
+}
+
+.separator-vertical.separator-thick {
+  width: 2px;
+}
+
+/* Color variants */
+.separator.separator-muted {
+  background: var(--muted, #f1f5f9);
+}
+
+.separator.separator-primary {
+  background: var(--primary);
+}
+
+.separator.separator-secondary {
+  background: var(--secondary);
+}
+
+/* Spacing utilities */
+.separator-spacing-sm {
+  margin: 0.5rem 0;
+}
+
+.separator-spacing-md {
+  margin: 1rem 0;
+}
+
+.separator-spacing-lg {
+  margin: 1.5rem 0;
+}
+
+.separator-spacing-xl {
+  margin: 2rem 0;
+}
+
+/* Vertical spacing */
+.separator-vertical.separator-spacing-sm {
+  margin: 0 0.5rem;
+}
+
+.separator-vertical.separator-spacing-md {
+  margin: 0 1rem;
+}
+
+.separator-vertical.separator-spacing-lg {
+  margin: 0 1.5rem;
+}
+
+.separator-vertical.separator-spacing-xl {
+  margin: 0 2rem;
+}
