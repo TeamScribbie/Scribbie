@@ -3,10 +3,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5rem;
+  min-height: 100vh;
+  color: #333;
+  font-family: 'Comic Neue', cursive;
   background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-  min-height: 200vh;
-  color: #333; /* General light text */
+  background-size: 200% 200%;
+  animation: gradient 10s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Start Popup Container */
@@ -22,6 +36,9 @@
   align-items: center;
   z-index: 999;
   flex-direction: column;
+  border-radius: 25px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .start-popup-content {
@@ -33,6 +50,18 @@
   text-align: center;
   max-width: 90%;
   width: 500px;
+  animation: popup 0.5s ease-out forwards;
+}
+
+@keyframes popup {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .start-popup-image {
@@ -40,6 +69,18 @@
   border-radius: 20px;
   object-fit: cover;
   max-height: 400px;
+  animation: image 1s ease-out forwards;
+}
+
+@keyframes image {
+  0% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .start-popup-button {
@@ -55,6 +96,72 @@
   border-radius: 25px;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  animation: button 0.5s ease-out forwards;
+}
+
+@keyframes button {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Particle Animation */
+.particle {
+  position: fixed;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 999;
+  animation: particleFloat 1s ease-out forwards;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Floating Word Pop-up */
+.popup-word {
+  position: fixed;
+  top: 50%;
+  right: 30px;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #ff5722;
+  font-size: 60px;
+  font-weight: 1000;
+  padding: 24px 36px;
+  border-radius: 20px;
+  z-index: 999;
+  border: 4px solid #ff8a65;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  animation: popupWord 1s ease-out forwards;
+}
+
+@keyframes popupWord {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Card Layout */
@@ -65,6 +172,18 @@
   justify-content: center;
   margin-top: 1rem;
   max-width: 500px;
+  animation: grid 1s ease-out forwards;
+}
+
+@keyframes grid {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .card {
@@ -78,6 +197,18 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease;
+  animation: card 0.5s ease-out forwards;
+}
+
+@keyframes card {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .card:hover {
@@ -93,28 +224,6 @@
 .card-back {
   font-size: 2rem;
   color: #444;
-}
-
-/* Floating Word Pop-up */
-.popup-word {
-  position: fixed;
-  top: 50%;
-  right: 30px;
-  transform: translateY(-50%);
-  background-color: rgba(255, 255, 255, 0.95);
-  color: #ff5722; /* warm readable color */
-  font-size: 60px;
-  font-weight: 1000;
-  padding: 24px 36px;
-  border-radius: 20px;
-  z-index: 999;
-  border: 4px solid #ff8a65;
-  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
-  pointer-events: none;
-  user-select: none;
-  text-align: center;
-  transition: all 0.3s ease;
-  white-space: nowrap;
 }
 
 .win-message {
@@ -201,4 +310,202 @@
 }
 .player-name {
   color: white;
+}
+
+/* Modern Animations */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  60% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cardDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) rotateY(90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateY(0deg);
+  }
+}
+
+@keyframes flipIn {
+  0% {
+    transform: scale(0.8) rotateY(90deg);
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes comboPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 12px 28px rgba(255, 107, 107, 0.7);
+  }
+}
+
+/* Glow Effects for Match/Mismatch */
+.glow-match {
+  animation: glowMatch 0.8s ease-in-out !important;
+}
+
+.glow-mismatch {
+  animation: glowMismatch 0.8s ease-in-out !important;
+}
+
+@keyframes glowMatch {
+  0%, 100% {
+    box-shadow: 0 0 30px 8px rgba(34, 197, 94, 0.8), 
+                0 0 50px 12px rgba(74, 222, 128, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 40px 15px rgba(34, 197, 94, 1), 
+                0 0 70px 20px rgba(74, 222, 128, 0.8);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes glowMismatch {
+  0% {
+    box-shadow: 0 0 30px 8px rgba(239, 68, 68, 0.8), 
+                0 0 50px 12px rgba(248, 113, 113, 0.6);
+  }
+  25% {
+    box-shadow: 0 0 40px 15px rgba(239, 68, 68, 1), 
+                0 0 70px 20px rgba(248, 113, 113, 0.8);
+    transform: translateX(-5px);
+  }
+  50% {
+    box-shadow: 0 0 40px 15px rgba(239, 68, 68, 1), 
+                0 0 70px 20px rgba(248, 113, 113, 0.8);
+    transform: translateX(5px);
+  }
+  75% {
+    box-shadow: 0 0 40px 15px rgba(239, 68, 68, 1), 
+                0 0 70px 20px rgba(248, 113, 113, 0.8);
+    transform: translateX(-5px);
+  }
+  100% {
+    box-shadow: 0 0 30px 8px rgba(239, 68, 68, 0.8), 
+                0 0 50px 12px rgba(248, 113, 113, 0.6);
+    transform: translateX(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .card-grid-modern {
+    gap: 1rem !important;
+    max-width: 90% !important;
+  }
+  
+  .popup-word-modern {
+    right: 20px !important;
+    font-size: 2rem !important;
+    padding: 16px 24px !important;
+  }
+
+  .memory-card {
+    max-height: 110px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid-modern {
+    gap: 0.75rem !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  
+  .popup-word-modern {
+    right: 10px !important;
+    font-size: 1.5rem !important;
+    padding: 12px 20px !important;
+  }
+
+  .memory-card {
+    max-height: 95px !important;
+  }
+}
+
+/* Large screens - slightly bigger but ensure all cards visible */
+@media (min-width: 1200px) {
+  .card-grid-modern {
+    max-width: 650px !important;
+    gap: 2.5rem !important;
+  }
+  
+  .memory-card {
+    max-height: 135px !important;
+  }
 }

@@ -13,6 +13,9 @@ const LoginForm = ({
   onSubmit,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [idError, setIdError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [touched, setTouched] = useState({ id: false, password: false });
 
   const handleClickShowPassword = () => {
     setShowPassword((show) => !show);
@@ -22,18 +25,73 @@ const LoginForm = ({
     event.preventDefault();
   };
 
+  const validateIdNumber = (value) => {
+    if (!value || value.trim() === '') {
+      return 'Student ID is required';
+    }
+    if (value.length < 4) {
+      return 'Student ID must be at least 4 characters';
+    }
+    return '';
+  };
+
+  const validatePassword = (value) => {
+    if (!value || value.trim() === '') {
+      return 'Password is required';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    return '';
+  };
+
+  const handleIdBlur = () => {
+    setTouched({ ...touched, id: true });
+    setIdError(validateIdNumber(idNumber));
+  };
+
+  const handlePasswordBlur = () => {
+    setTouched({ ...touched, password: true });
+    setPasswordError(validatePassword(password));
+  };
+
+  const handleIdChangeWithValidation = (e) => {
+    onIdChange(e);
+    if (touched.id) {
+      setIdError(validateIdNumber(e.target.value));
+    }
+  };
+
+  const handlePasswordChangeWithValidation = (e) => {
+    onPasswordChange(e);
+    if (touched.password) {
+      setPasswordError(validatePassword(e.target.value));
+    }
+  };
+
   return (
     <form className="login-form-container" onSubmit={onSubmit}>
       <div className="form-field">
         <label className="field-label">ID NUMBER:</label>
         <TextField
           value={idNumber}
-          onChange={onIdChange}
+          onChange={handleIdChangeWithValidation}
+          onBlur={handleIdBlur}
           placeholder="00-0000-000"
           variant="outlined"
           className="login-input-field"
+          error={touched.id && !!idError}
+          helperText={touched.id && idError}
           InputProps={{
             disableUnderline: true,
+          }}
+          FormHelperTextProps={{
+            sx: {
+              marginLeft: 0,
+              marginTop: '4px',
+              fontSize: '14px',
+              color: '#ef4444'
+            }
           }}
         />
       </div>
@@ -43,10 +101,13 @@ const LoginForm = ({
         <TextField
           type={showPassword ? 'text' : 'password'}
           value={password}
-          onChange={onPasswordChange}
+          onChange={handlePasswordChangeWithValidation}
+          onBlur={handlePasswordBlur}
           placeholder="**********"
           variant="outlined"
           className="login-input-field"
+          error={touched.password && !!passwordError}
+          helperText={touched.password && passwordError}
           InputProps={{
             disableUnderline: true,
             endAdornment: (
@@ -61,6 +122,14 @@ const LoginForm = ({
                 </IconButton>
               </InputAdornment>
             ),
+          }}
+          FormHelperTextProps={{
+            sx: {
+              marginLeft: 0,
+              marginTop: '4px',
+              fontSize: '14px',
+              color: '#ef4444'
+            }
           }}
         />
       </div>
