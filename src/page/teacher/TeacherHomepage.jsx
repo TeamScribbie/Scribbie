@@ -4,13 +4,19 @@ import {
     Typography,
     CircularProgress,
     Alert,
-    Box // Import Box for layout
+    Box,
+    Card,
+    CardContent,
+    Grid,
+    Chip,
+    Button,
+    Snackbar
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 // Import components
-import Navbar from '../../components/layout/navbar';
+import TeacherNavbar from '../../components/layout/TeacherNavbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import ClassroomCard from '../../components/cards/ClassroomCard';
 import AddClassCard from '../../components/cards/AddClassCard';
@@ -48,48 +54,40 @@ const TeacherHomepage = () => {
   // State for Sidebar
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // State for notifications
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+
+  // State for creating classroom
+  const [isCreatingClassroom, setIsCreatingClassroom] = useState(false);
 
   // --- Fetch Classrooms Function ---
   const fetchClassrooms = useCallback(async () => {
-    // Add these logs:
-    console.log("Fetching classrooms for teacher identifier:", authState.user?.identifier);
-    console.log("Using auth token:", authState.token ? 'Token Present' : 'Token Missing!');
-
     if (!authState.user?.identifier || !authState.token) {
-        console.log("Skipping classroom fetch: Missing identifier or token."); // Add this log
         return;
     }
     setIsLoadingClassrooms(true);
     setErrorClassrooms(null);
     try {
-        console.log("Calling getTeacherClassrooms service..."); // Log before call
         const fetchedClassrooms = await getTeacherClassrooms(authState.user.identifier, authState.token);
-        // Log the result *before* setting state
-        console.log("Received from getTeacherClassrooms:", fetchedClassrooms);
         setClassrooms(Array.isArray(fetchedClassrooms) ? fetchedClassrooms : []);
     } catch (err) {
-        // Log the specific error
-        console.error("Error caught in fetchClassrooms:", err);
+        console.error("Error fetching classrooms:", err);
         setErrorClassrooms(err.message || "Could not fetch classrooms.");
         setClassrooms([]);
     } finally {
         setIsLoadingClassrooms(false);
     }
-  }, [authState.user?.identifier, authState.token]); // useCallback dependency
-
+  }, [authState.user?.identifier, authState.token]);
 
   // --- Fetch Pending Requests for ALL Classrooms ---
    const fetchPendingRequestsForAllClassrooms = useCallback(async () => {
-      // Only run if classrooms have been loaded and token exists
       if (classrooms.length === 0 || !authState.token) {
-          console.log("Skipping pending requests fetch: No classrooms loaded or token missing.");
-          setPendingRequests([]); // Ensure empty if no classrooms or no token
+          setPendingRequests([]);
           return;
       }
 
       setIsLoadingRequests(true);
       setErrorRequests(null);
-      console.log("Fetching pending requests for classrooms:", classrooms.map(c => c.classroomId));
 
       try {
           const requestPromises = classrooms.map(cls =>
@@ -99,14 +97,12 @@ const TeacherHomepage = () => {
                   )
                   .catch(err => {
                       console.error(`Failed to fetch pending requests for class ${cls.classroomId}:`, err);
-                      return []; // Return empty array for this classroom on error
+                      return [];
                   })
           );
 
           const results = await Promise.all(requestPromises);
           const allPendingRequests = results.flat();
-
-          console.log("Aggregated Pending Requests:", allPendingRequests);
           
           setPendingRequests(allPendingRequests);
 
@@ -117,8 +113,7 @@ const TeacherHomepage = () => {
       } finally {
           setIsLoadingRequests(false);
       }
-  }, [classrooms, authState.token]); // useCallback dependencies
-
+  }, [classrooms, authState.token]);
 
   // --- Initial Fetch Logic ---
   useEffect(() => {
@@ -130,8 +125,7 @@ const TeacherHomepage = () => {
       setErrorClassrooms(null);
       setErrorRequests(null);
     }
-  }, [authState.isAuthenticated, fetchClassrooms]); // Depend on fetchClassrooms useCallback
-
+  }, [authState.isAuthenticated, fetchClassrooms]);
 
   // --- Fetch Requests AFTER Classrooms are Loaded ---
   useEffect(() => {
@@ -143,42 +137,38 @@ const TeacherHomepage = () => {
       else if (!isLoadingClassrooms && classrooms.length === 0){
            setPendingRequests([]);
       }
-  }, [isLoadingClassrooms, authState.isAuthenticated, classrooms, fetchPendingRequestsForAllClassrooms]); // Add classrooms to dependency array
-
+  }, [isLoadingClassrooms, authState.isAuthenticated, classrooms, fetchPendingRequestsForAllClassrooms]);
 
   // --- Classroom Creation Handler ---
   const handleAddClassroom = async (newClassData) => {
      if (!authState.token) {
-       alert("Authentication error. Please log in again.");
-       // Maybe set an error state instead of alert
+       showNotification("Authentication error. Please log in again.", 'error');
        return;
      }
-     // Add loading state for creation maybe?
+     
+     setIsCreatingClassroom(true);
      try {
-       console.log("Attempting to create classroom:", newClassData);
        const createdClassroom = await createClassroom(newClassData, authState.token);
-       console.log("Classroom created:", createdClassroom);
-       setIsAddClassDialogOpen(false); // Close dialog on success
-       fetchClassrooms(); // Refresh the classroom list
+       setIsAddClassDialogOpen(false);
+       fetchClassrooms();
+       showNotification("Classroom created successfully!", 'success');
      } catch (err) {
        console.error("Failed to create classroom:", err);
-       // Display error to user (e.g., in the dialog or as an Alert)
-       alert(`Failed to create classroom: ${err.message}`);
+       showNotification(`Failed to create classroom: ${err.message}`, 'error');
+     } finally {
+       setIsCreatingClassroom(false);
      }
   };
 
   // --- Classroom Card Click Handler ---
   const handleClassCardClick = (classroom) => {
-    console.log(`Navigate to teacher view for class: ${classroom.classroomName} (ID: ${classroom.classroomId})`);
-    // Example navigation:
-    // navigate(`/teacher/class/${classroom.classroomId}`);
+    navigate(`/teacher/classroom/${classroom.classroomId}/progress`);
   };
-
 
   // --- Request Accept/Reject Handlers ---
   const handleUpdateRequestStatus = async (classroomId, studentId, newStatus) => {
       if (!authState.token) {
-          alert("Authentication error. Please log in again.");
+          showNotification("Authentication error. Please log in again.", 'error');
           return;
       }
       const uniqueProcessingId = `${classroomId}-${studentId}`;
@@ -186,16 +176,14 @@ const TeacherHomepage = () => {
       setErrorRequests(null);
 
       try {
-          console.log(`Attempting to ${newStatus} student ${studentId} in class ${classroomId}`);
           await updateEnrollmentStatus(classroomId, studentId, newStatus, authState.token);
-          console.log(`Successfully ${newStatus} student ${studentId}`);
-          // Refresh the pending list ONLY
           fetchPendingRequestsForAllClassrooms();
+          showNotification(`Student request ${newStatus.toLowerCase()} successfully!`, 'success');
       } catch (err) {
           console.error(`Failed to ${newStatus} student ${studentId}:`, err);
           setErrorRequests(`Failed to ${newStatus} request: ${err.message}`);
       } finally {
-          setProcessingRequestId(null); // Clear processing state
+          setProcessingRequestId(null);
       }
   };
 
@@ -206,12 +194,15 @@ const TeacherHomepage = () => {
   const handleRejectRequest = (classroomId, studentId) => {
       handleUpdateRequestStatus(classroomId, studentId, 'REJECTED');
   };
-  // --- End Request Handlers ---
 
+  // --- Notification Handler ---
+  const showNotification = (message, severity = 'info') => {
+    setNotification({ open: true, message, severity });
+  };
 
-  // *** Log the state right before rendering ***
-  console.log("Rendering TeacherHomepage, classrooms state:", classrooms);
-
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   return (
     <div className="teacher-homepage-container">
@@ -222,41 +213,316 @@ const TeacherHomepage = () => {
 
       {/* --- Main Content Area --- */}
       <div className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-        <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <TeacherNavbar 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
+        />
 
         <div className="teacher-main-content">
+          {/* --- Welcome Section --- */}
+          <Box sx={{ mb: 5 }}>
+            <Box sx={{ mb: 4 }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  mb: 1, 
+                  fontWeight: 700, 
+                  color: '#1a1a1a',
+                  fontSize: { xs: '1.8rem', md: '2.5rem' }
+                }}
+              >
+                Welcome back, {authState.user?.name || 'Teacher'}!
+              </Typography>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#64748b', 
+                  fontWeight: 400,
+                  fontSize: '1.1rem',
+                  maxWidth: '600px'
+                }}
+              >
+                Manage your classrooms, track student progress, and stay connected with your learning community.
+              </Typography>
+            </Box>
+            
+            {/* Modern Stats Cards */}
+            <Grid container spacing={3} sx={{ mb: 5 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  elevation={0}
+                  sx={{ 
+                    p: 3, 
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                    color: '#451513',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 40px rgba(249, 177, 33, 0.3)'
+                    }
+                  }}
+                >
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                    {classrooms.length}
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                    Active Classes
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  elevation={0}
+                  sx={{ 
+                    p: 3, 
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)',
+                    color: '#451513',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 40px rgba(253, 177, 13, 0.3)'
+                    }
+                  }}
+                >
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                    {pendingRequests.length}
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                    Pending Requests
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  elevation={0}
+                  sx={{ 
+                    p: 3, 
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #FFE8A3 0%, #FFEDB6 100%)',
+                    color: '#451513',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 40px rgba(255, 232, 163, 0.4)'
+                    }
+                  }}
+                >
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                    {classrooms.reduce((total, classroom) => total + (classroom.studentCount || 0), 0)}
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                    Total Students
+                  </Typography>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card 
+                  elevation={0}
+                  sx={{ 
+                    p: 3, 
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #36B8E4 0%, #4FACFE 100%)',
+                    color: 'white',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 40px rgba(54, 184, 228, 0.3)'
+                    }
+                  }}
+                >
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                    98%
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                    Engagement
+                  </Typography>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
+
           {/* --- Active Classes Section --- */}
-          <Typography variant="h5" className="main-content-heading">Active Classes</Typography>
-          {isLoadingClassrooms && <CircularProgress size={24} />}
+          <Box sx={{ mb: 3 }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                color: '#1a1a1a', 
+                mb: 1,
+                fontSize: { xs: '1.5rem', md: '2rem' }
+              }}
+            >
+              My Classrooms
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b', mb: 3 }}>
+              Manage and monitor your active classrooms
+            </Typography>
+          </Box>
+          {isLoadingClassrooms && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <CircularProgress size={24} />
+              <Typography>Loading your classrooms...</Typography>
+            </Box>
+          )}
           {errorClassrooms && <Alert severity="error" sx={{ mb: 2 }}>{errorClassrooms}</Alert>}
 
           {/* --- Classroom Card Rendering --- */}
           {!isLoadingClassrooms && !errorClassrooms && authState.isAuthenticated && (
-              <div className="card-container">
-                  {/* Map over the classrooms state */}
-                  {classrooms.map((classroom, index) => {
-                       // *** Log each item being mapped ***
-                       console.log(`Mapping classroom item ${index}:`, classroom);
-                       return (
-                          <ClassroomCard
-                              // Use properties from ClassroomSummaryResponse
-                              key={classroom.classroomId}
-                              classroomId={classroom.classroomId}
-                              name={classroom.classroomName}
-                              // status prop is not available in ClassroomSummaryResponse
-                              // We can remove it or pass null/undefined
-                              // status={undefined}
-                              onClick={() => handleClassCardClick(classroom)}
-                          />
-                      );
-                   })}
+              <Box sx={{ mb: 6 }}>
+                <Grid container spacing={3}>
+                  {classrooms.map((classroom) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={classroom.classroomId}>
+                      <Card
+                        elevation={0}
+                        sx={{
+                          height: '100%',
+                          borderRadius: 3,
+                          border: '1px solid #e2e8f0',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 12px 40px rgba(0,0,0,0.1)',
+                            borderColor: '#667eea'
+                          }
+                        }}
+                        onClick={() => handleClassCardClick(classroom)}
+                      >
+                        <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                          <Box
+                            sx={{
+                              width: 60,
+                              height: 60,
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto 16px',
+                              color: '#451513',
+                              fontSize: '1.5rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {classroom.classroomName.charAt(0).toUpperCase()}
+                          </Box>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              fontWeight: 600, 
+                              color: '#1a1a1a',
+                              mb: 1,
+                              fontSize: '1.1rem'
+                            }}
+                          >
+                            {classroom.classroomName}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#64748b' }}>
+                            {classroom.studentCount || 0} students
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                  
                   {/* Add Class Card */}
-                  <AddClassCard onClick={() => setIsAddClassDialogOpen(true)} />
-              </div>
+                  <Grid item xs={12} sm={6} md={4} lg={3}>
+                    <Card
+                      elevation={0}
+                      sx={{
+                        height: '100%',
+                        borderRadius: 3,
+                        border: '2px dashed #cbd5e1',
+                        transition: 'all 0.3s ease',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 200,
+                        '&:hover': {
+                          borderColor: '#f9b121',
+                          backgroundColor: '#fffbf5',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                      onClick={() => setIsAddClassDialogOpen(true)}
+                    >
+                      <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                        <Box
+                          sx={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: '50%',
+                            backgroundColor: '#FFF4E6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 16px',
+                            fontSize: '2rem',
+                            color: '#f9b121'
+                          }}
+                        >
+                          +
+                        </Box>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            fontWeight: 600, 
+                            color: '#64748b',
+                            fontSize: '1.1rem'
+                          }}
+                        >
+                          Add New Class
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
           )}
-          {/* Message if no classrooms */}
+          {/* Empty State */}
           {!isLoadingClassrooms && !errorClassrooms && classrooms.length === 0 && authState.isAuthenticated && (
-             <Typography sx={{ mt: 2 }}>You haven't created any classes yet. Click '+' to add one!</Typography>
+            <Box 
+              sx={{ 
+                textAlign: 'center', 
+                py: 8,
+                px: 4,
+                backgroundColor: '#f8fafc',
+                borderRadius: 3,
+                border: '1px solid #e2e8f0'
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 600, color: '#64748b', mb: 2 }}>
+                No classrooms yet
+              </Typography>
+              <Typography variant="body1" sx={{ color: '#94a3b8', mb: 3 }}>
+                Create your first classroom to start managing students and content
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => setIsAddClassDialogOpen(true)}
+                sx={{
+                  background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                  color: '#451513',
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)'
+                  }
+                }}
+              >
+                Create First Classroom
+              </Button>
+            </Box>
           )}
           {/* Message if not logged in */}
           {!authState.isAuthenticated && !isLoadingClassrooms && (
@@ -266,14 +532,46 @@ const TeacherHomepage = () => {
 
           {/* --- Requests Section --- */}
           {authState.isAuthenticated && (
-              <div className="requests-section" style={{ marginTop: '40px' }}>
-                <Typography variant="h5" className="main-content-heading" style={{ marginBottom: '10px' }}>
-                  Pending Requests
-                </Typography>
+              <Box 
+                sx={{ 
+                  backgroundColor: 'white',
+                  borderRadius: 3,
+                  border: '1px solid #e2e8f0',
+                  p: 4,
+                  mt: 4
+                }}
+              >
+                <Box sx={{ mb: 3 }}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      color: '#1a1a1a', 
+                      mb: 1,
+                      fontSize: { xs: '1.5rem', md: '2rem' }
+                    }}
+                  >
+                    Pending Requests
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: '#64748b' }}>
+                    Review and manage student enrollment requests
+                  </Typography>
+                </Box>
                 {isLoadingRequests && <CircularProgress size={24} />}
                 {errorRequests && <Alert severity="error" sx={{ mb: 2 }}>{errorRequests}</Alert>}
 
-                {!isLoadingRequests && (
+                {!isLoadingRequests && pendingRequests.length === 0 && (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="h6" sx={{ color: '#64748b', mb: 1 }}>
+                      No pending requests
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+                      All student requests have been processed
+                    </Typography>
+                  </Box>
+                )}
+                
+                {!isLoadingRequests && pendingRequests.length > 0 && (
                     <TeacherRequestsTable
                         requests={pendingRequests}
                         onAccept={handleAcceptRequest}
@@ -281,7 +579,7 @@ const TeacherHomepage = () => {
                         processingRequestId={processingRequestId}
                     />
                 )}
-              </div>
+              </Box>
           )}
           {/* --- End Requests Section --- */}
 
@@ -293,7 +591,20 @@ const TeacherHomepage = () => {
         open={isAddClassDialogOpen}
         onClose={() => setIsAddClassDialogOpen(false)}
         onAddClass={handleAddClassroom}
+        loading={isCreatingClassroom}
       />
+
+      {/* --- Notifications --- */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </div> // End teacher-homepage-container
   );
 };
