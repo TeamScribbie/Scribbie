@@ -8,13 +8,14 @@ import {
     Box, Typography, Paper, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert, Button, Tooltip,
     Breadcrumbs, Link as MuiLink, useTheme, CssBaseline,
-    Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar
+    Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar,
+    Card, CardContent, Grid, Avatar
 } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import StudentProgressRow from './StudentProgressRow';
-import Navbar from '../../components/layout/navbar';
+import TeacherNavbar from '../../components/layout/TeacherNavbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import '../../styles/TeacherHomepage.css';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,6 +25,15 @@ const ClassroomStudentProgressOverviewPage = () => {
     const navigate = useNavigate();
     const { authState } = useAuth();
     const theme = useTheme();
+
+    const scribbieColors = {
+        primary: '#f9b121',
+        primaryHover: '#FDB10D',
+        secondary: '#FFD966',
+        accent: '#36B8E4',
+        text: '#451513',
+        textSecondary: '#64748b'
+    };
 
     const yellowAccent = {
         main: '#FFC107',
@@ -59,10 +69,8 @@ const ClassroomStudentProgressOverviewPage = () => {
             const classroomDetails = await getClassroomById(classroomId, authState.token);
             setClassroomName(classroomDetails.classroomName);
 
-            // --- THE ONLY CHANGE IS HERE ---
             // Use the correct property name from the API response
             setClassCode(classroomDetails.classroomCode);
-            // --- END OF CHANGE ---
 
             const overview = await getClassroomCourseProgressOverview(classroomId);
             setProgressData(Array.isArray(overview) ? overview : []);
@@ -131,46 +139,204 @@ const ClassroomStudentProgressOverviewPage = () => {
             </div>
 
             <div className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-                <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: theme.palette.background.default, minHeight: 'calc(100vh - 64px)'}}>
-                    <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb" sx={{ mb: 2.5 }}>
-                        <MuiLink component="button" onClick={() => navigate('/teacher-homepage')} sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', fontSize: '0.875rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline', color: yellowAccent.main }}}>
+                <Box component="main" sx={{ flexGrow: 1, p: 3, backgroundColor: '#fafbfc', minHeight: 'calc(100vh - 64px)', mt: '80px' }}>
+                    <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb" sx={{ mb: 4 }}>
+                        <MuiLink 
+                            component="button" 
+                            onClick={() => navigate('/teacher-homepage')} 
+                            sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                color: scribbieColors.textSecondary, 
+                                fontSize: '0.875rem', 
+                                textDecoration: 'none', 
+                                '&:hover': { 
+                                    textDecoration: 'underline', 
+                                    color: scribbieColors.primary 
+                                }
+                            }}
+                        >
                             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
                             Teacher Home
                         </MuiLink>
-                        <Typography color="text.primary" sx={{ fontSize: '0.875rem' }}>Student Progress Overview</Typography>
+                        <Typography color={scribbieColors.text} sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Student Progress Overview</Typography>
                     </Breadcrumbs>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, mt: 3, flexWrap: 'wrap', gap: 2 }}>
-                        <Box>
-                            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: brownAccent.main }}>
-                                Student Progress Overview
-                            </Typography>
-                            <Typography variant="h6" color="text.secondary" sx={{ fontSize: '1.1rem', lineHeight: 1.4 }}>
-                                Classroom: {classroomName}
-                            </Typography>
-                            <Typography variant="subtitle1" color="text.secondary" sx={{ fontSize: '1rem', lineHeight: 1.4 }}>
-                                Class Code: {classCode || 'Not specified'}
-                            </Typography>
-                        </Box>
-                        <Tooltip title="Back to Teacher Homepage">
-                            <Button variant="contained" startIcon={<ArrowBackIcon />} onClick={() => navigate('/teacher-homepage')} sx={{ backgroundColor: yellowAccent.main, color: yellowAccent.contrastText, '&:hover': { backgroundColor: yellowAccent.hover }, mt: { xs: 1, sm: 0 }, fontWeight: 500 }}>
+                    {/* Modern Header Section */}
+                    <Box sx={{ mb: 5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+                            <Box>
+                                <Typography 
+                                    variant="h3" 
+                                    component="h1" 
+                                    sx={{ 
+                                        mb: 1, 
+                                        fontWeight: 700, 
+                                        color: '#1a1a1a',
+                                        fontSize: { xs: '1.8rem', md: '2.5rem' }
+                                    }}
+                                >
+                                    Student Progress Overview
+                                </Typography>
+                                <Typography 
+                                    variant="h6" 
+                                    sx={{ 
+                                        color: scribbieColors.textSecondary, 
+                                        fontWeight: 400,
+                                        fontSize: '1.1rem',
+                                        mb: 0.5
+                                    }}
+                                >
+                                    Monitor student performance and engagement in your classroom.
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 3, mt: 2, flexWrap: 'wrap' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Typography variant="body2" sx={{ color: scribbieColors.textSecondary, fontWeight: 500 }}>Classroom:</Typography>
+                                        <Typography variant="body2" sx={{ color: scribbieColors.text, fontWeight: 600 }}>{classroomName}</Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Typography variant="body2" sx={{ color: scribbieColors.textSecondary, fontWeight: 500 }}>Class Code:</Typography>
+                                        <Typography variant="body2" sx={{ color: scribbieColors.text, fontWeight: 600, fontFamily: 'monospace' }}>{classCode || 'Not specified'}</Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+                            <Button 
+                                variant="outlined" 
+                                startIcon={<ArrowBackIcon />} 
+                                onClick={() => navigate('/teacher-homepage')} 
+                                sx={{ 
+                                    color: scribbieColors.textSecondary,
+                                    borderColor: '#e2e8f0',
+                                    '&:hover': {
+                                        borderColor: scribbieColors.primary,
+                                        backgroundColor: '#fffbf5',
+                                        color: scribbieColors.primary
+                                    },
+                                    mt: { xs: 2, sm: 0 }, 
+                                    fontWeight: 500,
+                                    textTransform: 'none'
+                                }}
+                            >
                                 Back to Home
                             </Button>
-                        </Tooltip>
+                        </Box>
+                        
+                        {/* Stats Cards */}
+                        <Grid container spacing={3} sx={{ mb: 4 }}>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Card 
+                                    elevation={0}
+                                    sx={{ 
+                                        p: 3, 
+                                        background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                        color: scribbieColors.text,
+                                        borderRadius: 3
+                                    }}
+                                >
+                                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        {progressData.length}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        Total Students
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Card 
+                                    elevation={0}
+                                    sx={{ 
+                                        p: 3, 
+                                        background: 'linear-gradient(135deg, #36B8E4 0%, #4FACFE 100%)',
+                                        color: 'white',
+                                        borderRadius: 3
+                                    }}
+                                >
+                                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        {progressData.reduce((total, student) => total + (student.lessonsCompleted || 0), 0)}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        Lessons Completed
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Card 
+                                    elevation={0}
+                                    sx={{ 
+                                        p: 3, 
+                                        background: 'linear-gradient(135deg, #FFE8A3 0%, #FFEDB6 100%)',
+                                        color: scribbieColors.text,
+                                        borderRadius: 3
+                                    }}
+                                >
+                                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        {Math.round(progressData.reduce((total, student) => total + (student.totalScore || 0), 0) / Math.max(progressData.length, 1))}%
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        Average Score
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                        </Grid>
                     </Box>
 
-                    <Paper elevation={2} sx={{ mt: 2, overflowX: 'auto', borderRadius: 2 }}>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography 
+                            variant="h4" 
+                            sx={{ 
+                                fontWeight: 700, 
+                                color: '#1a1a1a', 
+                                mb: 1,
+                                fontSize: { xs: '1.5rem', md: '2rem' }
+                            }}
+                        >
+                            Student Performance
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: scribbieColors.textSecondary, mb: 3 }}>
+                            Detailed progress tracking for each student
+                        </Typography>
+                    </Box>
+                    
+                    {progressData.length === 0 ? (
+                        <Box 
+                            sx={{ 
+                                textAlign: 'center', 
+                                py: 8,
+                                px: 4,
+                                backgroundColor: '#fffbf5',
+                                borderRadius: 3,
+                                border: '1px solid #FFE8A3'
+                            }}
+                        >
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: scribbieColors.textSecondary, mb: 2 }}>
+                                No students enrolled
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#94a3b8' }}>
+                                Students will appear here once they join your classroom
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                overflowX: 'auto', 
+                                borderRadius: 3,
+                                border: '1px solid #e2e8f0'
+                            }}
+                        >
                         <TableContainer>
                             <Table stickyHeader aria-label="student progress table">
                                 <TableHead>
-                                    <TableRow sx={{/*...*/}}>
-                                        <TableCell>Student Name</TableCell>
-                                        <TableCell align="center">Lessons Completed</TableCell>
-                                        <TableCell align="center">Total Score</TableCell>
-                                        <TableCell align="center">Total Time Spent</TableCell>
-                                        <TableCell align="center">View Details</TableCell>
-                                        <TableCell align="center">Actions</TableCell>
+                                    <TableRow sx={{ backgroundColor: '#fffbf5' }}>
+                                        <TableCell sx={{ fontWeight: 700, color: scribbieColors.text, fontSize: '0.9rem' }}>Student</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, color: scribbieColors.text, fontSize: '0.9rem' }}>Lessons</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, color: scribbieColors.text, fontSize: '0.9rem' }}>Score</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, color: scribbieColors.text, fontSize: '0.9rem' }}>Time Spent</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, color: scribbieColors.text, fontSize: '0.9rem' }}>Details</TableCell>
+                                        <TableCell align="center" sx={{ fontWeight: 700, color: scribbieColors.text, fontSize: '0.9rem' }}>Actions</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -179,29 +345,66 @@ const ClassroomStudentProgressOverviewPage = () => {
                                             key={studentProgress.studentId}
                                             {...studentProgress}
                                             onViewDetails={() => handleStudentClick(studentProgress)}
-                                            yellowAccent={yellowAccent}
+                                            scribbieColors={scribbieColors}
                                             onRemove={() => handleOpenRemoveDialog(studentProgress)}
-                                            sx={{'&:hover': {backgroundColor: theme.palette.action.hover}, '&:last-child td, &:last-child th': { border: 0 }}}
+                                            sx={{
+                                                '&:hover': { backgroundColor: '#fffbf5' }, 
+                                                '&:last-child td, &:last-child th': { border: 0 }
+                                            }}
                                         />
                                     ))}
                                 </TableBody>
                             </Table>
                         </TableContainer>
-                    </Paper>
+                        </Paper>
+                    )}
                 </Box>
             </div>
 
-            <Dialog open={!!studentToRemove} onClose={handleCloseRemoveDialog}>
-                <DialogTitle>{"Remove Student from Classroom?"}</DialogTitle>
+            <Dialog 
+                open={!!studentToRemove} 
+                onClose={handleCloseRemoveDialog}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        border: '1px solid #e2e8f0'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ color: scribbieColors.text, fontWeight: 600 }}>
+                    Remove Student from Classroom?
+                </DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to remove <strong>{studentToRemove?.studentName}</strong> from this classroom? This action cannot be undone.
+                    <DialogContentText sx={{ color: scribbieColors.textSecondary }}>
+                        Are you sure you want to remove <strong style={{ color: scribbieColors.text }}>{studentToRemove?.studentName}</strong> from this classroom? This action cannot be undone.
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseRemoveDialog} disabled={isRemoving}>Cancel</Button>
-                    <Button onClick={handleConfirmRemove} color="error" autoFocus disabled={isRemoving}>
-                        {isRemoving ? <CircularProgress size={24} /> : 'Remove'}
+                <DialogActions sx={{ p: 3, gap: 1 }}>
+                    <Button 
+                        onClick={handleCloseRemoveDialog} 
+                        disabled={isRemoving}
+                        sx={{
+                            color: scribbieColors.textSecondary,
+                            '&:hover': {
+                                backgroundColor: '#f1f5f9'
+                            }
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleConfirmRemove} 
+                        variant="contained"
+                        autoFocus 
+                        disabled={isRemoving}
+                        sx={{
+                            backgroundColor: '#ef4444',
+                            '&:hover': {
+                                backgroundColor: '#dc2626'
+                            }
+                        }}
+                    >
+                        {isRemoving ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Remove Student'}
                     </Button>
                 </DialogActions>
             </Dialog>

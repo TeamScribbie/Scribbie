@@ -6,20 +6,25 @@ import {
     Alert,
     Box,
     Grid,
-    Fab
+    Fab,
+    Card,
+    CardContent,
+    Button,
+    Chip,
+    Snackbar
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext'; // Corrected path
 
-import Navbar from '../../components/layout/navbar'; // Corrected path
+import TeacherNavbar from '../../components/layout/TeacherNavbar'; // Corrected path
 import TeacherSidebar from '../../components/layout/TeacherSidebar'; // Corrected path
 import CourseCard from '../../components/cards/CourseCard.jsx'; // Corrected path
 import AddCourseDialog from '../../components/dialogs/AddCourseDialog.jsx'; // Corrected path
 import DeleteCourseDialog from '../../components/dialogs/DeleteCourseDialog.jsx'; // Corrected path
-import EditCourseDialog from '../../components/dialogs/EditCourseDialog.jsx'; // ✨ Import EditCourseDialog ✨
+import EditCourseDialog from '../../components/dialogs/EditCourseDialog.jsx'; // Import EditCourseDialog
 
-import { getAllCoursesForAdmin, createCourse, deleteCourse, updateCourse } from '../../services/courseService'; // ✨ Import updateCourse ✨
+import { getAllCoursesForAdmin, createCourse, deleteCourse, updateCourse } from '../../services/courseService'; // Import updateCourse
 
 import '../../styles/TeacherHomepage.css'; // Corrected path
 
@@ -41,12 +46,14 @@ const ManageCoursesPage = () => {
     const [isDeletingCourse, setIsDeletingCourse] = useState(false);
     const [deleteCourseError, setDeleteCourseError] = useState(null);
 
-    // ✨ Edit Course Dialog State ✨
+    // Edit Course Dialog State
     const [isEditCourseDialogOpen, setIsEditCourseDialogOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState(null); // Stores the full course object to edit
     const [isUpdatingCourse, setIsUpdatingCourse] = useState(false);
     const [updateCourseError, setUpdateCourseError] = useState(null);
-    // ✨ End Edit Course Dialog State ✨
+
+    // Notification state
+    const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
     const fetchCourses = useCallback(async () => {
         if (!authState.token) {
@@ -89,7 +96,6 @@ const ManageCoursesPage = () => {
         }
     }, [authState.isAuthenticated, authState.user, fetchCourses, userHasRequiredRoles]);
 
-
     const handleAddCourse = async (newCourseData) => {
         if (!authState.token) {
             setAddCourseError("Authentication error. Cannot add course."); return;
@@ -99,6 +105,7 @@ const ManageCoursesPage = () => {
             const createdCourse = await createCourse(newCourseData, authState.token);
             setCourses(prevCourses => [...prevCourses, createdCourse]);
             setIsAddCourseDialogOpen(false);
+            showNotification('Course created successfully!', 'success');
         } catch (err) {
             setAddCourseError(err.message || "Failed to create course.");
         } finally {
@@ -133,6 +140,7 @@ const ManageCoursesPage = () => {
             await deleteCourse(courseToDelete.courseId, authState.token);
             setCourses(prevCourses => prevCourses.filter(c => c.courseId !== courseToDelete.courseId));
             handleCloseDeleteDialog();
+            showNotification('Course deleted successfully!', 'success');
         } catch (err) {
             console.error("ManageCoursesPage: Error deleting course", err);
             setDeleteCourseError(err.message || "Failed to delete course. Please try again.");
@@ -141,7 +149,6 @@ const ManageCoursesPage = () => {
         }
     };
 
-    // --- ✨ Edit Course Handlers ✨ ---
     const handleOpenEditDialog = (course) => {
         setEditingCourse(course); // Set the course to be edited
         setUpdateCourseError(null); // Clear previous edit errors
@@ -166,6 +173,7 @@ const ManageCoursesPage = () => {
                 prevCourses.map(c => (c.courseId === editingCourse.courseId ? returnedUpdatedCourse : c))
             );
             handleCloseEditDialog();
+            showNotification('Course updated successfully!', 'success');
         } catch (err) {
             console.error("ManageCoursesPage: Error updating course", err);
             setUpdateCourseError(err.message || "Failed to update course. Please try again.");
@@ -173,7 +181,14 @@ const ManageCoursesPage = () => {
             setIsUpdatingCourse(false);
         }
     };
-    // --- ✨ End Edit Course Handlers ✨ ---
+
+    const showNotification = (message, severity = 'info') => {
+        setNotification({ open: true, message, severity });
+    };
+
+    const handleCloseNotification = () => {
+        setNotification({ ...notification, open: false });
+    };
 
     return (
         <Box className="teacher-homepage-container">
@@ -181,49 +196,173 @@ const ManageCoursesPage = () => {
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
-                    <Typography variant="h5" className="main-content-heading" gutterBottom>
-                        Course Management
-                    </Typography>
+                    {/* Modern Header Section */}
+                    <Box sx={{ mb: 5 }}>
+                        <Box sx={{ mb: 4 }}>
+                            <Typography
+                                variant="h3"
+                                sx={{
+                                    mb: 1,
+                                    fontWeight: 700,
+                                    color: '#1a1a1a',
+                                    fontSize: { xs: '1.8rem', md: '2.5rem' }
+                                }}
+                            >
+                                Course Management
+                            </Typography>
+                            <Typography
+                                variant="h6"
+                                sx={{
+                                    color: '#64748b',
+                                    fontWeight: 400,
+                                    fontSize: '1.1rem',
+                                    maxWidth: '600px'
+                                }}
+                            >
+                                Create, edit, and manage courses for your educational platform.
+                            </Typography>
+                        </Box>
 
-                    {isLoading && <Box sx={{display: 'flex', justifyContent: 'center', my: 3}}><CircularProgress /></Box>}
+                        {/* Stats Card */}
+                        <Card
+                            elevation={0}
+                            sx={{
+                                p: 3,
+                                background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                color: '#451513',
+                                borderRadius: 3,
+                                mb: 4,
+                                maxWidth: 300
+                            }}
+                        >
+                            <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                {courses.length}
+                            </Typography>
+                            <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                Total Courses
+                            </Typography>
+                        </Card>
+                    </Box>
+
+                    {isLoading && <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>}
                     {error && !isLoading && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
                     {!isLoading && !error && userHasRequiredRoles && (
-                        <>
-                            <Grid container spacing={3}>
-                                {Array.isArray(courses) && courses.map((course) => (
-                                    <Grid item xs={12} sm={6} md={4} key={course.courseId || Math.random()}>
-                                        <CourseCard
-                                            course={course}
-                                            onManageLessons={handleManageLessons}
-                                            onEdit={handleOpenEditDialog} // ✨ Use handleOpenEditDialog ✨
-                                            onDelete={handleOpenDeleteDialog}
-                                            isAdminOrSuperAdmin={userHasRequiredRoles} // For UI display logic in CourseCard
-                                            currentUserId={authState.user?.id} // For UI display logic in CourseCard
-                                        />
-                                    </Grid>
-                                ))}
-                            </Grid>
-                            {!isLoading && !error && Array.isArray(courses) && courses.length === 0 && (
-                                <Typography sx={{mt: 2, textAlign:'center'}}>No courses found. Click the '+' button to add a new course.</Typography>
+                        <Box>
+                            <Box sx={{ mb: 3 }}>
+                                <Typography
+                                    variant="h4"
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: '#1a1a1a',
+                                        mb: 1,
+                                        fontSize: { xs: '1.5rem', md: '2rem' }
+                                    }}
+                                >
+                                    All Courses
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: '#64748b', mb: 3 }}>
+                                    Manage your course catalog and content
+                                </Typography>
+                            </Box>
+
+                            {Array.isArray(courses) && courses.length > 0 ? (
+                                <Grid container spacing={3}>
+                                    {courses.map((course) => (
+                                        <Grid item xs={12} sm={6} md={4} key={course.courseId || Math.random()}>
+                                            <CourseCard
+                                                course={course}
+                                                onManageLessons={handleManageLessons}
+                                                onEdit={handleOpenEditDialog}
+                                                onDelete={handleOpenDeleteDialog}
+                                                isAdminOrSuperAdmin={userHasRequiredRoles}
+                                                currentUserId={authState.user?.id}
+                                            />
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            ) : (
+                                <Box
+                                    sx={{
+                                        textAlign: 'center',
+                                        py: 8,
+                                        px: 4,
+                                        backgroundColor: '#fffbf5',
+                                        borderRadius: 3,
+                                        border: '1px solid #FFE8A3'
+                                    }}
+                                >
+                                    <Typography variant="h5" sx={{ fontWeight: 600, color: '#64748b', mb: 2 }}>
+                                        No courses yet
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ color: '#94a3b8', mb: 3 }}>
+                                        Create your first course to start building your curriculum
+                                    </Typography>
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => { setAddCourseError(null); setIsAddCourseDialogOpen(true); }}
+                                        sx={{
+                                            background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                            color: '#451513',
+                                            borderRadius: 2,
+                                            px: 4,
+                                            py: 1.5,
+                                            textTransform: 'none',
+                                            fontWeight: 600,
+                                            '&:hover': {
+                                                background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)'
+                                            }
+                                        }}
+                                    >
+                                        Create First Course
+                                    </Button>
+                                </Box>
                             )}
-                        </>
+                        </Box>
                     )}
                     {authState.isAuthenticated && !userHasRequiredRoles && !isLoading && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            You do not have permission to manage courses.
-                        </Alert>
+                        <Box
+                            sx={{
+                                textAlign: 'center',
+                                py: 6,
+                                px: 4,
+                                backgroundColor: '#fef2f2',
+                                borderRadius: 3,
+                                border: '1px solid #fecaca'
+                            }}
+                        >
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: '#dc2626', mb: 2 }}>
+                                Access Denied
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#7f1d1d' }}>
+                                You do not have permission to manage courses. Contact your administrator for access.
+                            </Typography>
+                        </Box>
                     )}
                     {!authState.isAuthenticated && !isLoading && (
-                        <Alert severity="warning" sx={{ mt: 2 }}>
-                            Please log in to manage courses.
-                        </Alert>
+                        <Box
+                            sx={{
+                                textAlign: 'center',
+                                py: 6,
+                                px: 4,
+                                backgroundColor: '#fffbeb',
+                                borderRadius: 3,
+                                border: '1px solid #fde68a'
+                            }}
+                        >
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: '#d97706', mb: 2 }}>
+                                Authentication Required
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#92400e' }}>
+                                Please log in to access the course management system.
+                            </Typography>
+                        </Box>
                     )}
                 </Box>
 
-                {userHasRequiredRoles && (
+                {userHasRequiredRoles && courses.length > 0 && (
                     <Fab
                         color="primary"
                         aria-label="add course"
@@ -232,9 +371,14 @@ const ManageCoursesPage = () => {
                             position: 'fixed',
                             bottom: 32,
                             right: 32,
-                            bgcolor: '#451513',
-                            '&:hover': { bgcolor: '#5d211f' },
-                            zIndex: 1050
+                            background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                            color: '#451513',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)',
+                                transform: 'scale(1.1)'
+                            },
+                            zIndex: 1050,
+                            transition: 'all 0.3s ease'
                         }}
                     >
                         <AddIcon />
@@ -259,7 +403,6 @@ const ManageCoursesPage = () => {
                     error={deleteCourseError} // Pass error to dialog
                 />
             )}
-            {/* ✨ Add EditCourseDialog to the render tree ✨ */}
             {editingCourse && (
                 <EditCourseDialog
                     open={isEditCourseDialogOpen}
@@ -270,6 +413,18 @@ const ManageCoursesPage = () => {
                     error={updateCourseError}
                 />
             )}
+
+            {/* Notifications */}
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={6000}
+                onClose={handleCloseNotification}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+                    {notification.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
