@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 // Import Alert and CircularProgress for feedback
 import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../../assets/book.png';
+import scribbieLogo from '../../assets/ScribbieLogoV2.png';
+import studentLoginBg from '../../assets/studentlogin-bg.png';
 import UserTypeToggle from '../../components/auth/UserTypeToggle';
 import LoginForm from '../../components/auth/LoginForm';
 import '../../styles/StudentLogin.css';
@@ -61,22 +62,26 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="student-login-container">
-      <div className="login-card">
-        <div className="login-header">
-          Login
-        </div>
+    <div 
+      className="student-login-container"
+      style={{
+        backgroundColor: 'white',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="scribbie-logo-container">
+        <img src={scribbieLogo} alt="Scribbie Logo" className="ScribbieLogoV2" />
+      </div>
 
-        <div className="login-content">
-          <Typography variant="h5" className="login-title">
-            Practice and Learn with Scribbie!
-          </Typography>
-
+      <div className="login-grid">
+        <div className="login-form-section">
           <UserTypeToggle activeTab="Student" onTabSwitch={handleTabSwitch} />
 
           {/* Display error message if login failed */}
           {error && (
-            <Alert severity="error" sx={{ width: '80%', mt: 2, mb: 1 }}>
+            <Alert severity="error" sx={{ width: '100%', mt: 2, mb: 1 }}>
               {error}
             </Alert>
           )}
@@ -99,24 +104,30 @@ const StudentLogin = () => {
             </Box>
            )}
 
-
-          <Typography className="register-link-container">
+          <div className="button-container">
             <button
               onClick={() => navigate('/student-register')}
-              className="register-link"
-              disabled={isLoading} // Disable link while loading
+              className="first-time-button"
+              disabled={isLoading}
             >
-              No Account yet? <strong>Register Here</strong>
+              FIRST TIME HERE?
             </button>
-          </Typography>
+            <button
+              onClick={handleLogin}
+              className="login-button"
+              disabled={isLoading}
+            >
+              LOGIN
+            </button>
+          </div>
         </div>
       </div>
-
-      <img
-        src={bookImage}
-        alt="Books"
-        className="book-image"
-      />
+      
+      <div className="bottom-graphic">
+        <div className="color-bar orange"></div>
+        <div className="color-bar blue"></div>
+        <div className="color-bar red"></div>
+      </div>
     </div>
   );
 };

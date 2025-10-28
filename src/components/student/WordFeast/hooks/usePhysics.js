@@ -11,6 +11,19 @@ const CAGE_WIDTH = 80;
 const CAGE_HEIGHT = 50;
 const turningFriction = 0.92;
 
+// --- ADDED: Fish sprite dimensions for accurate hitboxes ---
+const fishSpriteDimensions = {
+    small: { width: 62, height: 45, scale: 0.6 },
+    medium: { width: 167, height: 102, scale: 0.7 },
+    large: { width: 177, height: 157, scale: 0.8 },
+};
+const playerSpriteDimensions = {
+    width: 274,
+    height: 142,
+    scaleMultiplier: 1.0, // Adjusted as an example
+};
+
+
 function isColliding(circle, radius, rect) {
     if (!circle || !rect) return false;
     const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
@@ -31,23 +44,42 @@ export const usePhysics = ({
     score, setScore, onGameOver, isGameOver, isPaused, width, height,
     onPlayerEat, swallowedWords, setSwallowedWords, onVomit, playerState,
     messages, setMessages, onMonsterDash,
+    mediumFishLimit, largeFishLimit, // <-- ADDED PROPS
+    lives, onPlayerDeath, isInvulnerable, isDying, // <-- HEALTH SYSTEM PROPS
 }) => {
     const mousePosition = useRef({ x: width / 2, y: height / 2 });
     const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
     const lastVelocity = useRef({ x: 1, y: 0 });
     const spacebarDown = useRef(false);
     const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
+    const deathProcessed = useRef(false); // Track if death has been processed
 
-    // --- MODIFIED: spawnFish now uses the player's position to spawn fish nearby ---
     const spawnFish = useCallback(() => {
-        if (!player) return; // Don't spawn if player doesn't exist yet
+        if (!player) return; 
 
+        // --- MODIFIED: Check fish counts before spawning ---
+        const currentMediumCount = fishLogics.filter(f => f.size === 'medium').length;
+        const currentLargeCount = fishLogics.filter(f => f.size === 'large').length;
+
+        const rand = Math.random();
+        let size;
+
+        if (rand < 0.6) {
+            size = 'small';
+        } else if (rand < 0.9) {
+            if (currentMediumCount >= mediumFishLimit) return; // Abort if limit is reached
+            size = 'medium';
+        } else {
+            if (currentLargeCount >= largeFishLimit) return; // Abort if limit is reached
+            size = 'large';
+        }
+        
         let position;
         let velocity;
-        const viewportWidth = gameConfig.width; // Get viewport size from config
-        const spawnMargin = 50; // How far off-screen to spawn
+        const viewportWidth = gameConfig.width; 
+        const spawnMargin = 50; 
 
-        const side = Math.floor(Math.random() * 4); // 4 sides: top, bottom, left, right
+        const side = Math.floor(Math.random() * 4); 
 
         switch (side) {
             case 0: // Left
@@ -60,16 +92,13 @@ export const usePhysics = ({
                 break;
             case 2: // Top
                 position = { x: player.position.x + (Math.random() - 0.5) * width, y: player.position.y - height / 2 - spawnMargin };
-                velocity = { x: 0, y: 1 }; // Fish spawning from top/bottom will need vertical velocity logic in FishLogic.js
+                velocity = { x: 0, y: 1 }; 
                 break;
             case 3: // Bottom
                 position = { x: player.position.x + (Math.random() - 0.5) * width, y: player.position.y + height / 2 + spawnMargin };
                 velocity = { x: 0, y: -1 };
                 break;
         }
-
-        const rand = Math.random();
-        const size = rand < 0.6 ? 'small' : rand < 0.9 ? 'medium' : 'large';
 
         const newFishData = {
             id: Date.now() * Math.random(),
@@ -79,7 +108,7 @@ export const usePhysics = ({
             velocity,
         };
         setFishLogics(logics => [...logics, new FishLogic(newFishData, width, height)]);
-    }, [width, height, setFishLogics, player]);
+    }, [width, height, setFishLogics, player, fishLogics, mediumFishLimit, largeFishLimit]); // <-- Added dependencies
 
 
     useEffect(() => {
@@ -91,7 +120,6 @@ export const usePhysics = ({
                 boostInfo.current.isBoosting = true;
                 boostInfo.current.boostTimer = gameConfig.player.boost.duration;
                 boostInfo.current.cooldownTimer = gameConfig.player.boost.cooldown;
-                // Play dash sound
                 const dashSound = new Audio(PlayerDashMp3);
                 dashSound.play().catch(e => console.error('Error playing dash sound:', e));
             }
@@ -103,7 +131,7 @@ export const usePhysics = ({
     }, [onVomit]);
 
     useTick(delta => {
-        if (isGameOver || isPaused || !player) return;
+        if (isGameOver || isPaused || !player || isDying) return;
 
         if (messages?.length > 0) {
             setMessages(currentMessages => currentMessages.map(msg => ({ ...msg, life: msg.life - delta })).filter(msg => msg.life > 0));
@@ -234,17 +262,47 @@ export const usePhysics = ({
             nextPlayerPos = { x: Math.max(0, Math.min(width, nextPlayerPos.x)), y: Math.max(0, Math.min(height, nextPlayerPos.y)), };
         }
 
+        // Reset death flag when invulnerable (player has respawned)
+        if (isInvulnerable) {
+            deathProcessed.current = false;
+        }
+        
         const eatenFishIds = new Set();
         if (fishLogics) {
+            const playerScale = { small: 0.4, medium: 0.6, large: 0.8 }[player.size];
+            const playerHitboxWidth = playerSpriteDimensions.width * playerScale * playerSpriteDimensions.scaleMultiplier;
+            const playerHitboxHeight = playerSpriteDimensions.height * playerScale * playerSpriteDimensions.scaleMultiplier;
+            const playerRect = {
+                x: nextPlayerPos.x - playerHitboxWidth / 2,
+                y: nextPlayerPos.y - playerHitboxHeight / 2,
+                width: playerHitboxWidth,
+                height: playerHitboxHeight,
+            };
+
             fishLogics.forEach(logic => {
-                const distance = calculateDistance(nextPlayerPos, logic.state.position);
-                if (distance < (playerRadius + 15)) {
-                    if (canEat(player.size, logic.state.size)) {
-                        setScore(s => s + logic.state.points);
+                const fishState = logic.state;
+                const dims = fishSpriteDimensions[fishState.size];
+                const fishHitboxWidth = dims.width * dims.scale;
+                const fishHitboxHeight = dims.height * dims.scale;
+                const fishRect = {
+                    x: fishState.position.x - fishHitboxWidth / 2,
+                    y: fishState.position.y - fishHitboxHeight / 2,
+                    width: fishHitboxWidth,
+                    height: fishHitboxHeight,
+                };
+
+                if (isRectColliding(playerRect, fishRect)) {
+                    if (canEat(player.size, fishState.size)) {
+                        setScore(s => s + fishState.points);
                         eatenFishIds.add(logic.id);
                         if (onPlayerEat) onPlayerEat();
-                    } else if (canEat(logic.state.size, player.size)) {
-                        onGameOver({ score: score, status: 'FAILED' });
+                    } else if (canEat(fishState.size, player.size)) {
+                        // Health system: check invulnerability before dealing damage
+                        if (!isInvulnerable && !deathProcessed.current) {
+                            deathProcessed.current = true;
+                            // Always call death handler - it will check if game over is needed
+                            if (onPlayerDeath) onPlayerDeath();
+                        }
                     }
                 }
             });

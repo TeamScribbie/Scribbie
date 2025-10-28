@@ -171,23 +171,28 @@ export const getLeaderboardSnapshot = async (lessonDefinitionId, topN = 5, token
  * @returns {Promise<object>} - A promise that resolves to the ChallengeDefinitionResponseDto.
  */
 export const configureChallengeForLesson = async (lessonDefinitionId, challengeData, token) => {
-    if (!lessonDefinitionId || !challengeData || !token) {
-        throw new Error('Lesson Definition ID, challenge data, and auth token are required.');
-    }
-    console.log(`challengeService: Configuring challenge for lessonDefinitionId: ${lessonDefinitionId}`, challengeData);
+    console.log(`challengeService: Configuring challenge for lesson ${lessonDefinitionId}`);
+    
+    // Validation
+    if (!lessonDefinitionId) throw new Error("Validation Error: Lesson Definition ID is missing.");
+    if (!challengeData || !challengeData.challengeType) throw new Error("Validation Error: Challenge data or type is missing.");
+    if (!token) throw new Error("Validation Error: Auth token is missing.");
+
     const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/challenge-definition`, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(challengeData),
     });
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        console.error(`Configure Challenge API Error (LessonDef ${lessonDefinitionId}):`, errorData);
-        throw new Error(errorData.message || `Failed to configure challenge. Status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('challengeService: Error configuring challenge:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
+    
     return response.json();
 };
 
@@ -198,26 +203,30 @@ export const configureChallengeForLesson = async (lessonDefinitionId, challengeD
  * @returns {Promise<object|null>} - A promise that resolves to the ChallengeDefinitionResponseDto or null if not found.
  */
 export const getChallengeConfigurationForLesson = async (lessonDefinitionId, token) => {
-    if (!lessonDefinitionId || !token) {
-        throw new Error('Lesson Definition ID and auth token are required.');
-    }
     console.log(`challengeService: Getting challenge configuration for lessonDefinitionId: ${lessonDefinitionId}`);
+
+    if (!lessonDefinitionId || !token) {
+        throw new Error("Lesson Definition ID and auth token are required.");
+    }
+    
     const response = await fetch(`${API_BASE_URL}/lesson-definitions/${lessonDefinitionId}/challenge-definition`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
         },
     });
-    if (response.status === 404) {
-        console.log(`challengeService: No challenge configuration found for lessonDefinitionId: ${lessonDefinitionId}`);
-        return null;
-    }
+
     if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! Status: ${response.status}` }));
-        console.error(`Get Challenge Config API Error (LessonDef ${lessonDefinitionId}):`, errorData);
-        throw new Error(errorData.message || `Failed to get challenge configuration. Status: ${response.status}`);
+        // A 404 is an expected outcome if no challenge is configured, so we don't treat it as a critical error.
+        if (response.status === 404) {
+            console.log(`challengeService: No challenge configuration found for lessonDefinitionId: ${lessonDefinitionId}`);
+            return null; // Return null to indicate "not found"
+        }
+        const errorData = await response.json().catch(() => ({}));
+        console.error('challengeService: Error fetching challenge config:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
+    
     return response.json();
 };
 

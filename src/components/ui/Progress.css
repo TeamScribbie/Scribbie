@@ -1,0 +1,140 @@
+/* Progress Component Styles */
+.progress-ui {
+  position: relative;
+  height: 1rem;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--secondary, #f1f5f9);
+  transition: all 0.3s ease;
+}
+
+.progress-indicator {
+  height: 100%;
+  width: 0%;
+  background: var(--primary);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated progress bar */
+.progress-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: progress-shine 2s infinite;
+}
+
+@keyframes progress-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Size variants */
+.progress-ui.progress-sm {
+  height: 0.5rem;
+}
+
+.progress-ui.progress-lg {
+  height: 1.5rem;
+}
+
+.progress-ui.progress-xl {
+  height: 2rem;
+}
+
+/* Color variants */
+.progress-ui.progress-success .progress-indicator {
+  background: #10b981;
+}
+
+.progress-ui.progress-warning .progress-indicator {
+  background: #f59e0b;
+}
+
+.progress-ui.progress-error .progress-indicator {
+  background: #ef4444;
+}
+
+.progress-ui.progress-info .progress-indicator {
+  background: var(--primary);
+}
+
+/* Striped variant */
+.progress-ui.progress-striped .progress-indicator {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+}
+
+.progress-ui.progress-striped.progress-animated .progress-indicator {
+  animation: progress-stripes 1s linear infinite;
+}
+
+@keyframes progress-stripes {
+  0% {
+    background-position: 1rem 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Indeterminate progress */
+.progress-ui.progress-indeterminate .progress-indicator {
+  width: 30% !important;
+  animation: progress-indeterminate 2s infinite linear;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* Progress with label */
+.progress-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground, var(--text));
+}
+
+.progress-percentage {
+  color: var(--muted-foreground, var(--text-light));
+  font-variant-numeric: tabular-nums;
+}

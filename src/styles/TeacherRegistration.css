@@ -1,115 +1,185 @@
 /* src/styles/TeacherRegistration.css */
 
-/* Adapt styles from StudentRegistration.css or create a shared auth.css */
 .teacher-registration-container {
-    background-color: #FFFBE0;
+    background-color: #ffffff;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 56px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  
+  .scribbie-logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    z-index: 3;
+  }
+  
+  .ScribbieLogoV2 {
+    height: 200px;
+    width: auto;
+  }
+  
+  .registration-grid {
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  
-  /* Using general class names adaptable from StudentRegistration.css */
-  .registration-card { /* Same as student */
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-width: 1400px;
     width: 100%;
-    max-width: 550px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
+    min-height: 600px;
+    background-color: #ffffff;
+    padding: 60px 80px;
   }
   
-  .registration-header { /* Same as student */
-    background-color: #451513;
-    color: white;
-    text-align: center;
-    padding: 15px 0;
-    font-size: 24px;
-    font-weight: bold;
-  }
-  
-  .registration-content { /* Same as student */
-    padding: 30px;
+  .registration-form-section {
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    gap: 30px;
+  }
+  
+  .teacher-registration-form-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .form-field {
+    display: flex;
+    flex-direction: row;
     align-items: center;
+    gap: 40px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
   
-  .registration-title-teacher { /* Specific class if needed */
-    text-align: center;
-    margin-bottom: 1rem !important;
+  .field-label {
+    color: #374151;
+    font-weight: 800;
+    font-size: 28px;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: left;
+    width: 200px;
+    flex-shrink: 0;
   }
   
-  .teacher-registration-form-container { /* Specific form container */
-    width: 80%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  
-  /* Reuse input field style */
   .registration-input-field .MuiOutlinedInput-root {
-    background-color: #FFDE9A;
-    border: 1px solid #451513;
-    border-radius: 4px;
-    font-size: 14px;
-    height: 50px;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 24px;
+    height: 80px;
+    flex: 1;
   }
+  
   .registration-input-field .MuiOutlinedInput-input {
-    padding: 0 12px;
+    padding: 0 30px;
     height: 100%;
     box-sizing: border-box;
+    color: #374151;
+    font-size: 24px;
   }
+  
   .registration-input-field .MuiOutlinedInput-notchedOutline {
     border: none;
   }
   
-  /* Reuse button style */
-  .registration-button {
-    background-color: #451513 !important;
-    color: white !important;
-    margin-top: 20px !important;
-    width: 40%;
-  }
-  .registration-button:hover {
-    background-color: #5d211f !important;
+  .registration-input-field .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border: none;
   }
   
-  /* Reuse link style */
-  .login-link-container {
-    margin-top: 15px;
-  }
-  .login-link {
-    color: #451513 !important;
-    text-decoration: none !important;
-  }
-  .login-link strong {
-    font-weight: bold;
+  .registration-input-field .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border: 2px solid #3b82f6;
   }
   
-  /* Reuse image style */
-  .book-image-teacher-reg {
+  .button-container {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin: 0;
+    margin-top: 20px;
+  }
+  
+  .confirm-button {
+    background-color: #fbbf24;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 20px 40px;
+    font-weight: 700;
+    font-size: 24px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .confirm-button:hover {
+    background-color: #f59e0b;
+  }
+  
+  .confirm-button:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  .bottom-graphic {
     position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 300px;
-    height: auto;
-    display: none;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 4px;
   }
   
-  @media (min-width: 768px) {
-    .book-image-teacher-reg {
-      display: block;
-      width: 350px;
+  .color-bar {
+    width: 8px;
+    height: 20px;
+    border-radius: 2px;
+  }
+  
+  .color-bar.blue {
+    background-color: #60a5fa;
+  }
+  
+  .color-bar.orange {
+    background-color: #f97316;
+  }
+  
+  .color-bar.red {
+    background-color: #ef4444;
+  }
+  
+  /* Mobile responsive design */
+  @media (max-width: 767px) {
+    .teacher-registration-container {
+      padding: 28px;
     }
-    .registration-card {
-       width: 40%;
+
+    .registration-form-section {
+      padding: 36px 24px;
+    }
+    
+    .form-field {
+      flex-direction: column;
+      gap: 15px;
+      align-items: flex-start;
+    }
+    
+    .field-label {
+      min-width: auto;
+      margin-bottom: 5px;
+    }
+    
+    .button-container {
+      justify-content: center;
     }
   }

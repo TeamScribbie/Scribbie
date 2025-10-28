@@ -5,7 +5,7 @@ import WhatshotIcon from '@mui/icons-material/Whatshot';
 import BookIcon from '../../assets/book.png';
 import mascot from '../../assets/duh.png';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import IconButton from '@mui/material/IconButton';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 // Import sounds
 import correctSound1 from '../../assets/sounds/correct1.ogg';
@@ -37,15 +37,18 @@ const pulseAnimation = (isCorrect) => ({
 });
 
 const ReadingGameComponent = ({
-                                  activityData,
-                                  onGameComplete,
-                                  activityTitle,
-                                  activityInstructions,
-                                  classroomId,
-                                  lessonDefinitionId
-                              }) => {
+    questions: initialQuestions, // Rename prop to avoid conflict
+    onGameComplete,
+    activityTitle,
+    activityInstructions,
+    classroomId,
+    lessonDefinitionId,
+    isChallengeMode = false // New prop for challenge mode
+}) => {
+    const navigate = useNavigate(); // Hook for navigation
     const [openInstructions, setOpenInstructions] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [questions, setQuestions] = useState([]);
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
     const [streak, setStreak] = useState(0);
@@ -54,25 +57,25 @@ const ReadingGameComponent = ({
     const [showFeedback, setShowFeedback] = useState(false);
     const [gameOver, setGameOver] = useState(false);
     const startTimeRef = useRef(Date.now());
-    const instructions = activityData?.instructions || activityInstructions || 'No instructions provided.';
-    const questions = activityData?.questions || [];
+    const instructions = activityInstructions || 'Read the question and select the correct answer.';
 
     const correctAudioRefs = useRef({
-        1: new Audio(correctSound1),
-        2: new Audio(correctSound2),
-        3: new Audio(correctSound3),
-        4: new Audio(correctSound4),
-        5: new Audio(correctSound5),
-        6: new Audio(correctSound6),
-        7: new Audio(correctSound7),
-        8: new Audio(correctSound8),
-        9: new Audio(correctSound9),
+        1: new Audio(correctSound1), 2: new Audio(correctSound2), 3: new Audio(correctSound3),
+        4: new Audio(correctSound4), 5: new Audio(correctSound5), 6: new Audio(correctSound6),
+        7: new Audio(correctSound7), 8: new Audio(correctSound8), 9: new Audio(correctSound9),
     });
     const wrongAudioRef = useRef(new Audio(wrongSound));
     const winAudioRef = useRef(new Audio(winSound));
     const loseAudioRef = useRef(new Audio(loseSound));
     const hoverAudioRef = useRef(new Audio(hoverSound));
     const isHoverSoundPlaying = useRef(false);
+
+    // Shuffle questions on initial load, especially for challenge mode
+    useEffect(() => {
+        const shuffled = [...initialQuestions].sort(() => Math.random() - 0.5);
+        setQuestions(shuffled);
+    }, [initialQuestions]);
+
 
     useEffect(() => {
         if (gameOver) return;
@@ -90,15 +93,20 @@ const ReadingGameComponent = ({
         if (lives <= 0 && !gameOver) {
             setGameOver(true);
             const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
-            onGameComplete({ score, status: 'FAILED', highestStreak, timeTaken });
+            loseAudioRef.current.play().catch(e => console.error("Error playing lose sound", e));
+            onGameComplete({
+                score,
+                status: isChallengeMode ? 'COMPLETED' : 'FAILED', // In challenge, ending is 'completing' the run
+                highestStreak,
+                timeTaken,
+                questionsAnswered: currentIndex + 1
+            });
         }
-    }, [lives, score, highestStreak, onGameComplete, gameOver]);
+    }, [lives, score, highestStreak, onGameComplete, gameOver, isChallengeMode, currentIndex]);
 
     useEffect(() => {
         // Initialize audio settings
-        Object.values(correctAudioRefs.current).forEach(audio => {
-            audio.volume = 0.5;
-        });
+        Object.values(correctAudioRefs.current).forEach(audio => { audio.volume = 0.5; });
         wrongAudioRef.current.volume = 0.5;
         winAudioRef.current.volume = 0.5;
         loseAudioRef.current.volume = 0.5;
@@ -106,17 +114,12 @@ const ReadingGameComponent = ({
 
         return () => {
             Object.values(correctAudioRefs.current).forEach(audio => {
-                audio.pause();
-                audio.currentTime = 0;
+                audio.pause(); audio.currentTime = 0;
             });
-            wrongAudioRef.current.pause();
-            wrongAudioRef.current.currentTime = 0;
-            winAudioRef.current.pause();
-            winAudioRef.current.currentTime = 0;
-            loseAudioRef.current.pause();
-            loseAudioRef.current.currentTime = 0;
-            hoverAudioRef.current.pause();
-            hoverAudioRef.current.currentTime = 0;
+            wrongAudioRef.current.pause(); wrongAudioRef.current.currentTime = 0;
+            winAudioRef.current.pause(); winAudioRef.current.currentTime = 0;
+            loseAudioRef.current.pause(); loseAudioRef.current.currentTime = 0;
+            hoverAudioRef.current.pause(); hoverAudioRef.current.currentTime = 0;
         };
     }, []);
 
@@ -143,65 +146,66 @@ const ReadingGameComponent = ({
         setSelectedChoice(choice);
         setShowFeedback(true);
 
-        let isCorrect = false;
-        let currentScore = score;
-        let currentStreak = streak;
+        const isCorrect = choice && choice.isCorrect;
 
-        if (choice && choice.isCorrect) {
-            isCorrect = true;
-            currentScore += 100 + (currentStreak * 10);
-            setScore(currentScore);
-            currentStreak++;
-            setStreak(currentStreak);
-            if (currentStreak > highestStreak) {
-                setHighestStreak(currentStreak);
+        if (isCorrect) {
+            const newStreak = streak + 1;
+            setScore(prev => prev + 100 + (streak * 10));
+            setStreak(newStreak);
+            if (newStreak > highestStreak) {
+                setHighestStreak(newStreak);
             }
-            // Play streak sound
-            const soundIndex = Math.min(currentStreak, 9);
+            const soundIndex = Math.min(newStreak, 9);
             const audio = correctAudioRefs.current[soundIndex];
             audio.currentTime = 0;
             audio.play().catch(error => console.error('Error playing sound:', error));
         } else {
             setLives(prev => prev - 1);
             setStreak(0);
-            currentStreak = 0;
             wrongAudioRef.current.currentTime = 0;
             wrongAudioRef.current.play().catch(error => console.error('Error playing wrong sound:', error));
-        }        setTimeout(async () => {
-            const endedDueToLives = lives <= (isCorrect ? 0 : 1);
-            const allQuestionsDone = currentIndex + 1 >= questions.length;
+        }
 
-            if (allQuestionsDone || endedDueToLives) {
-                setGameOver(true);
-                const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
-                const finalStatus = (allQuestionsDone && (lives > 0 || (isCorrect && lives === 0))) ? 'COMPLETED' : 'FAILED';
+        setTimeout(() => {
+            const isLastQuestion = currentIndex + 1 >= questions.length;
 
-                // Play appropriate game end sound
-                const soundToPlay = finalStatus === 'COMPLETED' ? winAudioRef.current : loseAudioRef.current;
-                soundToPlay.currentTime = 0;
-                await soundToPlay.play().catch(error => console.error('Error playing sound:', error));
-
-                // Calculate accuracy based on correct answers vs total questions attempted
-                const questionsAttempted = currentIndex + 1;
-                const correctAnswers = Math.floor(currentScore / 100); // Since each correct answer is worth 100 points
-
-                onGameComplete({
-                    score: currentScore,
-                    status: finalStatus,
-                    highestStreak: Math.max(highestStreak, currentStreak),
-                    timeTaken,
-                    accuracy: Math.round((correctAnswers / questionsAttempted) * 100),
-                    questionsAttempted
-                });
+            // CHALLENGE MODE LOGIC
+            if (isChallengeMode) {
+                if (lives > (isCorrect ? 0 : 1)) {
+                    // If not dead, go to next question or loop
+                    const nextIndex = isLastQuestion ? 0 : currentIndex + 1;
+                     if (isLastQuestion) {
+                        // Reshuffle questions when looping
+                        setQuestions([...questions].sort(() => Math.random() - 0.5));
+                    }
+                    setCurrentIndex(nextIndex);
+                }
+                // Game over is handled by the useEffect for lives
                 return;
             }
 
-            setCurrentIndex(prev => prev + 1);
+            // NORMAL ACTIVITY MODE LOGIC
+            if (isLastQuestion) {
+                setGameOver(true);
+                const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000);
+                 const finalStatus = (lives > 0 || (isCorrect && lives === 1)) ? 'COMPLETED' : 'FAILED';
+                 const soundToPlay = finalStatus === 'COMPLETED' ? winAudioRef.current : loseAudioRef.current;
+                 soundToPlay.play().catch(e => console.error("Error playing end sound", e));
+                onGameComplete({
+                    score: score + (isCorrect ? 100 + (streak * 10) : 0),
+                    status: finalStatus,
+                    highestStreak: Math.max(highestStreak, isCorrect ? streak + 1 : streak),
+                    timeTaken,
+                    questionsAttempted: questions.length
+                });
+            } else {
+                setCurrentIndex(prev => prev + 1);
+            }
         }, 2000);
     };
 
     const handleExitGame = () => {
-        if (window.confirm("Are you sure you want to exit? Your current progress in this activity will not be saved.")) {
+        if (window.confirm("Are you sure you want to exit? Your current progress will not be saved.")) {
             navigate(classroomId && lessonDefinitionId ? `/student/classroom/${classroomId}/lessons` : '/student-homepage');
         }
     };
@@ -224,6 +228,11 @@ const ReadingGameComponent = ({
     }
 
     const currentQuestion = questions[currentIndex];
+     if (!currentQuestion) {
+        // This can happen briefly if questions are being reshuffled
+        return <Typography>Loading next question...</Typography>;
+    }
+
 
     return (
         <Paper
@@ -250,21 +259,10 @@ const ReadingGameComponent = ({
                 left: {xs:10, sm:16},
                 zIndex: 10
             }}>
-                {/* <IconButton
-                    onClick={handleExitGame}
-                    aria-label="back"
-                    sx={{
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        color: 'white',
-                        '&:hover': {
-                            backgroundColor: 'rgba(0,0,0,0.65)'
-                        },
-                        padding: '8px'
-                    }}
-                >
-                    <ArrowBackIcon fontSize="medium" />
-                </IconButton> */}
-            </Box>            Reading Button - Floating Action Button
+                 {/* IconButton removed as per original component */}
+            </Box>
+
+             {/* Reading Button - Floating Action Button */}
             <Box sx={{
                 position: 'fixed',
                 bottom: {xs: 20, sm:30},
@@ -317,7 +315,8 @@ const ReadingGameComponent = ({
                     boxSizing: 'border-box',
                     maxWidth: '100%'
                 }}
-            >                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            >
+                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 {Array.from({ length: 3 }).map((_, i) => (
                     <span key={`life-${i}`} style={{
                         opacity: i < lives ? 1 : 0.3,
@@ -342,7 +341,7 @@ const ReadingGameComponent = ({
                             color: '#451513',
                             fontWeight: 'bold',
                             fontSize: 'clamp(1.2rem, 4vw, 2rem)',
-                            animation: showFeedback ? 'pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'none',
+                            animation: showFeedback && selectedChoice?.isCorrect ? 'pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)' : 'none',
                             '@keyframes pop-in': {
                                 '0%': { transform: 'scale(1)', opacity: 0.7 },
                                 '50%': { transform: 'scale(1.3)', opacity: 1 },
@@ -356,14 +355,7 @@ const ReadingGameComponent = ({
                     <Chip
                         icon={<WhatshotIcon sx={{
                             fontSize: 'clamp(1.2rem, 3.5vw, 1.6rem) !important',
-                            color: streak >= 7 ? '#ff3d00 !important' :
-                                streak >= 6 ? '#ff4d00 !important' :
-                                    streak >= 5 ? '#ff5d00 !important' :
-                                        streak >= 4 ? '#ff6d00 !important' :
-                                            streak >= 3 ? '#ff7d00 !important' :
-                                                streak >= 2 ? '#ff8d00 !important' :
-                                                    streak >= 1 ? '#ff9d00 !important' :
-                                                        '#757575 !important',
+                            color: streak >= 1 ? '#ff9d00 !important' : '#757575 !important',
                             animation: streak >= 3 ? 'flameWave 1s ease-in-out infinite' : 'none',
                             '@keyframes flameWave': {
                                 '0%': { transform: 'scale(1) rotate(0deg)' },
@@ -378,22 +370,10 @@ const ReadingGameComponent = ({
                             padding: 'clamp(12px, 2.5vh, 18px) clamp(10px, 2vw, 14px)',
                             height: 'auto',
                             backgroundColor: 'transparent',
-                            border: `2px solid ${
-                                streak >= 7 ? '#ff3d00' :
-                                    streak >= 6 ? '#ff4d00' :
-                                        streak >= 5 ? '#ff5d00' :
-                                            streak >= 4 ? '#ff6d00' :
-                                                streak >= 3 ? '#ff7d00' :
-                                                    streak >= 2 ? '#ff8d00' :
-                                                        streak >= 1 ? '#ff9d00' :
-                                                            '#9e9e9e'
-                            }`,
+                            border: `2px solid ${streak >= 1 ? '#ff9d00' : '#9e9e9e'}`,
                             color: streak >= 1 ? '#ff6d00' : '#757575',
                             boxShadow: streak >= 1 ? `0 0 ${Math.min(streak * 2, 14)}px rgba(255, 109, 0, ${Math.min(streak * 0.1, 0.7)})` : 'none',
                             transition: 'all 0.3s ease',
-                            '&:hover': {
-                                backgroundColor: 'rgba(255, 109, 0, 0.1)'
-                            }
                         }}
                     />
                 </Box>
@@ -508,7 +488,6 @@ const ReadingGameComponent = ({
                                 buttonSx.bgcolor = '#FFD966';
                                 buttonSx.color = '#451513';
                                 buttonSx.opacity = 0.45;
-                                buttonSx['&:hover'] = { bgcolor: '#FFC107' };
                             }
                             if (isSelected) buttonSx = { ...buttonSx, ...pulseAnimation(choice.isCorrect) };
                         } else {
@@ -559,7 +538,7 @@ const ReadingGameComponent = ({
                     textAlign: 'center',
                     fontSize: 'clamp(1.5rem, 4vw, 2rem)'
                 }}>
-                    Reading Instructions
+                     {isChallengeMode ? 'Challenge Instructions' : 'Reading Instructions'}
                 </DialogTitle>
                 <DialogContent>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
@@ -574,7 +553,10 @@ const ReadingGameComponent = ({
                                 textAlign: 'left'
                             }}
                         >
-                            {instructions}
+                           {isChallengeMode
+                                ? "Answer as many questions as you can before you run out of lives! The questions will loop, so stay sharp!"
+                                : instructions
+                            }
                         </Typography>
                     </Box>
                 </DialogContent>
@@ -597,6 +579,32 @@ const ReadingGameComponent = ({
             </Dialog>
         </Paper>
     );
+};
+
+ReadingGameComponent.propTypes = {
+    questions: PropTypes.arrayOf(PropTypes.shape({ // Renamed from activityData.questions
+        questionId: PropTypes.any.isRequired,
+        questionText: PropTypes.string.isRequired,
+        questionImageUrl: PropTypes.string,
+        questionSoundUrl: PropTypes.string,
+        choices: PropTypes.arrayOf(PropTypes.shape({
+            choiceId: PropTypes.any.isRequired,
+            choiceText: PropTypes.string.isRequired,
+            isCorrect: PropTypes.bool,
+        })).isRequired,
+    })).isRequired,
+    onGameComplete: PropTypes.func.isRequired,
+    activityTitle: PropTypes.string,
+    activityInstructions: PropTypes.string,
+    classroomId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    lessonDefinitionId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    isChallengeMode: PropTypes.bool, // Added prop type
+};
+
+const ReadingGameWrapper = (props) => {
+    const { activityData, questions, ...remaningProps } = props;
+    const gameQuestions = questions || activityData?.questions || [];
+    return <ReadingGameComponent questions={gameQuestions} {...remaningProps} />;
 };
 
 ReadingGameComponent.propTypes = {

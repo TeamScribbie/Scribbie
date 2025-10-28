@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // Import Alert and CircularProgress
 import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import bookImage from '../../assets/book.png';
+import scribbieLogo from '../../assets/ScribbieLogoV2.png';
 import TeacherRegistrationForm from '../../components/auth/TeacherRegistrationForm';
 import '../../styles/TeacherRegistration.css';
 
@@ -77,20 +77,24 @@ const TeacherRegistration = () => {
   };
 
   return (
-    <div className="teacher-registration-container">
-      <div className="registration-card">
-        <div className="registration-header">
-          Register
-        </div>
+    <div 
+      className="teacher-registration-container"
+      style={{
+        backgroundColor: 'white',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="scribbie-logo-container">
+        <img src={scribbieLogo} alt="Scribbie Logo" className="ScribbieLogoV2" />
+      </div>
 
-        <div className="registration-content">
-          <Typography variant="h5" className="registration-title-teacher">
-            Welcome to Scribbie, Teacher!
-          </Typography>
-
+      <div className="registration-grid">
+        <div className="registration-form-section">
           {/* Display status messages */}
           {error && (
-             <Alert severity="error" sx={{ width: '80%', mt: 1, mb: 1 }}>
+             <Alert severity="error" sx={{ width: '100%', mt: 2, mb: 1 }}>
                {error}
              </Alert>
            )}
@@ -100,7 +104,7 @@ const TeacherRegistration = () => {
             formData={formData}
             onChange={handleChange}
             onSubmit={handleRegister}
-            // isLoading={isLoading} // Pass if form handles disabling
+            isLoading={isLoading}
           />
 
            {/* Show loading indicator */}
@@ -109,23 +113,14 @@ const TeacherRegistration = () => {
               <CircularProgress size={24} />
             </Box>
            )}
-
-          <Typography className="login-link-container">
-            <Link
-                href="/teacher-login"
-                className="login-link"
-                 style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
-            >
-              Already have an account? <strong>Login here</strong>
-            </Link>
-          </Typography>
         </div>
       </div>
-      <img
-        src={bookImage}
-        alt="Books"
-        className="book-image-teacher-reg"
-      />
+      
+      <div className="bottom-graphic">
+        <div className="color-bar orange"></div>
+        <div className="color-bar blue"></div>
+        <div className="color-bar red"></div>
+      </div>
     </div>
   );
 };

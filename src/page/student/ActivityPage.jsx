@@ -82,9 +82,8 @@ const ActivityPage = () => {
 
     if (isLoading) {
         return (
-            <Box sx={{ display:'flex', flexDirection:'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1, width: '100vw', height: '100vh', bgcolor: '#FFFBE0' }}>
-                <CircularProgress size={50} />
-                <Typography sx={{ mt: 2, color: '#451513' }}>Loading Activity...</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <CircularProgress />
             </Box>
         );
     }
@@ -123,31 +122,46 @@ const ActivityPage = () => {
         activityInstructions: activityDetails.instructions || activityInstructions,
         classroomId,
         lessonDefinitionId,
-        difficulty: activityDetails.flagA || 'easy',
+        isChallengeMode: false, // Explicitly false for normal activities
     };
 
-    switch (activityDetails.activityType) {
-        case 'MATCHING':    return <QuizMcqGame {...gameProps} />;
-        case 'READING':     return <ReadingGameComponent activityData={activityDetails} {...gameProps} />;
-        case 'FILL_BLANKS': return <FillBlanksGameComponent activityData={activityDetails} {...gameProps} />;
-        case 'MATCHING2':   return <Matching2GameComponent {...gameProps} />;
-        case 'BALLOONGAME': return <ReadingDefenderComponent {...gameProps} />;
-        case 'MEMORYGAME':
-            return <MemoryGame
-                onGameComplete={handleGameComplete}
-                activityDetails={activityDetails}
-            />;
-        case 'WORDFEAST':   return <WordFeastGame {...gameProps} />;
-        default:
-            return (
-                <Box sx={{ display:'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                    <Alert severity="warning" sx={{ m: 2 }}>
-                        Unsupported activity type: "{activityDetails.activityType}".
-                        <Button onClick={handleBackNavigation} variant="outlined" sx={{ mt: 2, ml:1 }}>Go Back</Button>
-                    </Alert>
-                </Box>
-            );
-    }
+    const renderActivity = () => {
+        switch (activityDetails.activityType) {
+            case 'MATCHING':    return <QuizMcqGame {...gameProps} />;
+            case 'READING':     return <ReadingGameComponent activityData={activityDetails} {...gameProps} />;
+            case 'FILL_BLANKS': return <FillBlanksGameComponent activityData={activityDetails} {...gameProps} />;
+            case 'MATCHING2':   return <Matching2GameComponent {...gameProps} />;
+            case 'BALLOONGAME': return <ReadingDefenderComponent {...gameProps} />;
+            case 'MEMORYGAME':  return <FlipMatchingGame {...gameProps} />;
+            case 'WORDFEAST':   return <WordFeastGame {...gameProps} />;
+            default:
+                return (
+                    <Box sx={{ display:'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                        <Alert severity="warning" sx={{ m: 2 }}>
+                            Unsupported activity type: "{activityDetails.activityType}".
+                            <Button onClick={handleBackNavigation} variant="outlined" sx={{ mt: 2, ml:1 }}>Go Back</Button>
+                        </Alert>
+                    </Box>
+                );
+        }
+    };
+
+    return (
+        <Box sx={{ 
+            width: '100vw', 
+            height: '100vh', 
+            overflow: 'hidden',
+            margin: 0,
+            padding: 0,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+        }}>
+            {renderActivity()}
+        </Box>
+    );
 
 };
 

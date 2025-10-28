@@ -2,11 +2,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/layout/navbar';
+import TeacherNavbar from '../../components/layout/TeacherNavbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import {
     Typography, Box, CircularProgress, Alert, Paper, List, ListItem, ListItemText,
-    IconButton, Button, Divider, Collapse, Chip, Snackbar
+    IconButton, Button, Divider, Collapse, Chip, Snackbar, Card, CardContent, Grid
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -75,9 +75,7 @@ const LessonManagementPage = () => {
 
     const [isConfigureChallengeDialogOpen, setIsConfigureChallengeDialogOpen] = useState(false);
     const [currentLessonForChallenge, setCurrentLessonForChallenge] = useState(null);
-    const [existingChallengeConfigData, setExistingChallengeConfigData] = useState(null);
-    const [isSubmittingChallengeConfig, setIsSubmittingChallengeConfig] = useState(false);
-    const [configureChallengeError, setConfigureChallengeError] = useState(null);
+    
 
     const [isDeleteChallengeDialogOpen, setIsDeleteChallengeDialogOpen] = useState(false);
     const [lessonToDeleteChallengeFrom, setLessonToDeleteChallengeFrom] = useState(null);
@@ -107,6 +105,10 @@ const LessonManagementPage = () => {
     const [editingNodeForDetails, setEditingNodeForDetails] = useState(null);
     const [isSavingNodeDetails, setIsSavingNodeDetails] = useState(false);
     const [editNodeDetailsError, setEditNodeDetailsError] = useState(null);
+
+    const [isConfigDialogOpen, setConfigDialogOpen] = useState(false);
+
+    
 
     const handleDeleteActivityNode = (node, lessonDefId) => {
         setNodeToDelete({ ...node, lessonDefinitionId: lessonDefId });
@@ -285,6 +287,15 @@ const LessonManagementPage = () => {
         } finally { setIsSubmittingLesson(false); }
     };
 
+    const handleChallengeConfigured = (challengeDef) => {
+    setSnackbarMessage("Challenge saved successfully!");
+    setSnackbarOpen(true);
+    // Refresh the data to show the new configuration
+    fetchChallengeConfig(challengeDef.lessonDefinitionId);
+    // Re-fetch the main lesson list to get updated challengeDefinitionId
+    fetchLessons();
+    };
+
     const handleDeleteLesson = (lesson) => {
         setLessonToDelete(lesson);
         setDeleteLessonError(null);
@@ -376,10 +387,9 @@ const LessonManagementPage = () => {
     };
 
     const handleOpenConfigureChallengeDialog = (lesson) => {
-        setCurrentLessonForChallenge(lesson);
-        setExistingChallengeConfigData(challengeConfigByLesson[lesson.lessonDefinitionId] || null);
-        setIsConfigureChallengeDialogOpen(true);
-        setConfigureChallengeError(null);
+    setCurrentLessonForChallenge(lesson);
+    // This is much simpler now
+    setIsConfigureChallengeDialogOpen(true);
     };
 
     const handleSaveChallengeConfiguration = async (configData) => {
@@ -447,31 +457,195 @@ const LessonManagementPage = () => {
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
-                    <Button component={RouterLink} to="/teacher/manage-courses" startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">
+                    <Button 
+                        component={RouterLink} 
+                        to="/teacher/manage-courses" 
+                        startIcon={<ArrowBackIcon />} 
+                        sx={{ 
+                            mb: 3,
+                            color: '#64748b',
+                            borderColor: '#e2e8f0',
+                            '&:hover': {
+                                borderColor: '#f9b121',
+                                backgroundColor: '#fffbf5'
+                            }
+                        }} 
+                        variant="outlined"
+                    >
                         Back to Courses
                     </Button>
-                    <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, bgcolor: '#fffcf2' }} elevation={2}>
-                        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#451513' }}>
-                            {courseDetails?.title || 'Course Lessons'}
-                        </Typography>
-                    </Paper>
+                    
+                    {/* Modern Header Section */}
+                    <Box sx={{ mb: 5 }}>
+                        <Box sx={{ mb: 4 }}>
+                            <Typography 
+                                variant="h3" 
+                                sx={{ 
+                                    mb: 1, 
+                                    fontWeight: 700, 
+                                    color: '#1a1a1a',
+                                    fontSize: { xs: '1.8rem', md: '2.5rem' }
+                                }}
+                            >
+                                {courseDetails?.title || 'Course Lessons'}
+                            </Typography>
+                            <Typography 
+                                variant="h6" 
+                                sx={{ 
+                                    color: '#64748b', 
+                                    fontWeight: 400,
+                                    fontSize: '1.1rem',
+                                    maxWidth: '600px'
+                                }}
+                            >
+                                Manage lessons, activities, and challenges for your course curriculum.
+                            </Typography>
+                        </Box>
+                        
+                        {/* Stats Cards */}
+                        <Grid container spacing={3} sx={{ mb: 4 }}>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Card 
+                                    elevation={0}
+                                    sx={{ 
+                                        p: 3, 
+                                        background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                        color: '#451513',
+                                        borderRadius: 3
+                                    }}
+                                >
+                                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        {lessons.length}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        Total Lessons
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Card 
+                                    elevation={0}
+                                    sx={{ 
+                                        p: 3, 
+                                        background: 'linear-gradient(135deg, #36B8E4 0%, #4FACFE 100%)',
+                                        color: 'white',
+                                        borderRadius: 3
+                                    }}
+                                >
+                                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        {Object.values(activityNodesByLesson).reduce((total, nodes) => total + (nodes?.length || 0), 0)}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        Activities
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Card 
+                                    elevation={0}
+                                    sx={{ 
+                                        p: 3, 
+                                        background: 'linear-gradient(135deg, #FFE8A3 0%, #FFEDB6 100%)',
+                                        color: '#451513',
+                                        borderRadius: 3
+                                    }}
+                                >
+                                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        {Object.keys(challengeConfigByLesson).filter(key => challengeConfigByLesson[key]).length}
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        Challenges
+                                    </Typography>
+                                </Card>
+                            </Grid>
+                        </Grid>
+                    </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, mt: 4 }}>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#451513' }}>Lessons</Typography>
-                        <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddLessonDialog}
-                                sx={{ bgcolor: '#451513', '&:hover': { bgcolor: '#5d211f' } }}>
-                            Add Lesson
-                        </Button>
+                    <Box sx={{ mb: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                            <Box>
+                                <Typography 
+                                    variant="h4" 
+                                    sx={{ 
+                                        fontWeight: 700, 
+                                        color: '#1a1a1a', 
+                                        mb: 1,
+                                        fontSize: { xs: '1.5rem', md: '2rem' }
+                                    }}
+                                >
+                                    Course Lessons
+                                </Typography>
+                                <Typography variant="body1" sx={{ color: '#64748b' }}>
+                                    Create and organize your lesson content
+                                </Typography>
+                            </Box>
+                            <Button 
+                                variant="contained" 
+                                startIcon={<AddIcon />} 
+                                onClick={handleOpenAddLessonDialog}
+                                sx={{
+                                    background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                    color: '#451513',
+                                    borderRadius: 2,
+                                    px: 3,
+                                    py: 1.5,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)',
+                                        transform: 'translateY(-2px)'
+                                    },
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                Add Lesson
+                            </Button>
+                        </Box>
                     </Box>
 
                     {isLoadingLessons && <Box sx={{ textAlign: 'center', my: 3 }}><CircularProgress /> <Typography>Loading lessons...</Typography></Box>}
                     {errorLessons && <Alert severity="error" sx={{ my: 2 }}>{errorLessons}</Alert>}
                     {!isLoadingLessons && !errorLessons && lessons.length === 0 && (
-                        <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#fff9e6' }} elevation={1}>
-                            <Typography color="text.secondary">No lessons defined. Click "Add Lesson".</Typography>
-                        </Paper>
+                        <Box 
+                            sx={{ 
+                                textAlign: 'center', 
+                                py: 8,
+                                px: 4,
+                                backgroundColor: '#fffbf5',
+                                borderRadius: 3,
+                                border: '1px solid #FFE8A3'
+                            }}
+                        >
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: '#64748b', mb: 2 }}>
+                                No lessons yet
+                            </Typography>
+                            <Typography variant="body1" sx={{ color: '#94a3b8', mb: 3 }}>
+                                Create your first lesson to start building your course content
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                startIcon={<AddIcon />}
+                                onClick={handleOpenAddLessonDialog}
+                                sx={{
+                                    background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                    color: '#451513',
+                                    borderRadius: 2,
+                                    px: 4,
+                                    py: 1.5,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)'
+                                    }
+                                }}
+                            >
+                                Create First Lesson
+                            </Button>
+                        </Box>
                     )}
                     <List sx={{ width: '100%' }}>
                         {lessons.map((lesson, index) => {
@@ -481,24 +655,83 @@ const LessonManagementPage = () => {
                             const lessonHasChallengeConfigured = !!currentChallengeConfig;
 
                             return (
-                                <Paper key={lesson.lessonDefinitionId} sx={{ mb: 2, borderRadius: '8px' }} elevation={3}>
-                                    <ListItem onClick={() => handleToggleLessonExpand(lesson.lessonDefinitionId)}
-                                              sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' }, py: 1.5, display: 'flex', justifyContent: 'space-between' }}>
+                                <Paper 
+                                    key={lesson.lessonDefinitionId} 
+                                    sx={{ 
+                                        mb: 2, 
+                                        borderRadius: 3,
+                                        border: '1px solid #e2e8f0',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            borderColor: '#f9b121',
+                                            boxShadow: '0 4px 20px rgba(249, 177, 33, 0.1)'
+                                        }
+                                    }} 
+                                    elevation={0}
+                                >
+                                    <ListItem 
+                                        onClick={() => handleToggleLessonExpand(lesson.lessonDefinitionId)}
+                                        sx={{ 
+                                            cursor: 'pointer', 
+                                            '&:hover': { bgcolor: '#fffbf5' }, 
+                                            py: 2, 
+                                            display: 'flex', 
+                                            justifyContent: 'space-between',
+                                            borderRadius: '12px 12px 0 0'
+                                        }}
+                                    >
                                         <ListItemText
                                             primary={`${index + 1}. ${lesson.lessonTitle || 'Untitled Lesson'}`}
                                             secondary={lesson.lessonDescription || 'No description available.'}
-                                            primaryTypographyProps={{ fontWeight: 'medium', fontSize: '1.1rem', color: '#451513' }}
-                                            secondaryTypographyProps={{ noWrap: true, textOverflow: 'ellipsis', color: 'text.secondary' }} />
+                                            primaryTypographyProps={{ fontWeight: 600, fontSize: '1.2rem', color: '#1a1a1a' }}
+                                            secondaryTypographyProps={{ noWrap: true, textOverflow: 'ellipsis', color: '#64748b' }} />
                                         <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
-                                            <IconButton onClick={(e) => { e.stopPropagation(); handleEditLesson(lesson); }} sx={{ mx: 0.5 }} size="small" title="Edit Lesson Details"><EditIcon fontSize="small"/></IconButton>
-                                            <IconButton onClick={(e) => { e.stopPropagation(); handleDeleteLesson(lesson); }} sx={{ color: 'error.main', mx: 0.5 }} size="small" title="Delete Lesson"><DeleteIcon fontSize="small"/></IconButton>
-                                            <IconButton edge="end" aria-label="expand lesson" sx={{ mx: 0.5 }} size="small">{expandedLessonId === lesson.lessonDefinitionId ? <ExpandLessIcon /> : <ExpandMoreIcon />}</IconButton>
+                                            <IconButton 
+                                                onClick={(e) => { e.stopPropagation(); handleEditLesson(lesson); }} 
+                                                sx={{ 
+                                                    mx: 0.5,
+                                                    color: '#64748b',
+                                                    '&:hover': { 
+                                                        backgroundColor: '#f9b121',
+                                                        color: 'white'
+                                                    }
+                                                }} 
+                                                size="small" 
+                                                title="Edit Lesson Details"
+                                            >
+                                                <EditIcon fontSize="small"/>
+                                            </IconButton>
+                                            <IconButton 
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteLesson(lesson); }} 
+                                                sx={{ 
+                                                    color: '#ef4444', 
+                                                    mx: 0.5,
+                                                    '&:hover': { 
+                                                        backgroundColor: '#fef2f2'
+                                                    }
+                                                }} 
+                                                size="small" 
+                                                title="Delete Lesson"
+                                            >
+                                                <DeleteIcon fontSize="small"/>
+                                            </IconButton>
+                                            <IconButton 
+                                                edge="end" 
+                                                aria-label="expand lesson" 
+                                                sx={{ 
+                                                    mx: 0.5,
+                                                    color: '#f9b121'
+                                                }} 
+                                                size="small"
+                                            >
+                                                {expandedLessonId === lesson.lessonDefinitionId ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                            </IconButton>
                                         </Box>
                                     </ListItem>
                                     <Collapse in={expandedLessonId === lesson.lessonDefinitionId} timeout="auto" unmountOnExit>
                                         <Divider />
-                                        <Box sx={{ p: 2, bgcolor: '#fdfcf7' }}>
-                                            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium', color: '#5d211f' }}>Activity Nodes:</Typography>
+                                        <Box sx={{ p: 3, bgcolor: '#fafbfc' }}>
+                                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1a1a1a', mb: 2 }}>Activity Nodes</Typography>
                                             {isLoadingActivities[lesson.lessonDefinitionId] && <CircularProgress size={20} />}
                                             {!isLoadingActivities[lesson.lessonDefinitionId] && (
                                                 activityNodesByLesson[lesson.lessonDefinitionId]?.length > 0 ? (
@@ -523,28 +756,40 @@ const LessonManagementPage = () => {
                                                     </List>
                                                 ) : <Typography variant="body2" color="text.secondary" sx={{ my: 1, fontStyle: 'italic' }}>No activity nodes.</Typography>
                                             )}
-                                            <Button size="small" startIcon={<AddIcon />} onClick={() => handleAddActivityNode(lesson.lessonDefinitionId)} sx={{ mt: 1.5 }} variant="outlined">Add Activity Node</Button>
+                                            <Button 
+                                                size="small" 
+                                                startIcon={<AddIcon />} 
+                                                onClick={() => handleAddActivityNode(lesson.lessonDefinitionId)} 
+                                                sx={{ 
+                                                    mt: 2,
+                                                    borderColor: '#f9b121',
+                                                    color: '#f9b121',
+                                                    '&:hover': {
+                                                        borderColor: '#FDB10D',
+                                                        backgroundColor: '#fffbf5'
+                                                    }
+                                                }} 
+                                                variant="outlined"
+                                            >
+                                                Add Activity Node
+                                            </Button>
                                         </Box>
                                         <Divider />
-                                        <Box sx={{ p: 2, bgcolor: lessonHasChallengeConfigured ? '#fffde7' : '#fdfcf7' }}>
-                                            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium', color: '#5d211f' }}>Challenge:</Typography>
+                                        <Box sx={{ p: 3, bgcolor: lessonHasChallengeConfigured ? '#f0f9ff' : '#fafbfc' }}>
+                                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1a1a1a', mb: 2 }}>Challenge Configuration</Typography>
                                             {isLoadingChallengeConfig[lesson.lessonDefinitionId] && <CircularProgress size={20} />}
                                             {!isLoadingChallengeConfig[lesson.lessonDefinitionId] && (
                                                 lessonHasChallengeConfigured ? (
                                                     <Box>
                                                         <Typography variant="body2" component="div">
-                                                            Type: <Chip label={currentChallengeConfig.challengeType?.replace('_', ' ') || 'N/A'} size="small" /> <br />
-                                                            {currentChallengeConfig.challengeType === 'HEALTH_BASED' && `Health: ${currentChallengeConfig.initialHealth || 'N/A'}`}
-                                                            {currentChallengeConfig.challengeType === 'HEALTH_BASED' && <br />}
-                                                            Time/Q: {currentChallengeConfig.initialQuestionTimeSeconds || 'N/A'}s | Min Time: {currentChallengeConfig.minQuestionTimeSeconds || 'N/A'}s <br/>
-                                                            Reduction: {currentChallengeConfig.timeReductionPerCorrectSeconds || 0}s/correct
+                                                            Type: <Chip label={currentChallengeConfig.challengeType?.replace('_', ' ') || 'N/A'} size="small" color="primary" />
                                                         </Typography>
                                                         <Button size="small" startIcon={<EditIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1, mr: 1 }} variant="outlined">Edit Settings</Button>
                                                         <Button size="small" startIcon={<DeleteIcon />} onClick={() => handleOpenDeleteChallengeDialog(lesson)} sx={{ mt: 1, mr: 1 }} color="error" variant="outlined">Delete Challenge</Button>
                                                         <Button size="small" startIcon={<EmojiEventsIcon />} onClick={() => handleManageCustomChallengeQuestions(lesson)} sx={{ mt: 1 }} variant="outlined" color="secondary">Manage Custom Questions</Button>
                                                     </Box>
                                                 ) : (
-                                                    <Button size="small" startIcon={<AddIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1 }} variant="contained" color="warning">
+                                                    <Button size="smaall" startIcon={<AddIcon />} onClick={() => handleOpenConfigureChallengeDialog(lesson)} sx={{ mt: 1 }} variant="contained" color="warning">
                                                         Add Challenge to Lesson
                                                     </Button>
                                                 )
@@ -588,12 +833,11 @@ const LessonManagementPage = () => {
                 <ConfigureChallengeDialog
                     open={isConfigureChallengeDialogOpen}
                     onClose={() => setIsConfigureChallengeDialogOpen(false)}
-                    onSave={handleSaveChallengeConfiguration}
-                    existingConfig={existingChallengeConfigData}
-                    isLoading={isSubmittingChallengeConfig}
-                    error={configureChallengeError}
+                    lessonDefinitionId={currentLessonForChallenge.lessonDefinitionId}
+                    onConfigured={handleChallengeConfigured}
                 />
             )}
+
             {lessonToDeleteChallengeFrom && (
                 <DeleteChallengeDialog
                     open={isDeleteChallengeDialogOpen}
@@ -646,3 +890,4 @@ const LessonManagementPage = () => {
 };
 
 export default LessonManagementPage;
+

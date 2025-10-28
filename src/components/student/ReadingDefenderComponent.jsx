@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MEDIA_BASE_URL } from '../../config/apiConfig.js';
 import '../styles/ReadingDefender.css';
+import readingDefenderBg from '../../assets/reading-defender.jpg';
+import mascotImg from '../../assets/mascot.png';
+import tacoCloudImg from '../../assets/taco-cloud.png';
+import tacoImg from '../../assets/taco.png';
+import cartoonBg from '../../assets/cartoon-bg.jpg';
 
 function getRandom(arr) {
     if (!arr || arr.length === 0) return null;
@@ -271,36 +276,128 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
 
 
     return (
-        <div className="game-screen">
-            {activityTitle && <h2>{activityTitle}</h2>}
-            {activityInstructions && <p>{activityInstructions}</p>}
+        <div className="game-screen" style={gameState === 'menu' ? {
+            backgroundImage: `url(${readingDefenderBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+        } : {}}>
+            {gameState !== 'menu' && activityTitle && <h2>{activityTitle}</h2>}
+            {gameState !== 'menu' && activityInstructions && <p>{activityInstructions}</p>}
 
-            {gameState === 'menu' && <button onClick={startGame}>Start Game</button>}
+            {gameState === 'menu' && (
+                <div style={{ position: 'relative' }}>
+                    {/* Glow effect behind button */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '120%',
+                        height: '120%',
+                        background: 'radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%)',
+                        animation: 'pulse 2s ease-in-out infinite',
+                        pointerEvents: 'none',
+                    }}></div>
+                    
+                    <button 
+                        onClick={startGame}
+                        style={{
+                            position: 'relative',
+                            padding: '25px 70px',
+                            fontSize: '2.2rem',
+                            fontWeight: 900,
+                            color: '#FFF',
+                            background: 'linear-gradient(145deg, #ff6b35 0%, #f7931e 50%, #ffb84d 100%)',
+                            border: '4px solid #FFD700',
+                            borderRadius: '20px',
+                            cursor: 'pointer',
+                            boxShadow: '0 8px 0 #c45911, 0 15px 30px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.3)',
+                            transition: 'all 0.15s ease',
+                            textTransform: 'uppercase',
+                            letterSpacing: '3px',
+                            fontFamily: 'Arial Black, sans-serif',
+                            textShadow: '0 3px 5px rgba(0,0,0,0.5), 0 0 10px rgba(255,215,0,0.5)',
+                            transform: 'translateY(0)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-5px) scale(1.05)';
+                            e.target.style.boxShadow = '0 12px 0 #c45911, 0 20px 40px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4)';
+                            e.target.style.background = 'linear-gradient(145deg, #ff7c4d 0%, #ffaa33 50%, #ffc55f 100%)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0) scale(1)';
+                            e.target.style.boxShadow = '0 8px 0 #c45911, 0 15px 30px rgba(0,0,0,0.4), inset 0 2px 0 rgba(255,255,255,0.3)';
+                            e.target.style.background = 'linear-gradient(145deg, #ff6b35 0%, #f7931e 50%, #ffb84d 100%)';
+                        }}
+                        onMouseDown={(e) => {
+                            e.target.style.transform = 'translateY(4px)';
+                            e.target.style.boxShadow = '0 4px 0 #c45911, 0 5px 10px rgba(0,0,0,0.3), inset 0 2px 0 rgba(255,255,255,0.3)';
+                        }}
+                        onMouseUp={(e) => {
+                            e.target.style.transform = 'translateY(-5px) scale(1.05)';
+                            e.target.style.boxShadow = '0 12px 0 #c45911, 0 20px 40px rgba(0,0,0,0.5), inset 0 2px 0 rgba(255,255,255,0.4)';
+                        }}
+                    >
+                        <span style={{ 
+                            position: 'relative',
+                            zIndex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px',
+                            justifyContent: 'center'
+                        }}>
+                            <span style={{ fontSize: '2.5rem' }}>▶</span>
+                            START GAME
+                        </span>
+                    </button>
+                    
+                    {/* Animated sparkles */}
+                    <style>{`
+                        @keyframes pulse {
+                            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+                            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+                        }
+                    `}</style>
+                </div>
+            )}
 
             {gameState === 'playing' && (
-                <div className="game-area fullscreen" ref={containerRef}>
+                <div 
+                    className="game-area fullscreen" 
+                    ref={containerRef}
+                    style={{ backgroundImage: `url(${cartoonBg})` }}
+                >
                     {showWaveAnnouncer && (
                         <div className="wave-announcer">🌊 Wave {wave}!</div>
                     )}
+                    
+                    {/* Mascot with Feedback */}
                     <div className="mascot-wrapper">
-                        <img src="/mascot.png" className="mascot-img" alt="Mascot" />
                         {feedback && (
                             <div className="mascot-speech">
                                 {feedback}
                             </div>
                         )}
+                        <img
+                            src={mascotImg}
+                            alt="Mascot"
+                            className="mascot-img"
+                        />
                     </div>
-                    <div className="bottom-base">TACO TRAY</div>
-                    <div className="wave-hud">🌊 Wave: {wave} </div>
-                    <div className="left-hud">❤️ Lives: {[...Array(lives)].map((_, i) => (
-                        <img key={i} src="/heart.png" alt="life" className="life-icon" />
-                    ))}</div>
-                    <div className="right-hud">⭐ Score: {score}</div>
-                    <div className="taco-clouds-sky">
+
+                    {/* Taco Clouds */}
+                    <div className="taco-clouds-row">
                         {[...Array(12)].map((_, i) => (
                             <img
                                 key={i}
-                                src="/taco-cloud.png"
+                                src={tacoCloudImg}
                                 alt="Taco Cloud"
                                 className={`taco-cloud animated-cloud cloud-${i % 4}`}
                                 style={{ left: `${i * 10}%` }}
@@ -308,6 +405,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         ))}
                     </div>
 
+                    {/* Target Word Bubble */}
                     <div className="target-bubble-container">
                         <p className="target-instruction">Target Word: <span className="target-word-display">{difficulty !== 'easy' && target.text}</span></p>
                         <div
@@ -319,11 +417,16 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         </div>
                     </div>
 
+                    {/* Falling Words */}
                     {words.map(w => (
                         <div
                             key={w.id}
                             className="word"
-                            style={{ left: `${w.x}px`, top: `${w.y}px` }}
+                            style={{ 
+                                left: `${w.x}px`, 
+                                top: `${w.y}px`,
+                                backgroundImage: `url(${tacoImg})`
+                            }}
                             onClick={() => shoot(w)}
                             onMouseEnter={() => {
                                 if (difficulty === 'medium' || difficulty === 'hard') {

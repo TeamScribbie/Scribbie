@@ -1,0 +1,156 @@
+/* Switch Component Styles */
+.switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-wrapper.switch-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.switch-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch-ui {
+  position: relative;
+  display: inline-flex;
+  height: 1.5rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  align-items: center;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background: var(--input, #e5e7eb);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.switch-ui:hover {
+  background: var(--muted, #f1f5f9);
+}
+
+.switch-ui.switch-checked {
+  background: var(--primary);
+}
+
+.switch-ui.switch-checked:hover {
+  background: var(--primary-light, var(--primary));
+}
+
+.switch-thumb {
+  pointer-events: none;
+  display: block;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 50%;
+  background: var(--background, white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(0);
+}
+
+.switch-checked .switch-thumb {
+  transform: translateX(1.25rem);
+}
+
+/* Focus styles */
+.switch-input:focus + .switch-ui {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.switch-input:focus:not(:focus-visible) + .switch-ui {
+  outline: none;
+}
+
+/* Disabled state */
+.switch-disabled .switch-ui {
+  cursor: not-allowed;
+  background: var(--muted, #f1f5f9);
+}
+
+.switch-disabled .switch-ui.switch-checked {
+  background: rgba(54, 184, 228, 0.5);
+}
+
+/* Size variants */
+.switch-wrapper.switch-sm .switch-ui {
+  height: 1.25rem;
+  width: 2.25rem;
+}
+
+.switch-wrapper.switch-sm .switch-thumb {
+  height: 1rem;
+  width: 1rem;
+}
+
+.switch-wrapper.switch-sm .switch-checked .switch-thumb {
+  transform: translateX(1rem);
+}
+
+.switch-wrapper.switch-lg .switch-ui {
+  height: 2rem;
+  width: 3.5rem;
+}
+
+.switch-wrapper.switch-lg .switch-thumb {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.switch-wrapper.switch-lg .switch-checked .switch-thumb {
+  transform: translateX(1.5rem);
+}
+
+/* Color variants */
+.switch-ui.switch-success.switch-checked {
+  background: #10b981;
+}
+
+.switch-ui.switch-warning.switch-checked {
+  background: #f59e0b;
+}
+
+.switch-ui.switch-error.switch-checked {
+  background: #ef4444;
+}
+
+/* Animation for thumb */
+@keyframes switch-thumb-in {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.switch-checked .switch-thumb {
+  animation: switch-thumb-in 0.2s ease-out;
+}
+
+/* Switch with label */
+.switch-with-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.switch-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground, var(--text));
+  cursor: pointer;
+}
+
+.switch-description {
+  font-size: 0.75rem;
+  color: var(--muted-foreground, var(--text-light));
+  margin-top: 0.25rem;
+}

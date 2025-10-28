@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 // Import bite sounds
 import Bite1Mp3 from './game/audio/player/bite1.mp3';
 import Bite2Mp3 from './game/audio/player/bite2.mp3';
 import Bite3Mp3 from './game/audio/player/bite3.mp3';
 import Bite4Mp3 from './game/audio/player/bite4.mp3';
-import { AnimatedSprite } from '@pixi/react';
+import { AnimatedSprite, Graphics } from '@pixi/react';
 import * as PIXI from 'pixi.js';
 import playerSpriteImage from './game/spritesheets/Player.png';
 
-// --- MODIFIED: All spritesheet setup is now done ONCE outside the component ---
+// --- Spritesheet setup is now done ONCE outside the component ---
 
 const spritesheetLayout = {
     frames: {
@@ -67,10 +67,8 @@ const spritesheetLayout = {
     },
 };
 
-// This line is now safe because spritesheetLayout is defined.
 spritesheetLayout.animations.vomit = [...spritesheetLayout.animations.eat].reverse();
 
-// Create the spritesheet and a promise that resolves when parsing is done.
 const sheet = new PIXI.Spritesheet(PIXI.BaseTexture.from(playerSpriteImage), spritesheetLayout);
 let playerTextures = null;
 const parsingPromise = sheet.parse().then(() => {
@@ -78,8 +76,13 @@ const parsingPromise = sheet.parse().then(() => {
     return playerTextures;
 });
 
+// --- ADDED: Consistent dimensions from usePhysics ---
+const playerSpriteDimensions = {
+    width: 274,
+    height: 142,
+    scaleMultiplier: 1.5,
+};
 
-// Custom hook for reliable intervals in React
 function useInterval(callback, delay) {
     const savedCallback = useRef();
     useEffect(() => {
@@ -96,18 +99,16 @@ function useInterval(callback, delay) {
     }, [delay]);
 }
 
-
 const biteSounds = [Bite1Mp3, Bite2Mp3, Bite3Mp3, Bite4Mp3];
 
-
-const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete }) => {
+const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateChange, onVomitComplete, debugMode, isInvulnerable = false }) => {
     const [textures, setTextures] = useState(null);
     const [animationName, setAnimationName] = useState('idle');
     const [isEating, setIsEating] = useState(false);
+    const [blinkVisible, setBlinkVisible] = useState(true);
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
 
-    // This effect now safely waits for the single parsing promise to complete.
     useEffect(() => {
         if (playerTextures) {
             setTextures(playerTextures);
@@ -119,7 +120,6 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
     useEffect(() => {
         if (!textures) return;
         onStateChange({ name: animationName, facing: facingDirection.current });
-        // Only run velocity-based animation if not eating or vomiting
         if (animationName === 'eat' || animationName === 'vomit') return;
         if (!velocity) return;
         const speed = Math.sqrt(velocity.x ** 2 + velocity.y ** 2);
@@ -138,10 +138,8 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
         if (eatTrigger > 0) {
             setAnimationName('eat');
             setIsEating(true);
-            // Play bite sound, rotating through the array
             const idx = biteSoundIndexRef.current;
             const sound = new Audio(biteSounds[idx]);
-            sound.volume = 0.5;
             sound.play().catch(e => console.error('Error playing bite sound:', e));
             biteSoundIndexRef.current = (idx + 1) % biteSounds.length;
         }
@@ -156,6 +154,18 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
             spriteRef.current.gotoAndPlay(0);
         }
     }, [animationName]);
+
+    // Blinking effect during invulnerability
+    useEffect(() => {
+        if (isInvulnerable) {
+            const blinkInterval = setInterval(() => {
+                setBlinkVisible(prev => !prev);
+            }, 150); // Blink every 150ms
+            return () => clearInterval(blinkInterval);
+        } else {
+            setBlinkVisible(true);
+        }
+    }, [isInvulnerable]);
 
     useInterval(() => {
         const sprite = spriteRef.current;
@@ -175,7 +185,19 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
         }
     }, 50);
 
-    // Guard clause: Do not render until textures are loaded
+    const draw = useCallback((g) => {
+        g.clear();
+        if (debugMode) {
+            const playerScale = { small: 0.4, medium: 0.6, large: 0.8 }[size];
+            // --- MODIFIED LINES ---
+            // Use the exact same calculation as usePhysics.js
+            const width = playerSpriteDimensions.width * playerScale * playerSpriteDimensions.scaleMultiplier;
+            const height = playerSpriteDimensions.height * playerScale * playerSpriteDimensions.scaleMultiplier;
+            g.lineStyle(2, 0x00ff00, 1); // Green color for visibility
+            g.drawRect(-width / 2, -height / 2, width, height);
+        }
+    }, [debugMode, size]);
+
     if (!textures) {
         return null;
     }
@@ -184,17 +206,21 @@ const Player = ({ position, size, velocity, eatTrigger, vomitTrigger, onStateCha
     const isLooped = animationName === 'idle' || animationName === 'swim';
 
     return (
-        <AnimatedSprite
-            ref={spriteRef}
-            textures={textures[animationName]}
-            animationSpeed={0.3}
-            isPlaying={true}
-            loop={isLooped}
-            x={position.x}
-            y={position.y}
-            scale={{ x: facingDirection.current * scale, y: scale }}
-            anchor={{ x: 0.5, y: 0.5 }}
-        />
+        <>
+            <AnimatedSprite
+                ref={spriteRef}
+                textures={textures[animationName]}
+                animationSpeed={0.3}
+                isPlaying={true}
+                loop={isLooped}
+                x={position.x}
+                y={position.y}
+                scale={{ x: facingDirection.current * scale, y: scale }}
+                anchor={{ x: 0.5, y: 0.5 }}
+                alpha={blinkVisible ? 1 : 0.3}
+            />
+            <Graphics draw={draw} x={position.x} y={position.y} />
+        </>
     );
 };
 
