@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { CircularProgress, Alert, Typography, Box, Button } from '@mui/material';
 import { getActivityNodeTypeDetails } from '../../services/activityService';
+import MemoryGame from '../../page/student/MemoryGame';
 import challengeBGMusic from '../../assets/sounds/activitybgmusic.ogg';
 
 // Import all your game components

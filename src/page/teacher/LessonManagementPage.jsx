@@ -360,15 +360,27 @@ const LessonManagementPage = () => {
         setIsAddActivityNodeDialogOpen(true); setAddActivityNodeError(null);
     };
     const handleConfirmAddActivityNode = async (activityNodeData) => {
-        if (!currentLessonIdForNode || !authState.token) { setAddActivityNodeError("Context error."); return; }
-        setIsSubmittingActivityNode(true); setAddActivityNodeError(null);
+        if (!currentLessonIdForNode || !authState.token) {
+            setAddActivityNodeError("Context error.");
+            return;
+        }
+        setIsSubmittingActivityNode(true);
+        setAddActivityNodeError(null);
         try {
+            // No changes are needed here - your function is already correct!
+            // It correctly takes the full 'activityNodeData' object...
             await createActivityNodeTypeForLesson(currentLessonIdForNode, activityNodeData, authState.token);
+
+            // ...and passes it to the service.
             fetchActivityNodes(currentLessonIdForNode);
             setIsAddActivityNodeDialogOpen(false);
-            setSnackbarMessage("Activity node added!"); setSnackbarOpen(true);
-        } catch (err) { setAddActivityNodeError(err.message || "Failed to add node.");
-        } finally { setIsSubmittingActivityNode(false); }
+            setSnackbarMessage("Activity node added!");
+            setSnackbarOpen(true);
+        } catch (err) {
+            setAddActivityNodeError(err.message || "Failed to add node.");
+        } finally {
+            setIsSubmittingActivityNode(false);
+        }
     };
     const handleManageActivityNode = (activityNode, lessonDefId) => {
         navigate(`/teacher/course/${courseId}/lesson/${lessonDefId}/node/${activityNode.activityNodeTypeId}/edit`);

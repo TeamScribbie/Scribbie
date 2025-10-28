@@ -418,3 +418,33 @@ button {
   60% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
 }
+
+/* Colorful backgrounds for the tacos */
+.word-label.color-1 { background-color: #ffadad; border-color: #e69c9c; }
+.word-label.color-2 { background-color: #ffd6a5; border-color: #e6c195; }
+.word-label.color-3 { background-color: #fdffb6; border-color: #e4e6a4; }
+.word-label.color-4 { background-color: #caffbf; border-color: #b5e6ad; }
+.word-label.color-5 { background-color: #9bf6ff; border-color: #8bddc6; }
+.word-label.color-6 { background-color: #a0c4ff; border-color: #90b0e6; }
+.word-label.color-7 { background-color: #bdb2ff; border-color: #a_b_e6; }
+
+
+/* This ensures the correct/wrong indicators in easy mode override the colorful backgrounds */
+.word-label.correct {
+    background-color: #28a745 !important;
+    border-color: #238c3a !important;
+}
+
+.word-label.wrong {
+    background-color: #dc3545 !important;
+    border-color: #b02a37 !important;
+}
+
+
+/* Style for the target word text display */
+.target-word-display {
+    font-weight: bold;
+    color: #451513; /* A dark brown color */
+    margin-left: 8px;
+    font-size: 1.2em;
+}

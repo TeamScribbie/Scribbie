@@ -202,3 +202,18 @@
 .player-name {
   color: white;
 }
+.card .card-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 1.1rem; /* Adjust font size as needed */
+  font-weight: bold;
+  padding: 8px;
+  box-sizing: border-box; /* Ensures padding doesn't break layout */
+  text-align: center;
+  color: #1a237e; /* A dark blue color for the text */
+  background-color: #fff; /* White background for the card face */
+  border-radius: 10px; /* Match the card's border-radius */
+  user-select: none; /* Prevents text selection on click */
+}
