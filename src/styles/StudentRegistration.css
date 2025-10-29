@@ -25,10 +25,10 @@
   }
 
   .scribbie-logo {
-    width: 1000px;
+    width: auto;
     height: auto;
+    max-width: 500px;
     margin-bottom: 40px;
-    max-width: 100%;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
   }
   
@@ -98,7 +98,7 @@
     }
     
     .scribbie-logo {
-      width: 800px;
+      max-width: 400px;
     }
   }
   

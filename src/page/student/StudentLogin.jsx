@@ -1,7 +1,8 @@
 // src/page/student/StudentLogin.jsx
 import React, { useState } from 'react';
-// Import Alert and CircularProgress for feedback
-import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
+// Import Alert, CircularProgress, Skeleton, and Dialog for feedback
+import { Typography, Link, Alert, CircularProgress, Box, Skeleton, Dialog, DialogContent } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
 import scribbieLogo from '../../assets/ScribbieLogoV2.png';
 import studentLoginBg from '../../assets/studentlogin-bg.png';
@@ -18,6 +19,7 @@ const StudentLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false); // State for loading indicator
   const [error, setError] = useState(null); // State for error message
+  const [showSuccess, setShowSuccess] = useState(false); // Success dialog state
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -40,24 +42,20 @@ const StudentLogin = () => {
 
       console.log('Student Login Successful:', userData);
       login(userData, 'Student'); // Pass user data and type
-      navigate('/student-homepage');
-      // --- TODO: Store User Data/Token ---
-      // In a real app, you would typically store the received user data
-      // (like user ID, name, role, and authentication token if provided)
-      // in a global state (Context, Redux, Zustand) or local storage
-      // to keep the user logged in across the application.
-      // Example: authContext.login(userData);
-
-      // Navigate to the homepage on success
-      navigate('/student-homepage');
+      setIsLoading(false);
+      setShowSuccess(true);
+      
+      // Navigate to the homepage after showing success
+      setTimeout(() => {
+        navigate('/student-homepage');
+      }, 1500);
 
     } catch (err) {
       console.error('Student Login Failed:', err);
       // Set a user-friendly error message
       // You might want to check err.message for specific backend errors
       setError(err.message || 'Login failed. Please check your ID and password.');
-    } finally {
-      setIsLoading(false); // Stop loading regardless of success or failure
+      setIsLoading(false); // Stop loading on error
     }
   };
 
@@ -86,23 +84,25 @@ const StudentLogin = () => {
             </Alert>
           )}
 
-          {/* Pass onSubmit to LoginForm, which now calls the async handleLogin */}
-          <LoginForm
-            idNumber={idNumber}
-            password={password}
-            onIdChange={(e) => setIdNumber(e.target.value)}
-            onPasswordChange={(e) => setPassword(e.target.value)}
-            onSubmit={handleLogin} // Use the updated handler
-            // Disable form elements while loading (optional but good UX)
-            // You might need to pass an `isLoading` prop to LoginForm to disable fields
-          />
-
-           {/* Show loading indicator */}
-           {isLoading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <CircularProgress size={24} />
+          {/* Show loading skeleton or form */}
+          {isLoading ? (
+            <Box sx={{ width: '100%', maxWidth: '800px' }}>
+              <Skeleton variant="rectangular" height={60} sx={{ borderRadius: '8px', mb: 3 }} />
+              <Skeleton variant="rectangular" height={60} sx={{ borderRadius: '8px', mb: 2 }} />
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px', flex: 1 }} />
+                <Skeleton variant="rectangular" height={56} sx={{ borderRadius: '8px', flex: 1 }} />
+              </Box>
             </Box>
-           )}
+          ) : (
+            <LoginForm
+              idNumber={idNumber}
+              password={password}
+              onIdChange={(e) => setIdNumber(e.target.value)}
+              onPasswordChange={(e) => setPassword(e.target.value)}
+              onSubmit={handleLogin}
+            />
+          )}
 
           <div className="button-container">
             <button
@@ -128,6 +128,80 @@ const StudentLogin = () => {
         <div className="color-bar blue"></div>
         <div className="color-bar red"></div>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog
+        open={showSuccess}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            padding: '32px',
+            textAlign: 'center',
+            minWidth: '320px',
+          }
+        }}
+      >
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <CheckCircleIcon
+              sx={{
+                fontSize: 80,
+                color: '#FDB10D',
+                animation: 'scaleIn 0.5s ease-out',
+                '@keyframes scaleIn': {
+                  '0%': {
+                    transform: 'scale(0)',
+                    opacity: 0,
+                  },
+                  '50%': {
+                    transform: 'scale(1.2)',
+                  },
+                  '100%': {
+                    transform: 'scale(1)',
+                    opacity: 1,
+                  },
+                },
+              }}
+            />
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: '#1f2937',
+                animation: 'fadeInUp 0.5s ease-out 0.3s backwards',
+                '@keyframes fadeInUp': {
+                  '0%': {
+                    opacity: 0,
+                    transform: 'translateY(20px)',
+                  },
+                  '100%': {
+                    opacity: 1,
+                    transform: 'translateY(0)',
+                  },
+                },
+              }}
+            >
+              Login Successful!
+            </Typography>
+            <Typography
+              sx={{
+                color: '#6b7280',
+                fontSize: '16px',
+                animation: 'fadeInUp 0.5s ease-out 0.5s backwards',
+              }}
+            >
+              Welcome back! Redirecting...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

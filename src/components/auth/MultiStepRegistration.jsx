@@ -1,14 +1,16 @@
 // src/components/auth/MultiStepRegistration.jsx
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, TextField, IconButton, InputAdornment, Box } from '@mui/material';
+import { Button, TextField, IconButton, InputAdornment, Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 import './MultiStepRegistration.css';
 
 const MultiStepRegistration = ({ formData, onChange, onSubmit, isLoading }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   
   const steps = [
     {
@@ -68,7 +70,22 @@ const MultiStepRegistration = ({ formData, onChange, onSubmit, isLoading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(e);
+    // Show confirmation dialog instead of submitting directly
+    setOpenConfirmDialog(true);
+  };
+
+  const handleConfirmRegistration = () => {
+    setOpenConfirmDialog(false);
+    // Create a synthetic event for the onSubmit handler
+    const syntheticEvent = {
+      preventDefault: () => {},
+      target: {}
+    };
+    onSubmit(syntheticEvent);
+  };
+
+  const handleCancelRegistration = () => {
+    setOpenConfirmDialog(false);
   };
 
   const handlePasswordVisibility = () => {
@@ -170,13 +187,16 @@ const MultiStepRegistration = ({ formData, onChange, onSubmit, isLoading }) => {
               : undefined
           }
         />
+        {currentStepData.isPassword && (
+          <PasswordStrengthIndicator password={formData.password || ''} />
+        )}
       </div>
     );
   };
 
   const getButtonText = () => {
     if (currentStep === totalSteps) {
-      return isLoading ? 'REGISTERING...' : 'ARE YOU SURE?';
+      return isLoading ? 'REGISTERING...' : 'REGISTER';
     }
     return 'NEXT';
   };
@@ -186,6 +206,20 @@ const MultiStepRegistration = ({ formData, onChange, onSubmit, isLoading }) => {
       return 'orange';
     }
     return 'orange';
+  };
+
+  const isButtonDisabled = () => {
+    // Loading state
+    if (isLoading) return true;
+
+    // Review step validation
+    if (currentStepData?.isReview) {
+      return !formData.studentId || !formData.firstName || !formData.lastName || !formData.password;
+    }
+
+    // Input step validation
+    const fieldValue = formData[currentStepData?.field];
+    return !fieldValue || fieldValue.trim() === '';
   };
 
   return (
@@ -211,12 +245,65 @@ const MultiStepRegistration = ({ formData, onChange, onSubmit, isLoading }) => {
             onClick={currentStep === totalSteps ? undefined : handleNext}
             className={`next-button ${getButtonColor()}`}
             variant="contained"
-            disabled={isLoading || (currentStepData && !currentStepData.isReview && !formData[currentStepData.field]) || (currentStepData && !currentStepData.isReview && formData[currentStepData.field] && formData[currentStepData.field].trim() === '') || (currentStepData && currentStepData.isReview && (!formData.studentId || !formData.firstName || !formData.lastName || !formData.password))}
+            disabled={isButtonDisabled()}
           >
             {getButtonText()}
           </Button>
         </div>
       </form>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCancelRegistration}
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            padding: '8px'
+          }
+        }}
+      >
+        <DialogTitle id="confirm-dialog-title" sx={{ fontWeight: 'bold', fontSize: '20px' }}>
+          Are you sure you want to register?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="confirm-dialog-description" sx={{ fontSize: '16px', color: '#666' }}>
+            Please confirm that all your information is correct. Once you register, you'll be able to log in with your Student ID and password.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ padding: '16px 24px', gap: '12px' }}>
+          <Button 
+            onClick={handleCancelRegistration} 
+            variant="outlined"
+            sx={{ 
+              color: '#451513',
+              borderColor: '#451513',
+              '&:hover': {
+                borderColor: '#451513',
+                backgroundColor: 'rgba(69, 21, 19, 0.04)'
+              }
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmRegistration} 
+            variant="contained"
+            autoFocus
+            disabled={isLoading}
+            sx={{ 
+              backgroundColor: '#FDB10D',
+              '&:hover': {
+                backgroundColor: '#f9b121'
+              }
+            }}
+          >
+            {isLoading ? 'Registering...' : 'Confirm'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
     </div>
   );
