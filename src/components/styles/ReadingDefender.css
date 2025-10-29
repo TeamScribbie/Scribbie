@@ -768,199 +768,32 @@ button {
   100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
 }
 
-/* Mobile Responsive Styles */
-@media (max-width: 768px) {
-    .bottom-tray {
-        height: 80px;
-        padding: 0 25px;
-    }
+/* Colorful backgrounds for the tacos */
+.word-label.color-1 { background-color: #ffadad; border-color: #e69c9c; }
+.word-label.color-2 { background-color: #ffd6a5; border-color: #e6c195; }
+.word-label.color-3 { background-color: #fdffb6; border-color: #e4e6a4; }
+.word-label.color-4 { background-color: #caffbf; border-color: #b5e6ad; }
+.word-label.color-5 { background-color: #9bf6ff; border-color: #8bddc6; }
+.word-label.color-6 { background-color: #a0c4ff; border-color: #90b0e6; }
+.word-label.color-7 { background-color: #bdb2ff; border-color: #a_b_e6; }
 
-    .left-hud, .right-hud {
-        font-size: 1.1rem;
-    }
 
-    .heart-icon {
-        width: 28px;
-        height: 28px;
-    }
-
-    .wave-hud {
-        font-size: 1.2rem;
-        padding: 10px 18px;
-        top: 15px;
-        right: 15px;
-    }
-
-    .wave-icon {
-        width: 24px;
-        height: 24px;
-    }
-
-    .combo-counter {
-        font-size: 1.1rem;
-        padding: 10px 16px;
-        top: 70px;
-        right: 15px;
-    }
-
-    .target-bubble-container {
-        width: 150px;
-        height: 150px;
-        padding: 15px;
-        bottom: 20px;
-    }
-
-    .target-bubble {
-        width: 75px;
-        height: 75px;
-    }
-
-    .target-letter {
-        font-size: 0.9rem;
-    }
-
-    .target-bubble::after {
-        width: 24px;
-        height: 24px;
-        font-size: 1.2rem;
-        top: -6px;
-        right: -6px;
-    }
-
-    .target-instruction {
-        font-size: 0.75rem;
-    }
-
-    .overlay {
-        min-width: 300px;
-        max-width: 90%;
-        padding: 30px 20px;
-    }
-
-    .game-over-overlay,
-    .win-overlay {
-        padding: 30px 25px;
-    }
-
-    .mascot-wrapper {
-        bottom: 80px;
-        right: 10px;
-    }
-
-    .mascot-img {
-        width: 180px;
-    }
-
-    .mascot-speech {
-        font-size: 0.95rem;
-        max-width: 180px;
-        padding: 10px 12px;
-    }
-
-    .wave-announcer {
-        font-size: 3rem;
-        padding: 20px 40px;
-        gap: 15px;
-    }
-
-    .wave-announcer-icon {
-        width: 60px;
-        height: 60px;
-    }
-
-    .taco-clouds-row {
-        height: 100px;
-        padding-top: 5px;
-    }
-
-    .taco-cloud {
-        width: 140px;
-    }
+/* This ensures the correct/wrong indicators in easy mode override the colorful backgrounds */
+.word-label.correct {
+    background-color: #28a745 !important;
+    border-color: #238c3a !important;
 }
 
-@media (max-width: 480px) {
-    .bottom-tray {
-        height: 70px;
-        padding: 0 20px;
-    }
+.word-label.wrong {
+    background-color: #dc3545 !important;
+    border-color: #b02a37 !important;
+}
 
-    .left-hud, .right-hud {
-        font-size: 0.95rem;
-    }
 
-    .heart-icon {
-        width: 24px;
-        height: 24px;
-        margin: 0 2px;
-    }
-
-    .wave-hud {
-        font-size: 1rem;
-        padding: 8px 14px;
-    }
-
-    .wave-icon {
-        width: 20px;
-        height: 20px;
-    }
-
-    .combo-counter {
-        font-size: 0.95rem;
-        padding: 8px 12px;
-        top: 60px;
-    }
-
-    .target-bubble-container {
-        width: 130px;
-        height: 130px;
-        padding: 12px;
-        bottom: 15px;
-    }
-
-    .target-bubble {
-        width: 65px;
-        height: 65px;
-    }
-
-    .target-letter {
-        font-size: 0.8rem;
-    }
-
-    .target-instruction {
-        font-size: 0.7rem;
-    }
-
-    .overlay {
-        min-width: 280px;
-    }
-
-    .mascot-img {
-        width: 150px;
-    }
-
-    .mascot-speech {
-        font-size: 0.85rem;
-        max-width: 150px;
-        padding: 8px 12px;
-    }
-
-    .wave-announcer {
-        font-size: 2.5rem;
-        padding: 16px 32px;
-        gap: 12px;
-    }
-
-    .wave-announcer-icon {
-        width: 50px;
-        height: 50px;
-    }
-
-    .taco-clouds-row {
-        height: 80px;
-        padding-top: 3px;
-    }
-
-    .taco-cloud {
-        width: 110px;
-    }
+/* Style for the target word text display */
+.target-word-display {
+    font-weight: bold;
+    color: #451513; /* A dark brown color */
+    margin-left: 8px;
+    font-size: 1.2em;
 }

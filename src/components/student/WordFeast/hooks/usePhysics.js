@@ -13,9 +13,9 @@ const turningFriction = 0.92;
 
 // --- ADDED: Fish sprite dimensions for accurate hitboxes ---
 const fishSpriteDimensions = {
-    small: { width: 62, height: 45, scale: 0.8 },
-    medium: { width: 167, height: 102, scale: 0.9 },
-    large: { width: 177, height: 157, scale: 1.1 },
+    small: { width: 62, height: 45, scale: 0.6 },
+    medium: { width: 167, height: 102, scale: 0.7 },
+    large: { width: 177, height: 157, scale: 0.8 },
 };
 const playerSpriteDimensions = {
     width: 274,
@@ -45,12 +45,14 @@ export const usePhysics = ({
     onPlayerEat, swallowedWords, setSwallowedWords, onVomit, playerState,
     messages, setMessages, onMonsterDash,
     mediumFishLimit, largeFishLimit, // <-- ADDED PROPS
+    lives, onPlayerDeath, isInvulnerable, isDying, // <-- HEALTH SYSTEM PROPS
 }) => {
     const mousePosition = useRef({ x: width / 2, y: height / 2 });
     const boostInfo = useRef({ isBoosting: false, boostTimer: 0, cooldownTimer: 0 });
     const lastVelocity = useRef({ x: 1, y: 0 });
     const spacebarDown = useRef(false);
     const spawnCooldown = useRef(gameConfig.fishSpawning.respawnCooldown);
+    const deathProcessed = useRef(false); // Track if death has been processed
 
     const spawnFish = useCallback(() => {
         if (!player) return; 
@@ -129,7 +131,7 @@ export const usePhysics = ({
     }, [onVomit]);
 
     useTick(delta => {
-        if (isGameOver || isPaused || !player) return;
+        if (isGameOver || isPaused || !player || isDying) return;
 
         if (messages?.length > 0) {
             setMessages(currentMessages => currentMessages.map(msg => ({ ...msg, life: msg.life - delta })).filter(msg => msg.life > 0));
@@ -260,6 +262,11 @@ export const usePhysics = ({
             nextPlayerPos = { x: Math.max(0, Math.min(width, nextPlayerPos.x)), y: Math.max(0, Math.min(height, nextPlayerPos.y)), };
         }
 
+        // Reset death flag when invulnerable (player has respawned)
+        if (isInvulnerable) {
+            deathProcessed.current = false;
+        }
+        
         const eatenFishIds = new Set();
         if (fishLogics) {
             const playerScale = { small: 0.4, medium: 0.6, large: 0.8 }[player.size];
@@ -290,7 +297,12 @@ export const usePhysics = ({
                         eatenFishIds.add(logic.id);
                         if (onPlayerEat) onPlayerEat();
                     } else if (canEat(fishState.size, player.size)) {
-                        onGameOver({ score: score, status: 'FAILED' });
+                        // Health system: check invulnerability before dealing damage
+                        if (!isInvulnerable && !deathProcessed.current) {
+                            deathProcessed.current = true;
+                            // Always call death handler - it will check if game over is needed
+                            if (onPlayerDeath) onPlayerDeath();
+                        }
                     }
                 }
             });

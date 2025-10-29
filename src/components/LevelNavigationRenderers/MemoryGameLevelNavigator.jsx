@@ -10,14 +10,46 @@ import nextArrowIcon from './AssetsLN/MemoryGame/Next Icon.png';
 import memoryGameLvlIcon from './AssetsLN/MemoryGame/MemoryPuzzleLvlIcon-Photoroom.png';
 import StartChallengeButton from '../buttons/StartChallengeButton'; // Import the button
 
-const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+const MemoryGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress = [], onSelectNode, onPrevLesson, onNextLesson, currentLessonIdx, totalLessons }) => {
+
+    // Helper function to check if a level is unlocked
+    const isLevelUnlocked = (activityId, nodeIndex) => {
+        // First activity node is always unlocked
+        if (nodeIndex === 0) {
+            return true;
+        }
+        
+        // For subsequent nodes, check if the previous node is finished
+        const previousNode = activityNodes[nodeIndex - 1];
+        if (!previousNode) return false;
+        
+        const previousProgressData = activityNodeProgress.find(
+            p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === previousNode.activityId
+        );
+        
+        return previousProgressData?.isFinished || previousProgressData?.finished || false;
+    };
+    
+    // Just pass through to original handler
+    const handleSelectNode = React.useCallback((node) => {
+        onSelectNode(node);
+    }, [onSelectNode]);
 
     const levels = useMemo(() => {
-        return activityNodes.map((node, index) => ({
-            ...node,
-            levelNumber: index + 1,
-        }));
-    }, [activityNodes]);
+        return activityNodes.map((node, index) => {
+            const progressData = activityNodeProgress.find(
+                p => (p.activityNodeType?.activityNodeTypeId || p.activityNodeTypeId) === node.activityId
+            );
+
+            return {
+                ...node,
+                levelNumber: index + 1,
+                isLocked: !isLevelUnlocked(node.activityId, index),
+                isCompleted: progressData?.isFinished || progressData?.finished || false,
+                hasProgress: !!progressData,
+            };
+        });
+    }, [activityNodes, activityNodeProgress]);
 
     const isFirstLesson = currentLessonIdx === 0;
     const isLastLesson = currentLessonIdx === totalLessons - 1;
@@ -81,9 +113,9 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
 
             <Grid container spacing={2} sx={{ width: '90%', maxWidth: '800px', mx: 'auto', justifyContent: 'center' }}>
                 {levels.map(level => (
-                    <Grid item key={level.activityId} xs={4} sm={3} md={2.4} sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Grid item key={level.activityId} xs={4} sm={3} md={2.4} sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
                         <Paper
-                            onClick={() => onSelectNode(level)}
+                            onClick={() => !level.isLocked && handleSelectNode(level)}
                             sx={{
                                 width: { xs: '80px', sm: '100px' },
                                 height: { xs: '80px', sm: '100px' },
@@ -99,17 +131,40 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
                                 backgroundColor: 'transparent',
                                 border: 'none',
                                 boxShadow: 'none',
-                                color: '#4a2c5a',
-                                cursor: 'pointer',
+                                color: level.isLocked ? '#999' : '#4a2c5a',
+                                cursor: level.isLocked ? 'not-allowed' : 'pointer',
+                                opacity: level.isLocked ? 0.5 : 1,
+                                filter: level.isLocked ? 'grayscale(1)' : 'none',
                                 transition: 'transform 0.2s ease, filter 0.2s ease',
-                                '&:hover': {
+                                '&:hover': level.isLocked ? {} : {
                                     transform: 'scale(1.1)',
                                     filter: 'brightness(1.2)',
                                 },
                             }}
                         >
-                            {level.levelNumber}
+                            {level.isLocked ? '🔒' : level.levelNumber}
                         </Paper>
+                        {/* Show checkmark for completed levels */}
+                        {level.isCompleted && !level.isLocked && (
+                            <Box sx={{
+                                position: 'absolute',
+                                top: -5,
+                                right: -5,
+                                backgroundColor: '#4caf50',
+                                borderRadius: '50%',
+                                width: '24px',
+                                height: '24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '14px',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                            }}>
+                                ✓
+                            </Box>
+                        )}
                     </Grid>
                 ))}
             </Grid>
@@ -124,6 +179,7 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, onSelectNode, onPrevL
 MemoryGameLevelNavigator.propTypes = {
     lesson: PropTypes.object.isRequired,
     activityNodes: PropTypes.array.isRequired,
+    activityNodeProgress: PropTypes.array,
     onSelectNode: PropTypes.func.isRequired,
     onPrevLesson: PropTypes.func.isRequired,
     onNextLesson: PropTypes.func.isRequired,

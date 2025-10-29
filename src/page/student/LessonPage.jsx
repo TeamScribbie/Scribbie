@@ -92,7 +92,7 @@ const LessonPage = () => {
             }
         };
         fetchLessons();
-    }, [authState.token, classroomId, location.state, authState.user?.identifier]);
+    }, [authState.token, classroomId, location.state, authState.user?.identifier, location.key]);
 
     const handlePrevLesson = useCallback(() => {
         if (currentLessonIdx > 0 && !isTransitioning) {

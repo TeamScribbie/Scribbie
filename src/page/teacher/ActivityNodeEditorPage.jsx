@@ -6,7 +6,7 @@ import Navbar from '../../components/layout/navbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
 import {
     Typography, Box, CircularProgress, Alert, Paper, Button,
-    List, ListItem, ListItemText, IconButton, Snackbar, Chip
+    List, ListItem, ListItemText, IconButton, Snackbar, Chip, TextField
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,7 +16,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SaveIcon from '@mui/icons-material/Save';
 
-import { getActivityNodeTypeDetails } from '../../services/activityService';
+import { getActivityNodeTypeDetails, updateActivityNodeTypeDetails  } from '../../services/activityService';
 import {
     deleteQuestion,
     updateQuestionOrderForActivityNode
@@ -35,6 +35,16 @@ const ActivityNodeEditorPage = () => {
     const [activityNodeDetails, setActivityNodeDetails] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [modifiedQuestionOrderIds, setModifiedQuestionOrderIds] = useState(new Set());
+
+    const [detailsFormData, setDetailsFormData] = useState({
+        activityTitle: '',
+        instructions: '',
+        flagA: '',
+        flagB: '',
+        flagC: '',
+    });
+
+    const [isDetailsSaving, setIsDetailsSaving] = useState(false);
 
     const [isLoadingPage, setIsLoadingPage] = useState(true);
     const [pageError, setPageError] = useState(null);
@@ -59,6 +69,13 @@ const ActivityNodeEditorPage = () => {
         try {
             const data = await getActivityNodeTypeDetails(activityNodeTypeId, authState.token);
             setActivityNodeDetails(data);
+            setDetailsFormData({
+                activityTitle: data.activityTitle || '',
+                instructions: data.instructions || '',
+                flagA: data.flagA || '',
+                flagB: data.flagB || '',
+                flagC: data.flagC || '',
+            });
             const formattedQuestions = (data.questions || []).map((q, index) => ({
                 ...q,
                 choices: Array.isArray(q.choices) ? q.choices.map(c => ({ ...c, tempChoiceId: c.choiceId || `c-${Date.now()}-${Math.random()}` })) : [],
@@ -82,6 +99,30 @@ const ActivityNodeEditorPage = () => {
             setIsLoadingPage(false);
         }
     }, [authState.isAuthenticated, authState.token, fetchActivityNodeData]);
+
+    const handleDetailsChange = (e) => {
+        const { name, value } = e.target;
+        setDetailsFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSaveDetails = async () => {
+        if (!authState.token) {
+            setSnackbarMessage("Authentication missing.");
+            setSnackbarOpen(true);
+            return;
+        }
+        setIsDetailsSaving(true);
+        try {
+            await updateActivityNodeTypeDetails(activityNodeTypeId, detailsFormData, authState.token);
+            setSnackbarMessage("Activity details updated successfully!");
+            setSnackbarOpen(true);
+        } catch (err) {
+            setSnackbarMessage(`Error saving details: ${err.message}`);
+            setSnackbarOpen(true);
+        } finally {
+            setIsDetailsSaving(false);
+        }
+    };
 
     const handleOpenAddQuestionDialog = () => {
         setEditingQuestion(null);
@@ -246,8 +287,8 @@ const ActivityNodeEditorPage = () => {
         }
     };
 
-    const pageTitle = activityNodeDetails
-        ? `Editor: ${activityNodeDetails.activityTitle || activityNodeDetails.activityType || 'Activity Node'}`
+    const pageTitle = detailsFormData.activityTitle
+        ? `Editor: ${detailsFormData.activityTitle}`
         : 'Loading Activity Node Editor...';
     const lessonManagementPath = `/teacher/course/${courseId}/lessons`;
 
@@ -267,9 +308,41 @@ const ActivityNodeEditorPage = () => {
                     <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, bgcolor: '#fffcf2' }} elevation={2}>
                         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#451513' }}>{pageTitle}</Typography>
                         {activityNodeDetails && (
-                            <Typography variant="body1" color="text.secondary">
-                                Type: {activityNodeDetails.activityType} | Instructions: {activityNodeDetails.instructions || "None"}
-                            </Typography>
+                            <Box component="form" noValidate autoComplete="off">
+                                <TextField
+                                    fullWidth label="Activity Title" name="activityTitle"
+                                    value={detailsFormData.activityTitle} onChange={handleDetailsChange}
+                                    variant="outlined" sx={{ mb: 2 }} disabled={isDetailsSaving}
+                                />
+                                <TextField
+                                    fullWidth label="Instructions" name="instructions"
+                                    value={detailsFormData.instructions} onChange={handleDetailsChange}
+                                    multiline rows={3} variant="outlined" sx={{ mb: 2 }} disabled={isDetailsSaving}
+                                />
+                                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                                    <TextField
+                                        label="Game Flag A" name="flagA" value={detailsFormData.flagA}
+                                        onChange={handleDetailsChange} variant="outlined" helperText="Custom game parameter"
+                                        sx={{ flex: 1 }} disabled={isDetailsSaving}
+                                    />
+                                    <TextField
+                                        label="Game Flag B" name="flagB" value={detailsFormData.flagB}
+                                        onChange={handleDetailsChange} variant="outlined" helperText="Custom game parameter"
+                                        sx={{ flex: 1 }} disabled={isDetailsSaving}
+                                    />
+                                    <TextField
+                                        label="Game Flag C" name="flagC" value={detailsFormData.flagC}
+                                        onChange={handleDetailsChange} variant="outlined" helperText="Custom game parameter"
+                                        sx={{ flex: 1 }} disabled={isDetailsSaving}
+                                    />
+                                </Box>
+                                <Button
+                                    variant="contained" startIcon={<SaveIcon />} onClick={handleSaveDetails}
+                                    disabled={isDetailsSaving} sx={{ bgcolor: '#4CAF50', '&:hover': { bgcolor: '#45a049' } }}
+                                >
+                                    {isDetailsSaving ? <CircularProgress size={24} color="inherit" /> : "Save Details"}
+                                </Button>
+                            </Box>
                         )}
                     </Paper>
 

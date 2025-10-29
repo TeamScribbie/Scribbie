@@ -8,6 +8,11 @@ import Fish from './Fish';
 import DebugDisplay from './DebugDisplay';
 import Monster from './Monster';
 import CagedWord from './CagedWord';
+import LifeBar from './LifeBar';
+import BeCarefulMessage from './BeCarefulMessage';
+import GrowthProgressBar from './GrowthProgressBar';
+import SequenceDisplay from './SequenceDisplay';
+import PauseMenu from './PauseMenu';
 import { useGameLogic } from './hooks/useGameLogic';
 import { usePhysics } from './hooks/usePhysics';
 import { gameConfig } from './config';
@@ -48,14 +53,27 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
     const [playerState, setPlayerState] = useState({ name: 'idle', facing: 1 });
     const vomitCooldown = useRef(0);
     const worldContainer = useRef(null);
+    
+    // Health system states
+    const [lives, setLives] = useState(3);
+    const [isInvulnerable, setIsInvulnerable] = useState(false);
+    const [showWarningMessage, setShowWarningMessage] = useState(false);
+    const [isDying, setIsDying] = useState(false); // Disable movement during death
+    const invulnerabilityTimerRef = useRef(null);
+    const respawnTimerRef = useRef(null);
+    
+    // Pause system
+    const [isGamePaused, setIsGamePaused] = useState(false);
+    const bgMusicRef = useRef(null);
+    const ambientRef = useRef(null);
 
     const handleMonsterInteraction = useCallback(() => {
         const playerSequence = swallowedWords.map(w => w.word).join('');
         
         // Check for the win condition first
         if (monster && playerSequence.trim().toLowerCase() === monster.word.trim().toLowerCase()) {
-            console.log("✅ WIN CONDITION MET!");
-            if(onWin) onWin({ swallowedWords }); // Pass the swallowedWords here
+            console.log(" WIN CONDITION MET!");
+            if(onWin) onWin({ swallowedWords, score }); // Pass the swallowedWords and score
             return;
         }
 
@@ -118,33 +136,90 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
         }
     };
 
+    const handlePlayerDeath = useCallback(() => {
+        // Disable player movement
+        setIsDying(true);
+        
+        // Check lives and deduct
+        setLives(prevLives => {
+            const newLives = prevLives - 1;
+            
+            // If no lives left, trigger game over
+            if (newLives <= 0) {
+                setTimeout(() => {
+                    onGameOver({ score, status: 'FAILED' });
+                }, 100);
+                return 0;
+            }
+            
+            return newLives;
+        });
+        
+        // Show warning message
+        setShowWarningMessage(true);
+        
+        // Hide warning message and respawn after 300ms (snappy!)
+        respawnTimerRef.current = setTimeout(() => {
+            setShowWarningMessage(false);
+            setIsDying(false); // Re-enable movement
+            
+            // Respawn player in the middle of the map
+            setPlayer(p => ({
+                ...p,
+                position: { x: worldWidth / 2, y: worldHeight / 2 },
+                velocity: { x: 0, y: 0 }
+            }));
+            
+            // Make player invulnerable
+            setIsInvulnerable(true);
+            
+            // Remove invulnerability after 1.5 seconds
+            invulnerabilityTimerRef.current = setTimeout(() => {
+                setIsInvulnerable(false);
+            }, 1500);
+        }, 300);
+    }, [setPlayer, worldWidth, worldHeight, onGameOver, score]);
+
+    // Cleanup timers on unmount
+    useEffect(() => {
+        return () => {
+            if (invulnerabilityTimerRef.current) {
+                clearTimeout(invulnerabilityTimerRef.current);
+            }
+            if (respawnTimerRef.current) {
+                clearTimeout(respawnTimerRef.current);
+            }
+        };
+    }, []);
+
     const { mousePosition, boostInfo } = usePhysics({
         gameState, setGameState, player, setPlayer, cagedWords, setCagedWords, fishLogics, setFishLogics, monster,
-        score, setScore, onGameOver, isGameOver, isPaused, width: worldWidth, height: worldHeight,
+        score, setScore, onGameOver, isGameOver, isPaused: isPaused || isGamePaused, width: worldWidth, height: worldHeight,
         onPlayerEat: () => setEatTrigger(t => t + 1),
         swallowedWords, setSwallowedWords, onVomit: handleVomit, playerState,
         messages, setMessages, onMonsterDash: handleMonsterInteraction,
         mediumFishLimit: fishLimits.medium, // <-- PASS PROP
         largeFishLimit: fishLimits.large,   // <-- PASS PROP
+        lives, onPlayerDeath: handlePlayerDeath, isInvulnerable, isDying, // <-- HEALTH SYSTEM PROPS
     });
     
 
     // Play background music and ambient sound
     useEffect(() => {
-        let bgMusic = null;
-        let ambient = null;
         if (!isLoading && monster) {
             // Start background music
-            bgMusic = new Audio(Track1Wav);
+            const bgMusic = new Audio(Track1Wav);
             bgMusic.loop = true;
             bgMusic.volume = 1.0;
             bgMusic.play().catch(e => console.error("Error playing background music:", e));
+            bgMusicRef.current = bgMusic;
 
             // Start ambient sound
-            ambient = new Audio(WaterAmb1mp3);
+            const ambient = new Audio(WaterAmb1mp3);
             ambient.loop = true;
             ambient.volume = 0.2;
             ambient.play().catch(e => console.error("Error playing ambient sound:", e));
+            ambientRef.current = ambient;
 
             // Monster intro sound logic
             const timer = setTimeout(() => {
@@ -155,11 +230,42 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
             }, 2000);
             return () => {
                 clearTimeout(timer);
-                if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
-                if (ambient) { ambient.pause(); ambient.currentTime = 0; }
+                if (bgMusicRef.current) { bgMusicRef.current.pause(); bgMusicRef.current.currentTime = 0; }
+                if (ambientRef.current) { ambientRef.current.pause(); ambientRef.current.currentTime = 0; }
             };
         }
     }, [isLoading, monster, setMessages]);
+    
+    // Pause/Resume music when game is paused
+    useEffect(() => {
+        if (isGamePaused) {
+            if (bgMusicRef.current) bgMusicRef.current.pause();
+            if (ambientRef.current) ambientRef.current.pause();
+        } else {
+            if (bgMusicRef.current) bgMusicRef.current.play().catch(e => console.error("Error resuming music:", e));
+            if (ambientRef.current) ambientRef.current.play().catch(e => console.error("Error resuming ambient:", e));
+        }
+    }, [isGamePaused]);
+    
+    // ESC key listener for pause
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && !isGameOver) {
+                setIsGamePaused(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isGameOver]);
+    
+    const handleRetry = useCallback(() => {
+        window.location.reload(); // Simple retry - reload the page
+    }, []);
+    
+    const handleExit = useCallback(() => {
+        // Go back to previous page or home
+        window.history.back();
+    }, []);
 
     useTick(() => {
         if (!player || !worldContainer.current) return;
@@ -237,13 +343,40 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
                         eatTrigger={eatTrigger} vomitTrigger={vomitTrigger}
                         onStateChange={setPlayerState} onVomitComplete={handleVomitComplete}
                         debugMode={debugMode}
+                        isInvulnerable={isInvulnerable}
                     />
                 )}
                 {messages.map(msg => (<Text key={msg.id} text={msg.text} x={msg.position.x} y={msg.position.y - 40} style={new TextStyle({ fill: 'yellow', fontSize: 20, fontWeight: 'bold' })} />))}
             </Container>
             <Container>
-                <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24 })} x={10} y={10} />
-                <Text text={`Sequence: ${swallowedText}`} style={new TextStyle({ fill: 'yellow', fontSize: 20 })} x={10} y={40} />
+                {/* Top-left: Lives */}
+                <LifeBar lives={lives} maxLives={3} x={10} y={10} />
+                
+                {/* Top-right: Score */}
+                <Text text={`Score: ${score}`} style={new TextStyle({ fill: 'white', fontSize: 24, fontWeight: 'bold' })} x={viewportWidth - 150} y={10} />
+                
+                {/* Top-center: Sequence with red glowing bubbles */}
+                {swallowedWords.length > 0 && (
+                    <SequenceDisplay 
+                        swallowedWords={swallowedWords}
+                        x={viewportWidth / 2}
+                        y={50}
+                    />
+                )}
+                
+                {/* Bottom-center: Growth progress bar */}
+                <GrowthProgressBar 
+                    score={score}
+                    x={(viewportWidth - 300) / 2}
+                    y={viewportHeight - 50}
+                />
+                {showWarningMessage && (
+                    <BeCarefulMessage 
+                        x={viewportWidth / 2} 
+                        y={viewportHeight / 2} 
+                        visible={true} 
+                    />
+                )}
                 {debugMode && player && (
                     <DebugDisplay
                         playerSpeed={Math.sqrt(player.velocity.x**2 + player.velocity.y**2)}
@@ -251,6 +384,16 @@ const GameStage = ({ onGameOver, onWin, isGameOver, isPaused, debugMode, viewpor
                         boostCooldown={boostInfo.current.cooldownTimer}
                         width={viewportWidth}
                         playerAnimationName={playerState.name}
+                    />
+                )}
+                
+                {/* Pause Menu */}
+                {isGamePaused && (
+                    <PauseMenu
+                        x={viewportWidth / 2}
+                        y={viewportHeight / 2}
+                        onRetry={handleRetry}
+                        onExit={handleExit}
                     />
                 )}
             </Container>

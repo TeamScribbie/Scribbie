@@ -13,6 +13,19 @@ const WordFeastGame = ({ questions = [], onGameComplete = () => {} }) => {
         const mainQuestion = questions[0];
 
         // Construct the final gameData object
+        // === AUDIO DEBUG LOGGING ===
+        console.log(" === WORDFEAST AUDIO DEBUG ===");
+        console.log(" RAW Question Data:", {
+            questionText: mainQuestion.questionText,
+            questionSoundUrl: mainQuestion.questionSoundUrl,
+            hasQuestionSound: !!mainQuestion.questionSoundUrl
+        });
+        console.log(" RAW Choices Data:", mainQuestion.choices.map(c => ({
+            word: c.choiceText,
+            audioPath: c.audioPath,
+            hasAudio: !!c.audioPath
+        })));
+
         const data = {
             question: {
                 word: mainQuestion.questionText,
@@ -32,7 +45,28 @@ const WordFeastGame = ({ questions = [], onGameComplete = () => {} }) => {
                     : null,
             })),
         };
+        
+        console.log(" CONSTRUCTED URLs:");
+        console.log("  Question Audio:", data.question.soundSrc || " NO AUDIO");
+        console.log("  Choice Audios:", data.choices.map(c => `${c.word}: ${c.soundSrc || " NO AUDIO"}`));
+        console.log("  MEDIA_BASE_URL:", MEDIA_BASE_URL);
+        console.log(" === END AUDIO DEBUG ===");
         console.log("WordFeastGame - Transformed gameData:", data);
+        
+        // Test audio URL accessibility
+        if (data.question.soundSrc) {
+            fetch(data.question.soundSrc, { method: 'HEAD' })
+                .then(r => console.log(` Question audio HTTP ${r.status}:`, data.question.soundSrc))
+                .catch(e => console.error(` Question audio FAILED:`, data.question.soundSrc, e.message));
+        }
+        data.choices.forEach((choice, idx) => {
+            if (choice.soundSrc) {
+                fetch(choice.soundSrc, { method: 'HEAD' })
+                    .then(r => console.log(` Choice ${idx} (${choice.word}) audio HTTP ${r.status}:`, choice.soundSrc))
+                    .catch(e => console.error(` Choice ${idx} (${choice.word}) audio FAILED:`, choice.soundSrc, e.message));
+            }
+        });
+        
         return data;
     }, [questions]);
 
