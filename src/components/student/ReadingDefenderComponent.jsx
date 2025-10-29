@@ -7,6 +7,10 @@ import tacoCloudImg from '../../assets/taco-cloud.png';
 import tacoImg from '../../assets/taco.png';
 import cartoonBg from '../../assets/cartoon-bg.jpg';
 
+// HUD icons from public folder
+const heartIcon = '/heart.png';
+const waveIcon = '/wave.png';
+
 function getRandom(arr) {
     if (!arr || arr.length === 0) return null;
     return arr[Math.floor(Math.random() * arr.length)];
@@ -20,6 +24,8 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
     const [words, setWords] = useState([]);
     const [target, setTarget] = useState({ text: '', soundSrc: null });
     const [feedback, setFeedback] = useState('');
+    const [feedbackType, setFeedbackType] = useState(''); // 'success', 'error', 'miss'
+    const [combo, setCombo] = useState(0);
     const [highestScore, setHighestScore] = useState(0);
     const [showWaveAnnouncer, setShowWaveAnnouncer] = useState(false);
     const [hoveredWord, setHoveredWord] = useState(null);
@@ -71,6 +77,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         setLives(3);
         setWave(1);
         setWords([]);
+        setCombo(0);
         waveReadyRef.current = true;
         spawnInProgress.current = false;
         if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -162,19 +169,27 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         }
 
                         if (w.text === target.text) {
+                            // Target word missed - lose a life
                             setLives(l => {
                                 const newLives = l - 1;
                                 if (newLives <= 0) setGameState('gameOver');
                                 return newLives;
                             });
-                            setFeedback(`😬 Missed the target word "${target.text}"!`);
-                        } else {
-                            setScore(s => {
-                                const newScore = s + 1;
-                                if (newScore > highestScore) setHighestScore(newScore);
-                                return newScore;
-                            });
+                            setCombo(0);
+                            const missMessages = [
+                                '😬 Oh no! You missed it!',
+                                '💔 The target slipped away!',
+                                '😰 Quick! Shoot the next one!',
+                                '⚡ Don\'t let them pass!'
+                            ];
+                            setFeedback(missMessages[Math.floor(Math.random() * missMessages.length)]);
+                            setFeedbackType('miss');
+                            setTimeout(() => {
+                                setFeedback('');
+                                setFeedbackType('');
+                            }, 1500);
                         }
+                        // Distractor reached bottom - no penalty, just remove it
 
                         return false;
                     }
@@ -243,22 +258,56 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
         }
 
         if (w.text === target.text) {
+            setCombo(c => c + 1);
+            const newCombo = combo + 1;
+            const points = 10 + (newCombo > 1 ? (newCombo - 1) * 5 : 0);
+            
             setScore(s => {
-                const newScore = s + 10;
+                const newScore = s + points;
                 if (newScore > highestScore) setHighestScore(newScore);
                 return newScore;
             });
-            setFeedback('🎯 Shot the target word!');
+            
+            let message = '';
+            if (newCombo >= 5) {
+                message = `🔥 AMAZING! ${newCombo}x COMBO! +${points} pts!`;
+            } else if (newCombo >= 3) {
+                message = `⚡ ${newCombo}x COMBO! +${points} points!`;
+            } else if (newCombo === 2) {
+                message = `✨ 2x COMBO! +${points} points!`;
+            } else {
+                const successMessages = [
+                    `🎯 Perfect shot! +${points} points!`,
+                    `💫 Excellent! +${points} points!`,
+                    `🌟 Nice hit! +${points} points!`,
+                    `👏 You got it! +${points} points!`
+                ];
+                message = successMessages[Math.floor(Math.random() * successMessages.length)];
+            }
+            
+            setFeedback(message);
+            setFeedbackType('success');
         } else {
+            setCombo(0);
             setLives(l => {
                 const newLives = l - 1;
                 if (newLives <= 0) setGameState('gameOver');
                 return newLives;
             });
-            setFeedback('⚠️ That was a distractor.');
+            const errorMessages = [
+                '⚠️ Wrong target! -1 life',
+                '❌ That\'s not it! -1 life',
+                '🚫 Focus on the target! -1 life',
+                '💥 Oops! Wrong one! -1 life'
+            ];
+            setFeedback(errorMessages[Math.floor(Math.random() * errorMessages.length)]);
+            setFeedbackType('error');
         }
 
-        setTimeout(() => setFeedback(''), 1200);
+        setTimeout(() => {
+            setFeedback('');
+            setFeedbackType('');
+        }, 1500);
     };
 
     const speak = (audioUrl) => {
@@ -374,24 +423,39 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                     ref={containerRef}
                     style={{ backgroundImage: `url(${cartoonBg})` }}
                 >
-                    {showWaveAnnouncer && (
-                        <div className="wave-announcer">🌊 Wave {wave}!</div>
-                    )}
-                    
-                    {/* Mascot with Feedback */}
-                    <div className="mascot-wrapper">
-                        {feedback && (
-                            <div className="mascot-speech">
-                                {feedback}
-                            </div>
-                        )}
-                        <img
-                            src={mascotImg}
-                            alt="Mascot"
-                            className="mascot-img"
-                        />
+                    {/* Wave HUD - Top Right */}
+                    <div className="wave-hud">
+                        <img src={waveIcon} alt="Wave" className="wave-icon" />
+                        Wave {wave}
                     </div>
 
+                    {/* Combo Counter - Below Wave */}
+                    {combo > 1 && (
+                        <div className="combo-counter">
+                            {combo}x COMBO! 🔥
+                        </div>
+                    )}
+
+                    {/* Bottom Tray for Catching Tacos */}
+                    <div className="bottom-tray">
+                        <div className="left-hud">
+                            <span className="lives-label">Lives:</span>
+                            {Array(lives).fill(null).map((_, i) => (
+                                <img key={i} src={heartIcon} alt="Heart" className="heart-icon" />
+                            ))}
+                        </div>
+                        <div className="right-hud">
+                            Score: {score}
+                        </div>
+                    </div>
+
+                    {showWaveAnnouncer && (
+                        <div className="wave-announcer">
+                            <img src={waveIcon} alt="Wave" className="wave-announcer-icon" />
+                            Wave {wave}!
+                        </div>
+                    )}
+                    
                     {/* Taco Clouds */}
                     <div className="taco-clouds-row">
                         {[...Array(12)].map((_, i) => (
@@ -405,6 +469,20 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                         ))}
                     </div>
 
+                    {/* Mascot with Feedback */}
+                    <div className="mascot-wrapper">
+                        {feedback && (
+                            <div className={`mascot-speech ${feedbackType}`}>
+                                {feedback}
+                            </div>
+                        )}
+                        <img
+                            src={mascotImg}
+                            alt="Mascot"
+                            className="mascot-img"
+                        />
+                    </div>
+
                     {/* Target Word Bubble */}
                     <div className="target-bubble-container">
                         <p className="target-instruction">Target Word: <span className="target-word-display">{difficulty !== 'easy' && target.text}</span></p>
@@ -413,7 +491,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             onClick={() => speak(target.soundSrc)}
                             title="Click to hear the word"
                         >
-                            <div className="target-letter">{"Click Me"}</div>
+                            <div className="target-letter">{target.text || "Loading..."}</div>
                         </div>
                     </div>
 
@@ -451,11 +529,121 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             )}
 
             {gameState === 'gameOver' && wave < 6 && (
-                <div className="overlay">
-                    <h2>Game Over</h2>
-                    <p>Your score: {score}</p>
-                    <button onClick={startGame} style={{ marginLeft: '1rem' }}>
-                        Play Again
+                <div className="overlay" style={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    borderRadius: '24px',
+                    padding: '40px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+                }}>
+                    <h2 style={{ 
+                        fontSize: '3rem', 
+                        color: '#451513',
+                        marginBottom: '20px',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+                    }}>💔 Game Over</h2>
+                    <p style={{ 
+                        fontSize: '1.8rem', 
+                        color: '#666',
+                        marginBottom: '10px'
+                    }}>Your Score: <strong style={{ color: '#FDB10D' }}>{score}</strong></p>
+                    <p style={{ 
+                        fontSize: '1.5rem', 
+                        color: '#666',
+                        marginBottom: '30px'
+                    }}>Highest Score: <strong style={{ color: '#36B8E4' }}>{highestScore}</strong></p>
+                    <button 
+                        onClick={startGame} 
+                        style={{ 
+                            padding: '15px 40px',
+                            fontSize: '1.5rem',
+                            background: 'linear-gradient(145deg, #FDB10D 0%, #f9b121 100%)',
+                            border: '3px solid #f9b121',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 0 #c45911, 0 8px 20px rgba(0,0,0,0.2)',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-3px)';
+                            e.target.style.boxShadow = '0 6px 0 #c45911, 0 12px 24px rgba(0,0,0,0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 4px 0 #c45911, 0 8px 20px rgba(0,0,0,0.2)';
+                        }}
+                    >
+                        🔄 Play Again
+                    </button>
+                </div>
+            )}
+
+            {gameState === 'gameOver' && wave >= 6 && (
+                <div className="overlay" style={{
+                    background: 'linear-gradient(135deg, #FDB10D 0%, #FFD966 100%)',
+                    borderRadius: '24px',
+                    padding: '50px',
+                    boxShadow: '0 12px 48px rgba(253, 177, 13, 0.4)',
+                    border: '4px solid #f9b121'
+                }}>
+                    <h2 style={{ 
+                        fontSize: '4rem', 
+                        color: 'white',
+                        marginBottom: '20px',
+                        textShadow: '3px 3px 6px rgba(0,0,0,0.3)',
+                        animation: 'bounceIn 0.8s ease-out'
+                    }}>🎉 YOU WIN! 🎉</h2>
+                    <p style={{ 
+                        fontSize: '2rem', 
+                        color: 'white',
+                        marginBottom: '15px',
+                        fontWeight: 'bold',
+                        textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+                    }}>🏆 All Waves Completed!</p>
+                    <p style={{ 
+                        fontSize: '1.8rem', 
+                        color: 'white',
+                        marginBottom: '10px',
+                        textShadow: '1px 1px 3px rgba(0,0,0,0.2)'
+                    }}>Final Score: <strong>{score}</strong></p>
+                    <p style={{ 
+                        fontSize: '1.6rem', 
+                        color: 'white',
+                        marginBottom: '10px',
+                        textShadow: '1px 1px 3px rgba(0,0,0,0.2)'
+                    }}>Highest Score: <strong>{highestScore}</strong></p>
+                    <p style={{ 
+                        fontSize: '1.4rem', 
+                        color: 'white',
+                        marginBottom: '30px',
+                        textShadow: '1px 1px 3px rgba(0,0,0,0.2)'
+                    }}>Time: <strong>{Math.round((Date.now() - startTimeRef.current) / 1000)}s</strong></p>
+                    <button 
+                        onClick={startGame} 
+                        style={{ 
+                            padding: '18px 50px',
+                            fontSize: '1.6rem',
+                            background: 'white',
+                            border: '4px solid #f9b121',
+                            borderRadius: '16px',
+                            color: '#FDB10D',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 6px 0 #f9b121, 0 10px 30px rgba(0,0,0,0.3)',
+                            transition: 'all 0.2s',
+                            textTransform: 'uppercase'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'translateY(-4px)';
+                            e.target.style.boxShadow = '0 8px 0 #f9b121, 0 14px 36px rgba(0,0,0,0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'translateY(0)';
+                            e.target.style.boxShadow = '0 6px 0 #f9b121, 0 10px 30px rgba(0,0,0,0.3)';
+                        }}
+                    >
+                        ⭐ Play Again ⭐
                     </button>
                 </div>
             )}
