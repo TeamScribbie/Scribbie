@@ -1,168 +1,249 @@
-import React from "react";
-import { Typography, Button } from "@mui/material";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../assets/scribbie-logo.png"; 
+import { useAuth } from "../../context/AuthContext";
+import Navbar from "../../components/layout/navbar";
+import StudentSidebar from "../../components/layout/StudentSidebar";
+import "../../styles/StudentProfile.css";
 
 const StudentProfile = () => {
   const navigate = useNavigate();
+  const { authState } = useAuth();
+  const [activeSection, setActiveSection] = useState('personal');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState(null);
 
-  const styles = {
-    container: {
-      height: "100vh",
-      width: "100vw",
-      display: "flex",
-      flexDirection: "column",
-      backgroundColor: "#fff",
-    },
-    header: {
-      height: "60px",
-      backgroundColor: "#451513",
-      color: "white",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0 20px",
-    },
-    logo: {
-      height: "40px",
-    },
-    contentWrapper: {
-      flex: 1,
-      display: "flex",
-      flexDirection: "row",
-      padding: "20px",
-    },
-    backBtn: {
-      position: "absolute",
-      top: "80px",
-      left: "20px",
-      backgroundColor: "#451513",
-      color: "white",
-      border: "none",
-      fontSize: "20px",
-      borderRadius: "50%",
-      width: "40px",
-      height: "40px",
-      cursor: "pointer",
-    },
-    sidebar: {
-      width: "220px",
-      backgroundColor: "#FFD966",
-      borderRadius: "10px",
-      padding: "15px",
-      marginRight: "30px",
-      height: "fit-content",
-    },
-    sidebarHeader: {
-      backgroundColor: "#451513",
-      color: "white",
-      padding: "10px",
-      borderTopLeftRadius: "10px",
-      borderTopRightRadius: "10px",
-      fontWeight: "bold",
-      textAlign: "center",
-    },
-    sidebarItem: {
-      backgroundColor: "white",
-      color: "#451513",
-      borderRadius: "8px",
-      textAlign: "center",
-      padding: "10px",
-      marginTop: "10px",
-      fontWeight: "bold",
-      cursor: "pointer",
-    },
-    profileCard: {
-      backgroundColor: "#FFF2D0",
-      borderRadius: "15px",
-      display: "flex",
-      padding: "30px",
-      flexGrow: 1,
-      alignItems: "center",
-      justifyContent: "space-between",
-    },
-    imageBox: {
-      width: "150px",
-      height: "150px",
-      backgroundColor: "#FFD966",
-      borderRadius: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      position: "relative",
-    },
-    plusButton: {
-      position: "absolute",
-      bottom: "-10px",
-      right: "-10px",
-      backgroundColor: "#E63946",
-      color: "white",
-      width: "30px",
-      height: "30px",
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "20px",
-      cursor: "pointer",
-      border: "none",
-    },
-    details: {
-      marginLeft: "40px",
-      display: "flex",
-      flexDirection: "column",
-      gap: "10px",
-    },
-    label: {
-      fontWeight: "bold",
-      fontSize: "20px",
-      color: "#451513",
-    },
-    subtext: {
-      fontSize: "16px",
-      color: "#555",
-    },
-    boldSub: {
-      fontWeight: "bold",
-    },
+  useEffect(() => {
+    // Trigger entrance animations
+    setTimeout(() => setIsLoaded(true), 100);
+  }, []);
+  
+  // Dynamic student data from authentication context
+  const studentData = {
+    name: authState.user?.name || "Student",
+    email: authState.user?.email || "",
+    // Remove static mock data - these should come from API when available
+  };
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+  };
+
+  const handleImageUpload = () => {
+    // Handle image upload logic
+    console.log("Upload image clicked");
+  };
+
+  const handleEditProfile = () => {
+    // Handle edit profile logic
+    console.log("Edit profile clicked");
+  };
+
+  const handleMobileMenuToggle = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  };
+
+  const handleMobileSidebarClose = () => {
+    setIsMobileSidebarOpen(false);
   };
 
   return (
-    <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <img src={logo} alt="Scribbie Logo" style={styles.logo} />
-        <div style={{ display: "flex", gap: "10px" }}>
-          <div style={{ backgroundColor: "#38E54D", color: "white", padding: "4px 10px", borderRadius: "10px", fontSize: "12px", fontWeight: "bold" }}>
-            STUDENT
-          </div>
-          <div style={{ backgroundColor: "#FFD966", width: "35px", height: "35px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center" }}>🔔</div>
-          <div style={{ width: "35px", height: "35px", borderRadius: "50%", backgroundColor: "#542d1d", color: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>👤</div>
-        </div>
+    <div className="student-profile-container">
+      {/* Sidebar */}
+      <div className="student-sidebar">
+        <StudentSidebar 
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={handleMobileSidebarClose}
+        />
       </div>
 
-      <button style={styles.backBtn} onClick={() => navigate(-1)}>←</button>
+      <div className="profile-content-area">
+        {/* Navbar */}
+        <Navbar onMobileMenuToggle={handleMobileMenuToggle} />
 
-      {/* Content */}
-      <div style={styles.contentWrapper}>
-        {/* Sidebar */}
-        <div style={styles.sidebar}>
-          <div style={styles.sidebarHeader}>Account Details</div>
-          <div style={styles.sidebarItem}>Personal Information</div>
-        </div>
+        {/* Back Button */}
+        <button className="back-button animated-button" onClick={() => navigate(-1)}>
+          <span className="back-icon">←</span>
+          <span className="back-text">Back</span>
+        </button>
 
-        {/* Profile Card */}
-        <div style={styles.profileCard}>
-          <div style={styles.imageBox}>
-            <span style={{ fontSize: "14px", color: "#451513" }}>Profile Image</span>
-            <button style={styles.plusButton}>+</button>
+        <div className="profile-main-content">
+          {/* Header */}
+          <div className={`profile-header ${isLoaded ? 'loaded' : ''}`}>
+            <div className="title-container">
+              <h1 className="profile-title">
+                <span className="title-emoji">👋</span>
+                My Profile
+                <span className="title-sparkle">✨</span>
+              </h1>
+              <div className="title-underline"></div>
+            </div>
+            <p className="profile-subtitle">
+              🎨 Customize your learning journey and manage your account
+            </p>
           </div>
 
-          <div style={styles.details}>
-            <Typography style={styles.label}>Name</Typography>
-            <Typography style={styles.subtext}>Student</Typography>
-            <Typography style={styles.subtext}>ID Number<br /><span className={styles.boldSub}>xx-xxxx-xxx</span></Typography>
-            <Typography style={styles.subtext}>Grade <span className={styles.boldSub}>Section</span></Typography>
+          {/* Profile Layout */}
+          <div className="profile-layout">
+            {/* Sidebar */}
+            <div className={`profile-sidebar ${isLoaded ? 'slide-in-left' : ''}`}>
+              <div className="sidebar-header">
+                <span className="header-icon">⚙️</span>
+                Account Settings
+                <div className="header-decoration"></div>
+              </div>
+              <div className="sidebar-menu">
+                <div 
+                  className={`sidebar-item ${activeSection === 'personal' ? 'active' : ''} ${hoveredItem === 'personal' ? 'hovered' : ''}`}
+                  onClick={() => handleSectionChange('personal')}
+                  onMouseEnter={() => setHoveredItem('personal')}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
+                  <span className="item-icon">👤</span>
+                  <span className="item-text">Personal Information</span>
+                  <span className="item-arrow">→</span>
+                </div>
+                <div 
+                  className={`sidebar-item ${activeSection === 'academic' ? 'active' : ''} ${hoveredItem === 'academic' ? 'hovered' : ''}`}
+                  onClick={() => handleSectionChange('academic')}
+                  onMouseEnter={() => setHoveredItem('academic')}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
+                  <span className="item-icon">📚</span>
+                  <span className="item-text">Academic Details</span>
+                  <span className="item-arrow">→</span>
+                </div>
+                <div 
+                  className={`sidebar-item ${activeSection === 'security' ? 'active' : ''} ${hoveredItem === 'security' ? 'hovered' : ''}`}
+                  onClick={() => handleSectionChange('security')}
+                  onMouseEnter={() => setHoveredItem('security')}
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
+                  <span className="item-icon">🔒</span>
+                  <span className="item-text">Security Settings</span>
+                  <span className="item-arrow">→</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Card */}
+            <div className={`profile-card ${isLoaded ? 'slide-in-right' : ''}`}>
+              <div className="profile-card-content">
+                {/* Avatar Section */}
+                <div className="avatar-section">
+                  <div className="avatar-container">
+                    <div className="avatar-ring"></div>
+                    <span className="avatar-placeholder">
+                      {studentData.name.charAt(0).toUpperCase()}
+                    </span>
+                    <button className="avatar-upload-btn bounce" onClick={handleImageUpload}>
+                      <span className="upload-icon">📷</span>
+                    </button>
+                    <div className="avatar-sparkles">
+                      <span className="sparkle sparkle-1">✨</span>
+                      <span className="sparkle sparkle-2">⭐</span>
+                      <span className="sparkle sparkle-3">💫</span>
+                    </div>
+                  </div>
+                  <button className="change-photo-btn animated-button" onClick={handleImageUpload}>
+                    <span className="btn-icon">🎨</span>
+                    Change Photo
+                  </button>
+                </div>
+
+                {/* Profile Details */}
+                <div className="profile-details">
+                  {activeSection === 'personal' && (
+                    <div className="section-content fade-in">
+                      <div className="section-title">
+                        <span className="section-emoji">👤</span>
+                        Personal Information
+                      </div>
+                      <div className="detail-group animated-detail">
+                        <label className="detail-label">
+                          <span className="label-icon">🏷️</span>
+                          Full Name
+                        </label>
+                        <div className="detail-value editable">
+                          <span className="value-text">{studentData.name}</span>
+                          <span className="edit-hint">Click to edit</span>
+                        </div>
+                      </div>
+                      
+                      {studentData.email && (
+                        <div className="detail-group animated-detail">
+                          <label className="detail-label">
+                            <span className="label-icon">📧</span>
+                            Email
+                          </label>
+                          <div className="detail-value">
+                            <span className="value-text">{studentData.email}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeSection === 'academic' && (
+                    <div className="section-content fade-in">
+                      <div className="section-title">
+                        <span className="section-emoji">📚</span>
+                        Academic Journey
+                      </div>
+                      <div className="academic-placeholder">
+                        <div className="placeholder-icon">🎓</div>
+                        <h3>Your Learning Adventure Awaits!</h3>
+                        <p>Academic details will appear here once you join your first class</p>
+                        <div className="coming-soon-badge">
+                          <span className="badge-text">Coming Soon</span>
+                          <span className="badge-sparkle">✨</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSection === 'security' && (
+                    <div className="section-content fade-in">
+                      <div className="section-title">
+                        <span className="section-emoji">🔒</span>
+                        Security & Privacy
+                      </div>
+                      <div className="detail-group animated-detail">
+                        <label className="detail-label">
+                          <span className="label-icon">🔑</span>
+                          Password
+                        </label>
+                        <div className="detail-value editable security-field">
+                          <span className="value-text">••••••••</span>
+                          <span className="security-status secure">🛡️ Secure</span>
+                        </div>
+                      </div>
+                      
+                      <div className="security-tips">
+                        <div className="tip-icon">💡</div>
+                        <div className="tip-content">
+                          <h4>Security Tips</h4>
+                          <p>Keep your account safe with strong passwords and regular updates!</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="profile-actions">
+                    <button className="action-btn action-btn-primary pulse" onClick={handleEditProfile}>
+                      <span className="btn-icon">✏️</span>
+                      <span className="btn-text">Edit Profile</span>
+                      <span className="btn-shine"></span>
+                    </button>
+                    <button className="action-btn action-btn-secondary hover-lift">
+                      <span className="btn-icon">📄</span>
+                      <span className="btn-text">Download Info</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

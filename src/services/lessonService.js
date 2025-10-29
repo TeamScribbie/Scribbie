@@ -435,7 +435,7 @@ export const deleteLessonDefinition = async (courseId, lessonId, token) => {
     if (!courseId || !lessonId || !token) {
         throw new Error('Course ID, Lesson ID, and auth token are required for deletion.');
     }
-    const response = await fetch(`http://localhost:8080/api/courses/${courseId}/lessons/${lessonId}`, {
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/lessons/${lessonId}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -452,7 +452,7 @@ export const deleteActivityNode = async (activityNodeTypeId, token) => {
     if (!activityNodeTypeId || !token) {
         throw new Error('Activity Node ID and auth token are required for deletion.');
     }
-    const response = await fetch(`http://localhost:8080/api/activity-node-types/${activityNodeTypeId}`, {
+    const response = await fetch(`${API_BASE_URL}/activity-node-types/${activityNodeTypeId}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`,

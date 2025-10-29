@@ -58,45 +58,96 @@ let fishTexturesLarge = null;
 const parsingPromiseLarge = sheetLarge.parse().then(() => { fishTexturesLarge = sheetLarge.animations; return fishTexturesLarge; });
 
 
-// --- SmallFish Component (Unchanged) ---
-const SmallFish = ({ position, velocity, status }) => {
+// --- SmallFish Component (MODIFIED) ---
+const SmallFish = ({ position, velocity, status, debugMode }) => {
     const [textures, setTextures] = useState(null);
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
     useEffect(() => { if (fishTexturesSmall) setTextures(fishTexturesSmall); else parsingPromiseSmall.then(setTextures); }, []);
     useEffect(() => { if (spriteRef.current && textures) { spriteRef.current.gotoAndPlay(0); } }, [status, textures]);
+
+    const draw = useCallback(g => {
+        g.clear();
+        if (debugMode) {
+            const width = smFrameWidth * 0.6;
+            const height = smSwimHeight * 0.6;
+            g.lineStyle(2, 0x0000ff, 1); // Blue hitbox
+            g.drawRect(-width / 2, -height / 2, width, height);
+        }
+    }, [debugMode]);
+
     if (!textures) return null;
     if (velocity.x < -0.1) facingDirection.current = 1; else if (velocity.x > 0.1) facingDirection.current = -1;
     const animationName = status === 'turning' ? 'turn' : 'swim';
     const isLooped = animationName === 'swim';
-    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.25} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.8, y: 0.8 }} anchor={{ x: 0.5, y: 0.5 }} />);
+    return (
+        <>
+            <AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.25} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.8, y: 0.8 }} anchor={{ x: 0.5, y: 0.5 }} />
+            <Graphics draw={draw} x={position.x} y={position.y} />
+        </>
+    );
 };
 
 
-// --- MediumFish Component (Unchanged) ---
-const MediumFish = ({ position, velocity, status }) => {
+// --- MediumFish Component (MODIFIED) ---
+const MediumFish = ({ position, velocity, status, debugMode }) => {
     const [textures, setTextures] = useState(null);
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
     useEffect(() => { if (fishTexturesMedium) setTextures(fishTexturesMedium); else parsingPromiseMedium.then(setTextures); }, []);
     useEffect(() => { if (spriteRef.current && textures) { spriteRef.current.gotoAndPlay(0); } }, [status, textures]);
+
+    const draw = useCallback(g => {
+        g.clear();
+        if (debugMode) {
+            const width = mdFrameWidth * 0.7;
+            const height = mdFrameHeight * 0.7;
+            g.lineStyle(2, 0x0000ff, 1); // Blue hitbox
+            g.drawRect(-width / 2, -height / 2, width, height);
+
+            const chaseRadius = gameConfig.fishTypes.medium.chaseRadius;
+            g.lineStyle(2, 0xff0000, 1); // Red chase range
+            g.drawRect(-chaseRadius, -chaseRadius, chaseRadius * 2, chaseRadius * 2);
+        }
+    }, [debugMode]);
+
     if (!textures) return null;
     if (velocity.x < -0.1) facingDirection.current = 1; else if (velocity.x > 0.1) facingDirection.current = -1;
     let animationName = 'swim';
     if (status === 'turning') animationName = 'turn';
     if (status === 'eating') animationName = 'eat';
     const isLooped = animationName === 'swim';
-    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.2} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.9, y: 0.9 }} anchor={{ x: 0.5, y: 0.5 }} />);
+    return (
+        <>
+            <AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.2} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 0.9, y: 0.9 }} anchor={{ x: 0.5, y: 0.5 }} />
+            <Graphics draw={draw} x={position.x} y={position.y} />
+        </>
+    );
 };
 
 
-// --- LargeFish Component (Unchanged) ---
-const LargeFish = ({ position, velocity, status }) => {
+// --- LargeFish Component (MODIFIED) ---
+const LargeFish = ({ position, velocity, status, debugMode }) => {
     const [textures, setTextures] = useState(null);
     const spriteRef = useRef(null);
     const facingDirection = useRef(1);
     useEffect(() => { if (fishTexturesLarge) setTextures(fishTexturesLarge); else parsingPromiseLarge.then(setTextures); }, []);
     useEffect(() => { if (spriteRef.current && textures) spriteRef.current.gotoAndPlay(0); }, [status, textures]);
+
+    const draw = useCallback(g => {
+        g.clear();
+        if (debugMode) {
+            const width = lgFrameWidth * 0.8;
+            const height = lgFrameHeight * 0.8;
+            g.lineStyle(2, 0x0000ff, 1); // Blue hitbox
+            g.drawRect(-width / 2, -height / 2, width, height);
+
+            const chaseRadius = gameConfig.fishTypes.large.chaseRadius;
+            g.lineStyle(2, 0xff0000, 1); // Red chase range
+            g.drawRect(-chaseRadius, -chaseRadius, chaseRadius * 2, chaseRadius * 2);
+        }
+    }, [debugMode]);
+
     if (!textures) return null;
     if (velocity.x < -0.1) facingDirection.current = 1; else if (velocity.x > 0.1) facingDirection.current = -1;
     let animationName = 'swim';
@@ -104,20 +155,25 @@ const LargeFish = ({ position, velocity, status }) => {
     if (status === 'eating') animationName = 'eat';
     const isLooped = animationName === 'swim';
 
-    return (<AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.15} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 1.1, y: 1.1 }}  anchor={{ x: 0.5, y: 0.5 }} />);
+    return (
+        <>
+            <AnimatedSprite ref={spriteRef} textures={textures[animationName]} animationSpeed={0.15} isPlaying={true} loop={isLooped} x={position.x} y={position.y} scale={{ x: facingDirection.current * 1.1, y: 1.1 }}  anchor={{ x: 0.5, y: 0.5 }} />
+            <Graphics draw={draw} x={position.x} y={position.y} />
+        </>
+    );
 };
 
 
 // --- Main Fish Component (Unchanged) ---
 const Fish = ({ position, size, velocity, status, debugMode }) => {
     if (size === 'small') {
-        return <SmallFish position={position} velocity={velocity} status={status} />;
+        return <SmallFish position={position} velocity={velocity} status={status} debugMode={debugMode} />;
     }
     if (size === 'medium') {
-        return <MediumFish position={position} velocity={velocity} status={status} />;
+        return <MediumFish position={position} velocity={velocity} status={status} debugMode={debugMode} />;
     }
     if (size === 'large') {
-        return <LargeFish position={position} velocity={velocity} status={status} />;
+        return <LargeFish position={position} velocity={velocity} status={status} debugMode={debugMode} />;
     }
     return null;
 };

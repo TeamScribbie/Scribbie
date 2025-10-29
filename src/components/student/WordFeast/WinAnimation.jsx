@@ -15,7 +15,7 @@ const WinAnimation = ({ swallowedWords, onComplete }) => {
 
         const wordTimer = setTimeout(() => {
             setShowWords(true);
-        }, 3000);
+        }, 6000);
         
         mermaidSoundRef.current = new Audio(MermaidAudio);
         mermaidSoundRef.current.play().catch(e => console.error("Error playing win sound:", e));
@@ -82,6 +82,7 @@ const WinAnimation = ({ swallowedWords, onComplete }) => {
         borderRadius: '8px',
         border: '2px solid #333',
         backgroundColor: '#f0f0f0',
+        color: '#000000', // Black text
         fontWeight: 'bold',
         animation: 'fadeIn 1s ease-in',
     };

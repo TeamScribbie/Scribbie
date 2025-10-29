@@ -11,8 +11,16 @@ const formatLabel = (fieldName) => {
     .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
 };
 
-const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */ }) => {
-  const fields = ['email', 'firstName', 'lastName', 'teacherId', 'password', 'verifyPassword', 'businessCode'];
+const TeacherRegistrationForm = ({ formData, onChange, onSubmit, isLoading }) => {
+  const fields = [
+    { name: 'email', label: 'EMAIL:' },
+    { name: 'firstName', label: 'FIRSTNAME:' },
+    { name: 'lastName', label: 'LASTNAME:' },
+    { name: 'teacherId', label: 'ID NUMBER:' },
+    { name: 'password', label: 'PASSWORD:' },
+    { name: 'verifyPassword', label: 'VERIFY PASSWORD:' },
+    { name: 'businessCode', label: 'BUSINESS CODE:' }
+  ];
 
   // Track show/hide password state per field, including businessCode
   const [showPasswordFields, setShowPasswordFields] = useState({});
@@ -31,57 +39,57 @@ const TeacherRegistrationForm = ({ formData, onChange, onSubmit /*, isLoading */
   return (
     <form className="teacher-registration-form-container" onSubmit={onSubmit}>
       {fields.map((field) => {
-        const isPasswordField = field.toLowerCase().includes('password') || field === 'businessCode'; // businessCode secured too
+        const isPasswordField = field.name.toLowerCase().includes('password') || field.name === 'businessCode';
 
         const inputType = isPasswordField
-          ? (showPasswordFields[field] ? 'text' : 'password')
-          : field === 'email'
+          ? (showPasswordFields[field.name] ? 'text' : 'password')
+          : field.name === 'email'
           ? 'email'
           : 'text';
 
         return (
-          <TextField
-            key={field}
-            name={field}
-            label={formData[field] ? '' : formatLabel(field)} // hide label if filled
-            type={inputType}
-            size="small"
-            value={formData[field]}
-            onChange={onChange}
-            fullWidth
-            margin="dense"
-            variant="outlined"
-            className={`registration-input-field ${formData[field] ? 'hide-label' : ''}`}
-            InputLabelProps={{ shrink: false }}
-            InputProps={
-              isPasswordField
-                ? {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => handleClickShowPassword(field)}
-                          onMouseDown={handleMouseDownPassword}
-                          edge="end"
-                          aria-label={showPasswordFields[field] ? 'Hide password' : 'Show password'}
-                        >
-                          {showPasswordFields[field] ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }
-                : undefined
-            }
-          />
+          <div key={field.name} className="form-field">
+            <label className="field-label">{field.label}</label>
+            <TextField
+              name={field.name}
+              type={inputType}
+              value={formData[field.name]}
+              onChange={onChange}
+              placeholder={field.name === 'email' || field.name === 'teacherId' ? '00-0000-000' : field.name.includes('password') || field.name === 'businessCode' ? '**********' : '00-0000-000'}
+              variant="outlined"
+              className="registration-input-field"
+              disabled={isLoading}
+              InputProps={
+                isPasswordField
+                  ? {
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => handleClickShowPassword(field.name)}
+                            onMouseDown={handleMouseDownPassword}
+                            edge="end"
+                            aria-label={showPasswordFields[field.name] ? 'Hide password' : 'Show password'}
+                          >
+                            {showPasswordFields[field.name] ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }
+                  : undefined
+              }
+            />
+          </div>
         );
       })}
-      <Button
-        type="submit"
-        variant="contained"
-        className="registration-button"
-        // disabled={isLoading} // Uncomment if using isLoading prop
-      >
-        Register
-      </Button>
+      <div className="button-container">
+        <button
+          type="submit"
+          className="confirm-button"
+          disabled={isLoading}
+        >
+          CONFIRM
+        </button>
+      </div>
     </form>
   );
 };
