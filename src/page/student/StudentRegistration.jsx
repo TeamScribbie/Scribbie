@@ -1,7 +1,8 @@
 // src/page/student/StudentRegistration.jsx
 import React, { useState } from 'react';
-// Import Alert and CircularProgress
-import { Typography, Link, Alert, CircularProgress, Box } from '@mui/material';
+// Import Alert, CircularProgress, and Dialog components
+import { Typography, Link, Alert, CircularProgress, Box, Dialog, DialogContent } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
 import bookImage from '../../assets/book.png';
 import scribbieLogo from '../../assets/ScribbieLogoV2.png';
@@ -22,8 +23,7 @@ const StudentRegistration = () => {
   });
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
-  // Optional: Add success message state
-  // const [success, setSuccess] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false); // Success dialog state
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,12 +67,13 @@ const StudentRegistration = () => {
       const result = await registerStudent(formData.studentId, name, formData.password);
 
       console.log('Student Registration Successful:', result);
-      // setSuccess('Registration successful! Redirecting to login...'); // Set success message
+      setIsLoading(false);
+      setShowSuccess(true);
 
-      // Redirect to login after a short delay to show success message
+      // Redirect to login after showing success animation
       setTimeout(() => {
         navigate('/student-login');
-      }, 1500); // 1.5 second delay
+      }, 2500); // 2.5 second delay to show animation
 
     } catch (err) {
       console.error('Student Registration Failed:', err);
@@ -116,19 +117,86 @@ const StudentRegistration = () => {
             isLoading={isLoading}
           />
 
-          {/* Show loading indicator */}
-           {isLoading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <CircularProgress size={24} />
-            </Box>
-           )}
-
           <Typography className="login-link-container">
             <Link href="/student-login" className="login-link">
               Already have an account? <strong>Login here</strong>
             </Link>
           </Typography>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog
+        open={showSuccess}
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            padding: '32px',
+            textAlign: 'center',
+            minWidth: '320px',
+          }
+        }}
+      >
+        <DialogContent>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
+            }}
+          >
+            <CheckCircleIcon
+              sx={{
+                fontSize: 80,
+                color: '#FDB10D',
+                animation: 'scaleIn 0.5s ease-out',
+                '@keyframes scaleIn': {
+                  '0%': {
+                    transform: 'scale(0)',
+                    opacity: 0,
+                  },
+                  '50%': {
+                    transform: 'scale(1.2)',
+                  },
+                  '100%': {
+                    transform: 'scale(1)',
+                    opacity: 1,
+                  },
+                },
+              }}
+            />
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: '#1f2937',
+                animation: 'fadeInUp 0.5s ease-out 0.3s backwards',
+                '@keyframes fadeInUp': {
+                  '0%': {
+                    opacity: 0,
+                    transform: 'translateY(20px)',
+                  },
+                  '100%': {
+                    opacity: 1,
+                    transform: 'translateY(0)',
+                  },
+                },
+              }}
+            >
+              Registration Successful!
+            </Typography>
+            <Typography
+              sx={{
+                color: '#6b7280',
+                fontSize: '16px',
+                animation: 'fadeInUp 0.5s ease-out 0.5s backwards',
+              }}
+            >
+              Redirecting to login page...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

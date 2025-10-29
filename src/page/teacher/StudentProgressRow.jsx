@@ -9,7 +9,6 @@ const StudentProgressRow = ({
                                 totalScore, // This now receives the total score
                                 totalTimeSpentSeconds,
                                 onViewDetails,
-                                yellowAccent,
                                 // highlight-start
                                 // Add onRemove to the props
                                 onRemove,
@@ -51,9 +50,9 @@ const StudentProgressRow = ({
                     variant="contained"
                     onClick={onViewDetails}
                     sx={{
-                        backgroundColor: yellowAccent.main,
-                        color: yellowAccent.contrastText,
-                        '&:hover': { backgroundColor: yellowAccent.hover },
+                        backgroundColor: '#FFC107',
+                        color: '#000',
+                        '&:hover': { backgroundColor: '#FFA000' },
                         py: 0.5,
                         px: 2
                     }}

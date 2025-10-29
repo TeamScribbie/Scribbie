@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
     Box, Typography, Paper, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert, Button, Tooltip,
-    Breadcrumbs, Link as MuiLink, useTheme, CssBaseline,
+    Breadcrumbs, Link as MuiLink, CssBaseline,
     Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Snackbar,
     Card, CardContent, Grid, Avatar
 } from '@mui/material';
@@ -24,7 +24,6 @@ const ClassroomStudentProgressOverviewPage = () => {
     const { classroomId } = useParams();
     const navigate = useNavigate();
     const { authState } = useAuth();
-    const theme = useTheme();
 
     const scribbieColors = {
         primary: '#f9b121',
@@ -33,17 +32,6 @@ const ClassroomStudentProgressOverviewPage = () => {
         accent: '#36B8E4',
         text: '#451513',
         textSecondary: '#64748b'
-    };
-
-    const yellowAccent = {
-        main: '#FFC107',
-        hover: '#FFA000',
-        contrastText: theme.palette.getContrastText('#FFC107'),
-    };
-
-    const brownAccent = {
-        main: '#795548',
-        contrastText: theme.palette.getContrastText('#795548'),
     };
 
     const [progressData, setProgressData] = useState([]);
@@ -273,7 +261,7 @@ const ClassroomStudentProgressOverviewPage = () => {
                                     }}
                                 >
                                     <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
-                                        {Math.round(progressData.reduce((total, student) => total + (student.totalScore || 0), 0) / Math.max(progressData.length, 1))}%
+                                        {Math.round(progressData.reduce((total, student) => total + (student.totalScore || 0), 0) / Math.max(progressData.length, 1))}
                                     </Typography>
                                     <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
                                         Average Score
