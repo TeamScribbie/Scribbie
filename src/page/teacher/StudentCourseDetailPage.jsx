@@ -262,7 +262,7 @@ const StudentCourseDetailPage = () => {
                                         }}
                                     >
                                         <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
-                                            {Math.round(detailedProgress.reduce((total, lesson) => total + (lesson.score || 0), 0) / Math.max(detailedProgress.length, 1))}%
+                                            {Math.round(detailedProgress.reduce((total, lesson) => total + (lesson.score || 0), 0) / Math.max(detailedProgress.length, 1))}
                                         </Typography>
                                         <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
                                             Average Score
