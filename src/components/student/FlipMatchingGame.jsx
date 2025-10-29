@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import MemoryGame from '../../page/student/MemoryGame.jsx';
 import { MEDIA_BASE_URL } from "../../config/apiConfig.js";
 
-const FlipMatchingGame = ({ questions = [], onGameComplete = () => {}, isChallengeMode = false }) => {
+// FIX 1: Add `activityDetails` to the list of props this component accepts.
+const FlipMatchingGame = ({ questions = [], onGameComplete = () => {}, activityDetails = {}, isChallengeMode = false }) => {
+
+    // DEBUG: Let's log the details as they arrive in this component.
+    console.log("FlipMatchingGame received these activityDetails:", activityDetails);
 
     const gameData = useMemo(() => {
         console.log(" === MEMORY GAME AUDIO DEBUG ===");
@@ -43,8 +47,7 @@ const FlipMatchingGame = ({ questions = [], onGameComplete = () => {}, isChallen
                 soundSrc: choice.audioPath ? `${MEDIA_BASE_URL}${choice.audioPath.replace(/^\/+/, '')}` : null,
             };
         }).filter(Boolean);
-        
-        console.log(" Normal Mode Results:", result.length);
+console.log(" Normal Mode Results:", result.length);
         console.log(" With Audio:", result.filter(r => r.soundSrc).length);
         console.log(" WITHOUT Audio:", result.filter(r => !r.soundSrc).length);
         console.log(" Sample:", result[0]);
@@ -52,8 +55,13 @@ const FlipMatchingGame = ({ questions = [], onGameComplete = () => {}, isChallen
         return result;
     }, [questions, isChallengeMode]);
 
-    // Render the MemoryGame with the processed data and the challenge mode flag
-    return <MemoryGame gameData={gameData} onGameComplete={onGameComplete} isChallengeMode={isChallengeMode} />;
+    // Combined props from both branches
+    return <MemoryGame
+        gameData={gameData}
+        onGameComplete={onGameComplete}
+        activityDetails={activityDetails}
+        isChallengeMode={isChallengeMode}
+    />;
 };
 
 export default FlipMatchingGame;

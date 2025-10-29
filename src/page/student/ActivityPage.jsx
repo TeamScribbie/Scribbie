@@ -122,6 +122,7 @@ const ActivityPage = () => {
         activityInstructions: activityDetails.instructions || activityInstructions,
         classroomId,
         lessonDefinitionId,
+difficulty: activityDetails.flagA || 'easy',
         isChallengeMode: false, // Explicitly false for normal activities
     };
 
@@ -132,7 +133,7 @@ const ActivityPage = () => {
             case 'FILL_BLANKS': return <FillBlanksGameComponent activityData={activityDetails} {...gameProps} />;
             case 'MATCHING2':   return <Matching2GameComponent {...gameProps} />;
             case 'BALLOONGAME': return <ReadingDefenderComponent {...gameProps} />;
-            case 'MEMORYGAME':  return <FlipMatchingGame {...gameProps} />;
+            case 'MEMORYGAME':  return <FlipMatchingGame {...gameProps} />; // Kept from Challenge branch
             case 'WORDFEAST':   return <WordFeastGame {...gameProps} />;
             default:
                 return (

@@ -448,16 +448,24 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
                             Score: {score}
                         </div>
                     </div>
+{/* This block is from the 'Challenge' branch */}
+{showWaveAnnouncer && (
+    <div className="wave-announcer">
+        <img src={waveIcon} alt="Wave" className="wave-announcer-icon" />
+        Wave {wave}!
+    </div>
+)}
 
-                    {showWaveAnnouncer && (
-                        <div className="wave-announcer">
-                            <img src={waveIcon} alt="Wave" className="wave-announcer-icon" />
-                            Wave {wave}!
-                        </div>
-                    )}
-                    
-                    {/* Taco Clouds */}
-                    <div className="taco-clouds-row">
+{/* This block is from the 'SkibidiRIzz' branch */}
+<div className="bottom-base">TACO TRAY</div>
+<div className="wave-hud">🌊 Wave: {wave} </div>
+<div className="left-hud">❤️ Lives: {[...Array(lives)].map((_, i) => (
+    <img key={i} src="/heart.png" alt="life" className="life-icon" />
+))}</div>
+<div className="right-hud">⭐ Score: {score}</div>
+<div className="taco-clouds-sky">
+    {/* Taco Clouds */}
+    <div className="taco-clouds-row">
                         {[...Array(12)].map((_, i) => (
                             <img
                                 key={i}
