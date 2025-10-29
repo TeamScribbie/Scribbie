@@ -35,17 +35,6 @@ const ClassroomStudentProgressOverviewPage = () => {
         textSecondary: '#64748b'
     };
 
-    const yellowAccent = {
-        main: '#FFC107',
-        hover: '#FFA000',
-        contrastText: theme.palette.getContrastText('#FFC107'),
-    };
-
-    const brownAccent = {
-        main: '#795548',
-        contrastText: theme.palette.getContrastText('#795548'),
-    };
-
     const [progressData, setProgressData] = useState([]);
     const [classroomName, setClassroomName] = useState('');
     const [classCode, setClassCode] = useState(''); // State for the class code
