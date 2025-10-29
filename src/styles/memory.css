@@ -214,16 +214,12 @@
   }
 }
 
-.card:hover {
-  transform: scale(1.05);
-}
-
 .card img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 20px;
-  padding: 5px;
+  border-radius: 16px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
@@ -231,8 +227,8 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 20px;
-  padding: 5px;
+  border-radius: 16px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
@@ -303,6 +299,74 @@
   50% { transform: translateY(-8px); }
   100% { transform: translateY(0px); }
 }
+
+@keyframes cardDrop {
+  0% {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  0% {
+    transform: translateY(-50%) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.1);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .game-title {
   color: #ffffff; /* pure white */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* optional for better contrast */
@@ -326,7 +390,7 @@
 .player-name {
   color: white;
 }
-.card .card-text {
+.memory-card .card-text {
   display: flex;
   justify-content: center;
   align-items: center;
