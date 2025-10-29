@@ -2,12 +2,12 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom";
 import "../../styles/memory.css";
 import { Box, Button, Typography, LinearProgress, Chip, Paper } from "@mui/material";
-import { MEDIA_BASE_URL } from "../../config/apiConfig.js";
 import StarIcon from '@mui/icons-material/Star';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TimerIcon from '@mui/icons-material/Timer';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
+import memoryGameBg from '../../assets/memorygame-bg.png';
 
 // --- MERGED SIGNATURE ---
 // Accepts props from FlipMatchingGame (which passes both)
@@ -41,9 +41,9 @@ export default function MemoryGame({
     const wordBank = useRef([...gameData]);
 
     // --- MERGED AUDIO ---
-    const backgroundMusic = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/bgmusic.mp3`), []);
-    const winSound = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/win.mp3`), []);
-    const loseSound = useMemo(() => new Audio(`${MEDIA_BASE_URL}sounds/lose.ogg`), []); // Kept from Challenge
+    const backgroundMusic = useMemo(() => new Audio('/sounds/bgmusic.mp3'), []);
+    const winSound = useMemo(() => new Audio('/sounds/win.mp3'), []);
+    const loseSound = useMemo(() => new Audio('/sounds/win.mp3'), []); // Using win sound as fallback
 
     // --- Props and Refs ---
     const navigate = useNavigate();
@@ -272,7 +272,7 @@ export default function MemoryGame({
 
         // In Challenge mode, always show image
         if (isChallengeMode) {
-             return <img src={card.src} alt={card.word} className="card-image" />;
+             return <img src={card.src} alt={card.word} className="card-image" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />;
         }
 
         // In Normal mode, use difficulty flag
@@ -281,13 +281,13 @@ export default function MemoryGame({
                 return <div className="card-text">{card.word}</div>;
             case 'medium':
                 if (card.displayType === 'image') {
-                    return <img src={card.src} alt={card.word} className="card-image" />;
+                    return <img src={card.src} alt={card.word} className="card-image" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />;
                 } else {
                     return <div className="card-text">{card.word}</div>;
                 }
             case 'easy':
             default:
-                return <img src={card.src} alt={card.word} className="card-image" />;
+                return <img src={card.src} alt={card.word} className="card-image" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />;
         }
     };
 
@@ -297,7 +297,7 @@ export default function MemoryGame({
             className="memory-container"
             sx={{
                 minHeight: "100vh",
-                backgroundImage: 'url(/src/assets/memorygame-bg.png)',
+                backgroundImage: `url(${memoryGameBg})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
@@ -855,7 +855,7 @@ export default function MemoryGame({
                                                     onClick={() => { if (!disabled && !isFlipped) handleChoice(card); }}
                                                     sx={{
                                                         width: '100%',
-                                                        aspectRatio: '0.75',
+                                                        aspectRatio: '1',
                                                         maxHeight: { xs: '95px', sm: '110px', md: '125px' },
                                                         background: isFlipped 
                                                             ? 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
@@ -869,14 +869,12 @@ export default function MemoryGame({
                                                         border: { xs: '3px solid rgba(255, 255, 255, 0.5)', md: '4px solid rgba(255, 255, 255, 0.5)' },
                                                         position: 'relative',
                                                         overflow: 'hidden',
-                                                        animation: `cardDrop 0.5s ease-out ${index * 0.05}s backwards`,
                                                         boxShadow: glowType === 'match' 
                                                             ? '0 0 30px 8px rgba(34, 197, 94, 0.8), 0 0 50px 12px rgba(74, 222, 128, 0.6)'
                                                             : glowType === 'mismatch'
                                                             ? '0 0 30px 8px rgba(239, 68, 68, 0.8), 0 0 50px 12px rgba(248, 113, 113, 0.6)'
                                                             : isFlipped ? '0 8px 20px rgba(0, 0, 0, 0.2)' : '0 6px 16px rgba(0, 0, 0, 0.15)',
                                                         '&:hover': !disabled && !isFlipped ? {
-                                                            transform: 'translateY(-8px) scale(1.05)',
                                                             boxShadow: '0 12px 28px rgba(102, 126, 234, 0.5)',
                                                             background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)'
                                                         } : {},

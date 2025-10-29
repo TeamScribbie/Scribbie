@@ -109,7 +109,7 @@ const ReadingDefender = ({ questions = [], onGameComplete, activityTitle, activi
             id: crypto.randomUUID(),
             text: word.text,
             soundSrc: word.soundSrc,
-            speed: .09 + waveNum * (word.text === targetWordObject.text ? 0.1 : 0.3),
+            speed: .2 + waveNum * (word.text === targetWordObject.text ? 0.1 : 0.3),
             colorClass: getRandom(colors),
         });
 
