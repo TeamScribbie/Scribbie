@@ -7,8 +7,8 @@
 //export const MEDIA_BASE_URL = 'http://localhost:8080/';
 
 //FOR DEPLOYMENT
-export const API_BASE_URL = 'https://scribbiealpha.serveblog.net/api';
-export const MEDIA_BASE_URL = 'https://scribbiealpha.serveblog.net/';
+export const API_BASE_URL = 'https://scribbie-alpha.serveblog.net/api';
+export const MEDIA_BASE_URL = 'https://scribbie-alpha.serveblog.net/';
 
 // export const API_BASE_URL = 'https://trialrender-production.up.railway.app/api';
 // export const MEDIA_BASE_URL = 'https://trialrender-production.up.railway.app/';
