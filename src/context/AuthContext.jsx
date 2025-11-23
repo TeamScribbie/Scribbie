@@ -17,16 +17,22 @@ export const AuthProvider = ({ children }) => {
      console.log("AuthContext: useEffect trying to restore auth state...");
      const storedToken = localStorage.getItem('authToken');
      const storedUserString = localStorage.getItem('authUser');
+     const loginTimestamp = localStorage.getItem('loginTimestamp');
 
      if (storedToken && storedUserString) {
          try {
              const decodedPayload = jwtDecode(storedToken);
              const currentTime = Date.now() / 1000;
 
-             if (decodedPayload.exp < currentTime) {
-                 console.warn("AuthContext: Stored token has expired.");
+             // Check if token expired OR if login is older than 30 days
+             const thirtyDaysInSeconds = 30 * 24 * 60 * 60;
+             const isOlderThan30Days = loginTimestamp && ((currentTime - parseInt(loginTimestamp)) > thirtyDaysInSeconds);
+
+             if (decodedPayload.exp < currentTime || isOlderThan30Days) {
+                 console.warn("AuthContext: Stored token has expired or login is older than 30 days.");
                  localStorage.removeItem('authToken');
                  localStorage.removeItem('authUser');
+                 localStorage.removeItem('loginTimestamp');
                  setAuthState({ isAuthenticated: false, user: null, userType: null, token: null, loading: false }); // <-- Set loading to false
                  return;
              }
@@ -90,6 +96,7 @@ export const AuthProvider = ({ children }) => {
 
             localStorage.setItem('authToken', token);
             localStorage.setItem('authUser', JSON.stringify({...userDetails, userType: type }));
+            localStorage.setItem('loginTimestamp', Math.floor(Date.now() / 1000).toString());
             console.log("AuthContext: Saved token and user data (with roles) to localStorage.");
 
         } catch (error) {
@@ -113,6 +120,7 @@ export const AuthProvider = ({ children }) => {
     });
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
+    localStorage.removeItem('loginTimestamp');
   };
 
   const value = {

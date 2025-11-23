@@ -60,6 +60,20 @@
   border-color: var(--primary);
 }
 
+.btn-primary {
+  background: #FDB10D !important;
+  color: #000000 !important;
+  box-shadow: 0 4px 6px -1px rgba(253, 177, 13, 0.3);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #f9b121 !important;
+  color: #000000 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -1px rgba(253, 177, 13, 0.4);
+}
+
 .btn-secondary {
   background: var(--secondary);
   color: var(--text);
@@ -92,16 +106,19 @@
 }
 
 .btn-hero {
-  background: white;
-  color: var(--primary);
+  background: #ffffff !important;
+  color: #FDB10D !important;
   font-weight: 700;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
 }
 
 .btn-hero:hover {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #FDB10D !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -1px rgba(253, 177, 13, 0.3);
+  border: 2px solid #FDB10D;
 }
 
 .btn-cta {

@@ -55,7 +55,7 @@ const LandingPage = () => {
   }, []);
 
   const goToLogin = () => {
-    navigate("/teacher-login");
+    navigate("/student-login");
   };
 
   const scrollToTop = () => {
@@ -145,8 +145,8 @@ const LandingPage = () => {
           </a>
           
           <div className="nav-actions-modern">
-            <Button variant="ghost" onClick={goToLogin}>Sign In</Button>
-            <Button variant="primary" onClick={goToLogin}>Get Started</Button>
+            <Button variant="hero" onClick={goToLogin}>Sign In</Button>
+            <Button variant="primary" onClick={() => navigate("/student-register")}>Get Started</Button>
           </div>
         </div>
       </nav>

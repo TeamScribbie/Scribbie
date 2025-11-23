@@ -1,5 +1,5 @@
 // src/page/student/StudentLogin.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // Import Alert, CircularProgress, Skeleton, and Dialog for feedback
 import { Typography, Link, Alert, CircularProgress, Box, Skeleton, Dialog, DialogContent } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -21,7 +21,15 @@ const StudentLogin = () => {
   const [error, setError] = useState(null); // State for error message
   const [showSuccess, setShowSuccess] = useState(false); // Success dialog state
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, authState } = useAuth();
+
+  // Auto-redirect if already logged in as student
+  useEffect(() => {
+    if (authState.isAuthenticated && !authState.loading && authState.user?.roles?.includes('ROLE_STUDENT')) {
+      console.log('Student already authenticated, redirecting to homepage');
+      navigate('/student-homepage', { replace: true });
+    }
+  }, [authState.isAuthenticated, authState.loading, authState.user, navigate]);
 
   const handleTabSwitch = (tab) => {
     if (tab === 'Teacher') {
