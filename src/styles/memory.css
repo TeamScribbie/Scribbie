@@ -367,6 +367,24 @@
   100% { transform: rotate(360deg); }
 }
 
+@keyframes timerStripe {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 0;
+  }
+}
+
+@keyframes timerStripeFast {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 60px 0;
+  }
+}
+
 .game-title {
   color: #ffffff; /* pure white */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* optional for better contrast */
@@ -404,4 +422,19 @@
   background-color: #fff; /* White background for the card face */
   border-radius: 10px; /* Match the card's border-radius */
   user-select: none; /* Prevents text selection on click */
+}
+
+/* 3D flip effect for MemoryGame cards */
+.card-grid-modern {
+  perspective: 1200px;
+}
+
+.memory-card {
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transition: transform 0.4s ease;
+}
+
+.memory-card.flipped {
+  transform: rotateY(180deg);
 }

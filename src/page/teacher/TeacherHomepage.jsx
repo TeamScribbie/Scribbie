@@ -60,6 +60,13 @@ const TeacherHomepage = () => {
   // State for creating classroom
   const [isCreatingClassroom, setIsCreatingClassroom] = useState(false);
 
+  // Ensure sidebar starts closed on smaller screens
+  useEffect(() => {
+    if (window.innerWidth <= 1024) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
   // --- Fetch Classrooms Function ---
   const fetchClassrooms = useCallback(async () => {
     if (!authState.user?.identifier || !authState.token) {
@@ -210,6 +217,13 @@ const TeacherHomepage = () => {
       <div className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
         <TeacherSidebar isOpen={sidebarOpen} activeItem="Classes"/>
       </div>
+
+      {sidebarOpen && (
+        <div
+          className="teacher-sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* --- Main Content Area --- */}
       <div className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>

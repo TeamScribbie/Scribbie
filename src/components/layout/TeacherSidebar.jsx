@@ -93,7 +93,7 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes', onToggle }) => {
       }}
     >
       {/* Header Section */}
-      <Box sx={{ p: 3, pb: 2 }}>
+      <Box sx={{ p: { xs: 2, md: 3 }, pb: { xs: 1.5, md: 2 } }}>
         {/* User Profile Section */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Avatar
@@ -182,7 +182,7 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes', onToggle }) => {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  p: 2,
+                  p: { xs: 1.5, md: 2 },
                   mb: 1,
                   borderRadius: 2,
                   cursor: 'pointer',
@@ -239,7 +239,7 @@ const TeacherSidebar = ({ isOpen, activeItem = 'Classes', onToggle }) => {
       </Box>
 
       {/* Footer Section */}
-      <Box sx={{ p: 2, pt: 1 }}>
+      <Box sx={{ p: { xs: 1.5, md: 2 }, pt: 1 }}>
         <Divider sx={{ mb: 2, backgroundColor: 'rgba(69, 21, 19, 0.2)' }} />
         
         {/* Profile & Logout */}

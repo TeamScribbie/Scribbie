@@ -50,12 +50,10 @@ const StudentProfile = () => {
   return (
     <div className="student-profile-container">
       {/* Sidebar */}
-      <div className="student-sidebar">
-        <StudentSidebar 
-          isMobileOpen={isMobileSidebarOpen}
-          onMobileClose={handleMobileSidebarClose}
-        />
-      </div>
+      <StudentSidebar 
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={handleMobileSidebarClose}
+      />
 
       <div className="profile-content-area">
         {/* Navbar */}

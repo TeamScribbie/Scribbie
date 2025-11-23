@@ -186,40 +186,40 @@ export default function MemoryGame({
                 setMatchedPairs(prev => prev + 1);
                 setCombo(prev => prev + 1);
 
-                setTimeout(() => {
-                    setGlowCards({});
-                }, 800);
-
                 if (isChallengeMode) {
                     // --- Challenge Mode match logic ---
                     setScore(prev => prev + 100);
                     const newMaxTime = Math.max(maxTime - 1.0, 8);
                     setMaxTime(newMaxTime);
                     setTimeLeft(newMaxTime); 
-
-                    setTimeout(() => {
-                        const currentCardSrcs = cards.map(c => c.src);
-                        const newCard = getNewCard(currentCardSrcs);
-                        
-                        setCards(prevCards => prevCards.map(card => {
-                            if (card.id === choiceOne.id || card.id === choiceTwo.id) {
-                                return { ...newCard, id: card.id, matched: false };
-                            }
-                            return card;
-                        }));
-                        resetTurn();
-                        createParticle(choiceOne.x, choiceOne.y); // Use createParticle
-                    }, 800);
-
-                } else {
-                    // --- Normal Mode match logic ---
-                    setCards((prev) =>
-                        prev.map((card) =>
-                            card.src === choiceOne.src ? { ...card, matched: true } : card
-                        )
-                    );
-                    resetTurn();
                 }
+
+                // After a short delay, clear glow and mark cards as matched
+                setTimeout(() => {
+                    setGlowCards({});
+
+                    if (isChallengeMode) {
+                        // Mark only this pair as matched; board will be refreshed
+                        // later when ALL cards are matched.
+                        setCards(prevCards =>
+                            prevCards.map(card =>
+                                (card.id === choiceOne.id || card.id === choiceTwo.id)
+                                    ? { ...card, matched: true }
+                                    : card
+                            )
+                        );
+                        resetTurn();
+                        createParticle(choiceOne.x, choiceOne.y);
+                    } else {
+                        // --- Normal Mode match logic ---
+                        setCards(prev =>
+                            prev.map(card =>
+                                card.src === choiceOne.src ? { ...card, matched: true } : card
+                            )
+                        );
+                        resetTurn();
+                    }
+                }, 800);
             } else {
                 // Mismatch! - Red glow (from Challenge)
                 setGlowCards({
@@ -235,7 +235,33 @@ export default function MemoryGame({
                 }, 1000);
             }
         }
-    }, [choiceOne, choiceTwo, isChallengeMode, getNewCard, cards, maxTime]);
+    }, [choiceOne, choiceTwo, isChallengeMode, maxTime]);
+
+    // --- Challenge Mode: generate a new set only after clearing the current board ---
+    useEffect(() => {
+        if (!isChallengeMode || cards.length === 0) return;
+
+        const allMatched = cards.every(card => card.matched);
+        if (!allMatched) return;
+
+        // Build a fresh challenge board but keep score, time, and matchedPairs
+        const uniqueCards = [...new Map(gameData.map(item => [item.src, item])).values()];
+        const initialCards = uniqueCards.slice(0, 8);
+        const cardSet = [...initialCards, ...initialCards];
+
+        const shuffled = cardSet
+            .sort(() => Math.random() - 0.5)
+            .map(card => ({
+                ...card,
+                id: Math.random(),
+                matched: false
+            }));
+
+        setChoiceOne(null);
+        setChoiceTwo(null);
+        setCards(shuffled);
+        setDisabled(false);
+    }, [isChallengeMode, cards, gameData]);
 
     // --- Win Condition (Normal Mode) (from Challenge, merged with SkibidiRIzz data) ---
     useEffect(() => {
@@ -301,10 +327,12 @@ export default function MemoryGame({
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
-                padding: { xs: 1, md: 2 },
+                padding: { xs: 2, md: 4 },
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                justifyContent: 'flex-start',
+                gap: 2,
                 position: 'relative',
                 overflow: 'auto'
             }}
@@ -452,7 +480,7 @@ export default function MemoryGame({
                             background: 'linear-gradient(135deg, #FFD966 0%, #FDB10D 50%, #f9b121 100%)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            textShadow: '0 4px 20px rgba(253, 177, 13, 0.3)',
+                            textShadow: '0 4px 20px rgba(0,0,0,0.3)',
                             mb: 2,
                             fontFamily: 'Luckiest Guy, cursive',
                             letterSpacing: '2px',
@@ -467,11 +495,17 @@ export default function MemoryGame({
                         sx={{
                             display: 'flex',
                             flexDirection: { xs: 'column', lg: 'row' },
-                            gap: 3,
+                            gap: { xs: 2.5, md: 3 },
                             width: '100%',
                             maxWidth: '1400px',
                             alignItems: { xs: 'center', lg: 'flex-start' },
-                            justifyContent: 'center'
+                            justifyContent: 'center',
+                            p: { xs: 2, md: 3 },
+                            borderRadius: { xs: 3, md: 4 },
+                            background: 'rgba(255, 255, 255, 0.18)',
+                            boxShadow: '0 18px 45px rgba(15, 23, 42, 0.28)',
+                            backdropFilter: 'blur(16px)',
+                            border: '2px solid rgba(255, 255, 255, 0.35)'
                         }}
                     >
                         {/* Left Side Stats Cards (from Challenge) */}
@@ -479,9 +513,11 @@ export default function MemoryGame({
                             sx={{
                                 display: { xs: 'flex', lg: 'block' },
                                 flexDirection: { xs: 'row', lg: 'column' },
-                                gap: 2,
+                                gap: 1.5,
                                 flexWrap: { xs: 'wrap', lg: 'nowrap' },
                                 justifyContent: 'center',
+                                alignItems: { xs: 'stretch', lg: 'stretch' },
+                                width: { xs: '100%', lg: '210px' },
                                 order: { xs: 1, lg: 0 }
                             }}
                         >
@@ -490,10 +526,11 @@ export default function MemoryGame({
                             elevation={12}
                             sx={{
                                 background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
-                                padding: '14px 24px',
-                                borderRadius: '20px',
-                                minWidth: '140px',
+                                padding: { xs: '10px 14px', md: '12px 18px' },
+                                borderRadius: '16px',
+                                minWidth: '120px',
                                 textAlign: 'center',
+                                flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 140px', lg: '0 0 auto' },
                                 border: '3px solid rgba(255, 255, 255, 0.6)',
                                 boxShadow: '0 8px 24px rgba(34, 197, 94, 0.5)',
                                 position: 'relative',
@@ -515,8 +552,8 @@ export default function MemoryGame({
                                 }
                             }}
                         >
-                            <StarIcon sx={{ fontSize: 32, color: '#fff', mb: 0.5, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
-                            <Typography variant="h5" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: '1.6rem', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                            <StarIcon sx={{ fontSize: 26, color: '#fff', mb: 0.3, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
+                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: { xs: '1.1rem', md: '1.2rem' }, textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                                 {isChallengeMode ? score : `${matchedPairs}/${gameData.length}`}
                             </Typography>
                             <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: 'bold', fontSize: '0.75rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
@@ -529,10 +566,11 @@ export default function MemoryGame({
                             elevation={12}
                             sx={{
                                 background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-                                padding: '14px 24px',
-                                borderRadius: '20px',
-                                minWidth: '140px',
+                                padding: { xs: '10px 14px', md: '12px 18px' },
+                                borderRadius: '16px',
+                                minWidth: '120px',
                                 textAlign: 'center',
+                                flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 140px', lg: '0 0 auto' },
                                 border: '3px solid rgba(255, 255, 255, 0.6)',
                                 boxShadow: '0 8px 24px rgba(59, 130, 246, 0.5)',
                                 position: 'relative',
@@ -554,8 +592,8 @@ export default function MemoryGame({
                                 }
                             }}
                         >
-                            <FavoriteIcon sx={{ fontSize: 32, color: '#fff', mb: 0.5, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
-                            <Typography variant="h5" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: '1.6rem', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                            <FavoriteIcon sx={{ fontSize: 26, color: '#fff', mb: 0.3, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
+                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: { xs: '1.1rem', md: '1.2rem' }, textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                                 {turns}
                             </Typography>
                             <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: 'bold', fontSize: '0.75rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
@@ -570,10 +608,11 @@ export default function MemoryGame({
                                 className="combo-badge"
                                 sx={{
                                     background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
-                                    padding: '14px 24px',
-                                    borderRadius: '20px',
-                                    minWidth: '140px',
+                                    padding: { xs: '10px 14px', md: '12px 18px' },
+                                    borderRadius: '16px',
+                                    minWidth: '120px',
                                     textAlign: 'center',
+                                    flex: { xs: '1 1 100%', sm: '1 1 140px', lg: '0 0 auto' },
                                     border: '3px solid rgba(255, 255, 255, 0.7)',
                                     boxShadow: '0 10px 32px rgba(255, 107, 107, 0.6)',
                                     animation: 'comboPulse 0.8s ease-in-out infinite',
@@ -591,8 +630,8 @@ export default function MemoryGame({
                                     }
                                 }}
                             >
-                                <FlashOnIcon sx={{ fontSize: 32, color: '#fff', mb: 0.5, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))', animation: 'spin 2s linear infinite' }} />
-                                <Typography variant="h5" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: '1.6rem', textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                                <FlashOnIcon sx={{ fontSize: 26, color: '#fff', mb: 0.3, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))', animation: 'spin 2s linear infinite' }} />
+                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: { xs: '1.1rem', md: '1.2rem' }, textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
                                     {combo}x
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: 'bold', fontSize: '0.75rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
@@ -610,6 +649,8 @@ export default function MemoryGame({
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 gap: 2,
+                                width: '100%',
+                                minWidth: 0,
                                 order: { xs: 2, lg: 1 }
                             }}
                         >
@@ -651,20 +692,36 @@ export default function MemoryGame({
                                             value={(timeLeft / maxTime) * 100} 
                                             sx={{ 
                                                 height: '28px', 
-                                                borderRadius: '14px', 
-                                                backgroundColor: 'rgba(255,255,255,0.25)',
-                                                border: '3px solid rgba(255, 255, 255, 0.6)',
-                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                                                overflow: 'visible',
+                                                borderRadius: '999px',
+                                                background: 'linear-gradient(135deg, rgba(15,23,42,0.7) 0%, rgba(30,64,175,0.9) 50%, rgba(15,23,42,0.7) 100%)',
+                                                border: '3px solid rgba(255, 255, 255, 0.4)',
+                                                boxShadow: '0 10px 26px rgba(15, 23, 42, 0.7)',
+                                                overflow: 'hidden',
+                                                position: 'relative',
+                                                '&::before': {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    inset: 0,
+                                                    backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.16) 1px, transparent 1px)',
+                                                    backgroundSize: '18px 100%',
+                                                    opacity: 0.25,
+                                                    pointerEvents: 'none',
+                                                    zIndex: 0,
+                                                },
                                                 '& .MuiLinearProgress-bar': { 
                                                     background: timeLeft <= 10 
-                                                        ? 'linear-gradient(90deg, #ff6b6b 0%, #ee5a52 50%, #ff6b6b 100%)'
-                                                        : 'linear-gradient(90deg, #4ade80 0%, #22c55e 50%, #4ade80 100%)',
-                                                    borderRadius: '14px',
+                                                        ? 'linear-gradient(90deg, #ff6b6b 0%, #ee5a52 45%, #ff9f7d 100%)'
+                                                        : 'linear-gradient(90deg, #4ade80 0%, #22c55e 45%, #a7f3d0 100%)',
+                                                    borderRadius: '999px',
                                                     boxShadow: timeLeft <= 10
-                                                        ? '0 0 20px rgba(255, 107, 107, 0.6)'
-                                                        : '0 0 20px rgba(34, 197, 94, 0.5)',
-                                                    transition: 'all 0.3s ease'
+                                                        ? '0 0 24px rgba(248, 113, 113, 0.9)'
+                                                        : '0 0 24px rgba(74, 222, 128, 0.9)',
+                                                    transition: 'all 0.25s ease',
+                                                    backgroundSize: '32px 32px',
+                                                    animation: timeLeft <= 10
+                                                        ? 'timerStripeFast 0.6s linear infinite'
+                                                        : 'timerStripe 1.5s linear infinite',
+                                                    zIndex: 1,
                                                 } 
                                             }} 
                                         />
@@ -805,20 +862,24 @@ export default function MemoryGame({
                                 <>
                                     {/* Word Popup (from Challenge) */}
                                     {popupWord && (
+<<<<<<< Updated upstream
                                         <Paper
                                             elevation={12}
                                             className="popup-word-modern"
                                             sx={{
                                                 position: 'fixed',
                                                 top: '50%',
-                                                right: '30px',
-                                                transform: 'translateY(-50%)',
+                                                left: { xs: '50%', md: 'auto' },
+                                                right: { xs: 'auto', md: '30px' },
+                                                transform: { xs: 'translate(-50%, -50%)', md: 'translateY(-50%)' },
                                                 background: 'linear-gradient(135deg, #FFD966 0%, #FDB10D 100%)',
                                                 color: '#451513',
-                                                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                                                fontSize: { xs: '2.3rem', md: '3.5rem' },
                                                 fontWeight: '900',
-                                                padding: { xs: '20px 30px', md: '28px 42px' },
+                                                padding: { xs: '18px 24px', md: '28px 42px' },
                                                 borderRadius: '25px',
+                                                maxWidth: { xs: '90vw', md: 'none' },
+                                                textAlign: 'center',
                                                 zIndex: 999,
                                                 border: '4px solid rgba(255, 255, 255, 0.5)',
                                                 boxShadow: '0 12px 40px rgba(253, 177, 13, 0.5)',
@@ -829,6 +890,32 @@ export default function MemoryGame({
                                             {popupWord}
                                         </Paper>
                                     )}
+=======
+                                <Paper
+                                    elevation={12}
+                                    className="popup-word-modern"
+                                    sx={{
+                                        position: 'fixed',
+                                        top: '50%',
+                                        right: '30px',
+                                        transform: 'translateY(-50%)',
+                                        background: 'linear-gradient(135deg, #FFD966 0%, #FDB10D 100%)',
+                                        color: '#451513',
+                                        fontSize: { xs: '2.5rem', md: '3.5rem' },
+                                        fontWeight: '900',
+                                        padding: { xs: '20px 30px', md: '28px 42px' },
+                                        borderRadius: '25px',
+                                        zIndex: 999,
+                                        border: '4px solid rgba(255, 255, 255, 0.5)',
+                                        boxShadow: '0 12px 40px rgba(253, 177, 13, 0.5)',
+                                        fontFamily: 'Luckiest Guy, cursive',
+                                        animation: 'popIn 0.4s ease-out'
+                                    }}
+                                >
+                                    {popupWord}
+                                </Paper>
+                            )}
+
 
                                     {/* Card Grid (from Challenge, but using MERGED grid logic) */}
                                     <Box 
@@ -856,7 +943,9 @@ export default function MemoryGame({
                                                     sx={{
                                                         width: '100%',
                                                         aspectRatio: '1',
-                                                        maxHeight: { xs: '95px', sm: '110px', md: '125px' },
+                                                        // Limit card height relative to viewport so the full grid fits on screen
+                                                        maxHeight: { xs: '16vh', sm: '14vh', md: '13vh' },
+
                                                         background: isFlipped 
                                                             ? 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
                                                             : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -876,7 +965,8 @@ export default function MemoryGame({
                                                             : isFlipped ? '0 8px 20px rgba(0, 0, 0, 0.2)' : '0 6px 16px rgba(0, 0, 0, 0.15)',
                                                         '&:hover': !disabled && !isFlipped ? {
                                                             boxShadow: '0 12px 28px rgba(102, 126, 234, 0.5)',
-                                                            background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)'
+                                                            background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)',
+                                                            transform: 'translateY(-4px) scale(1.03)'
                                                         } : {},
                                                         '&::before': !isFlipped && !glowType ? {
                                                             content: '""',

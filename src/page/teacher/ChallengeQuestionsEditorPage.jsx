@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/layout/navbar';
+import TeacherNavbar from '../../components/layout/TeacherNavbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
+
 import {
     Typography, Box, CircularProgress, Alert, Paper, Button,
     List, ListItem, ListItemText, IconButton, Divider, Snackbar, Chip
@@ -60,6 +61,12 @@ const ChallengeQuestionsEditorPage = () => {
         }
     }, [authState.isAuthenticated, authState.token]);
 
+    // Ensure sidebar starts closed on smaller screens
+    useEffect(() => {
+        if (window.innerWidth <= 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
 
     const fetchChallengeDetailsAndQuestions = useCallback(async () => {
         if (!challengeDefinitionId || !lessonDefinitionId || !authState.token) {
@@ -204,8 +211,16 @@ const ChallengeQuestionsEditorPage = () => {
             <Box className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
+
+            {sidebarOpen && (
+                <div
+                    className="teacher-sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
                     <Button component={RouterLink} to={backToLessonManagementPath} state={{ courseId: courseId, lessonDefinitionId: lessonDefinitionId }}
                         startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">

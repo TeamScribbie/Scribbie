@@ -130,12 +130,10 @@ const StudentHomepage = () => {
       <div className="sparkle sparkle-5"></div>
 
       {/* Sidebar */}
-      <div className="student-sidebar">
-        <StudentSidebar 
-          isMobileOpen={isMobileSidebarOpen}
-          onMobileClose={handleMobileSidebarClose}
-        />
-      </div>
+      <StudentSidebar 
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={handleMobileSidebarClose}
+      />
 
       <div className="student-content-area">
         {/* Navbar */}

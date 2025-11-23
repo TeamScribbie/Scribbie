@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/layout/navbar';
+import TeacherNavbar from '../../components/layout/TeacherNavbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
+
 import {
     Typography, Box, CircularProgress, Alert, Paper, List, ListItem, ListItemText,
     IconButton, Button, Divider, Collapse, Chip, Snackbar
@@ -430,7 +431,7 @@ const LessonManagementPage = () => {
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
                     {/* ... other JSX elements like BackButton, Paper for Course Title, Add Lesson button ... */}
                     <Button component={RouterLink} to="/teacher/manage-courses" startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">

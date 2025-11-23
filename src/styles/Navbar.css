@@ -283,6 +283,10 @@
         left: 0;
     }
 
+    .navbar-container.student-navbar {
+        left: 0;
+    }
+
     .navbar-left {
         gap: 12px;
     }
