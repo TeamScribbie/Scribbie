@@ -5,6 +5,7 @@ import { getLeaderboardSnapshot } from '../../services/challengeService';
 import { Box, Typography, CircularProgress, Alert, Paper, List, ListItem, ListItemText, Divider, Button, Avatar } from '@mui/material';
 import Navbar from '../../components/layout/navbar';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import leaderboardBg from '../../assets/leaderboard-bg.jpg';
 
 const ViewLeaderboardPage = () => {
     const { lessonDefinitionId } = useParams();
@@ -47,10 +48,21 @@ const ViewLeaderboardPage = () => {
     };
     
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#FFFBE0' }}>
-            <Navbar />
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '100vh',
+                backgroundImage: `url(${leaderboardBg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+            }}
+        >
+            <Navbar className="sidebar-closed" />
+
             <Box component="main" sx={{ flexGrow: 1, p: 3, mt: '60px', display: 'flex', justifyContent: 'center' }}>
-                <Paper elevation={4} sx={{ p: 4, borderRadius: 3, width: '100%', maxWidth: '800px' }}>
+                <Paper elevation={4} sx={{ p: 4, borderRadius: 3, width: '100%', maxWidth: '800px', bgcolor: '#FFFBE0' }}>
                     <Typography variant="h4" component="h1" gutterBottom textAlign="center" fontWeight="bold">
                         🏆 Leaderboard 🏆
                     </Typography>
@@ -70,9 +82,9 @@ const ViewLeaderboardPage = () => {
                                             primary={`${index + 1}. ${player.studentName || 'Unknown Player'}`}
                                             primaryTypographyProps={{ fontWeight: 'bold' }}
                                         />
-                                        {/* ✨ FIXED: Added a check to prevent crash if score is missing ✨ */}
+                                        {/* Use totalScore from API, with a safe fallback to score if needed */}
                                         <Typography variant="h6" color="primary">
-                                            {(player.score ?? 0).toLocaleString()}
+                                            {(player.totalScore ?? player.score ?? 0).toLocaleString()}
                                         </Typography>
                                     </ListItem>
                                     {index < leaderboard.length - 1 && <Divider />}

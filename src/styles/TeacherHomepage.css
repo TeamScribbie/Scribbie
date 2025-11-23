@@ -20,13 +20,14 @@
     display: flex;
     flex-direction: column;
     border-right: 1px solid rgba(255, 232, 163, 0.3);
-    z-index: 1000;
+    z-index: 1002;
     box-shadow: 
       4px 0 20px rgba(249, 177, 33, 0.15),
       0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   
   .teacher-sidebar.closed {
@@ -60,6 +61,24 @@
   
   .teacher-sidebar::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Mobile/tablet overlay behind teacher sidebar */
+  .teacher-sidebar-overlay {
+    display: none;
+  }
+
+  @media (max-width: 1024px) {
+    .teacher-sidebar-overlay {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 1001;
+    }
   }
   
   .sidebar-title {
@@ -186,7 +205,7 @@
     
     .teacher-sidebar {
       position: fixed;
-      z-index: 1001;
+      z-index: 1003;
       width: 320px;
       box-shadow: 
         8px 0 32px rgba(249, 177, 33, 0.2),

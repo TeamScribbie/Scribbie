@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE_URL } from '../../config/apiConfig';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Navbar from '../../components/layout/navbar';
+import TeacherNavbar from '../../components/layout/TeacherNavbar';
 import TeacherSidebar from '../../components/layout/TeacherSidebar';
+
 import {
     Typography, Box, CircularProgress, Alert, Paper, Button,
     List, ListItem, ListItemText, IconButton, Snackbar, Chip, TextField
@@ -99,6 +100,12 @@ const ActivityNodeEditorPage = () => {
             setIsLoadingPage(false);
         }
     }, [authState.isAuthenticated, authState.token, fetchActivityNodeData]);
+
+    useEffect(() => {
+        if (window.innerWidth <= 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
 
     const handleDetailsChange = (e) => {
         const { name, value } = e.target;
@@ -297,8 +304,16 @@ const ActivityNodeEditorPage = () => {
             <Box className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
+
+            {sidebarOpen && (
+                <div
+                    className="teacher-sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
-                <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+                <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">
                     <Button component={RouterLink} to={lessonManagementPath} state={{ courseId: courseId, lessonDefinitionId: lessonDefinitionId }}
                             startIcon={<ArrowBackIcon />} sx={{ mb: 2 }} variant="outlined">

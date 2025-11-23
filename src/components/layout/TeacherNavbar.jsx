@@ -31,7 +31,7 @@ const TeacherNavbar = ({ sidebarOpen, setSidebarOpen, transparent, className }) 
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+      setIsMobile(window.innerWidth <= 1024);
     };
     
     checkMobile();
@@ -95,14 +95,14 @@ const TeacherNavbar = ({ sidebarOpen, setSidebarOpen, transparent, className }) 
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        px: 4,
+        px: { xs: 2, md: 4 },
         borderBottom: '1px solid rgba(249, 177, 33, 0.15)',
         boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(249, 177, 33, 0.1)',
         position: 'fixed',
         top: 0,
-        left: sidebarOpen ? '280px' : '0',
+        left: isMobile ? '0' : (sidebarOpen ? '280px' : '0'),
         right: 0,
-        zIndex: 1000,
+        zIndex: 1100,
         backdropFilter: 'blur(12px)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         ...(className && { className })

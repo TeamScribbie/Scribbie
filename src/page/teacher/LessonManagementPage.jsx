@@ -206,6 +206,13 @@ const LessonManagementPage = () => {
         }
     }, [authState.isAuthenticated, authState.token]);
 
+    // Ensure sidebar starts closed on smaller screens
+    useEffect(() => {
+        if (window.innerWidth <= 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
+
     const fetchCourseDetails = useCallback(async () => {
         if (!courseId || !authState.token) return;
         setIsLoadingCourse(true); setErrorCourse(null);
@@ -456,6 +463,14 @@ const LessonManagementPage = () => {
             <Box className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageCourses" />
             </Box>
+
+            {sidebarOpen && (
+                <div
+                    className="teacher-sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
                 <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                 <Box className="teacher-main-content">

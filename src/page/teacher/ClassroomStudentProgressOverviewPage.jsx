@@ -41,6 +41,13 @@ const ClassroomStudentProgressOverviewPage = () => {
     const [error, setError] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
+    // Ensure sidebar starts closed on smaller screens
+    useEffect(() => {
+        if (window.innerWidth <= 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
+
     const [studentToRemove, setStudentToRemove] = useState(null);
     const [isRemoving, setIsRemoving] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -125,6 +132,13 @@ const ClassroomStudentProgressOverviewPage = () => {
             <div className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="Classes"/>
             </div>
+
+            {sidebarOpen && (
+                <div
+                    className="teacher-sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
 
             <div className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
                 <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />

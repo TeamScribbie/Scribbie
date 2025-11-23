@@ -35,6 +35,13 @@ const ManageAdminsPage = () => {
     const [processingTeacherId, setProcessingTeacherId] = useState(null);
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
+    // Ensure sidebar starts closed on smaller screens
+    useEffect(() => {
+        if (window.innerWidth <= 1024) {
+            setSidebarOpen(false);
+        }
+    }, []);
+
     const fetchTeachers = useCallback(async () => {
         if (!authState.token) return;
         setIsLoading(true);
@@ -109,12 +116,17 @@ const ManageAdminsPage = () => {
 
     return (
         <Box className="teacher-homepage-container"> {/* MUI Box can take className */}
-            {/*// highlight-start*/}
             {/* Wrap TeacherSidebar in a Box with the correct classes */}
             <Box className={`teacher-sidebar ${sidebarOpen ? '' : 'closed'}`}>
                 <TeacherSidebar isOpen={sidebarOpen} activeItem="ManageAdmins" />
             </Box>
-            {/*// highlight-end*/}
+
+            {sidebarOpen && (
+                <div
+                    className="teacher-sidebar-overlay"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
 
             <Box className={`teacher-content-area ${sidebarOpen ? '' : 'sidebar-closed'}`}>
                 <TeacherNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -147,7 +159,14 @@ const ManageAdminsPage = () => {
                         </Box>
                         
                         {/* Stats Cards */}
-                        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mb: 4 }}>
+                        <Box sx={{ mb: 4 }}>
+                            <Box
+                                sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                                    gap: 3
+                                }}
+                            >
                             <Card 
                                 elevation={0}
                                 sx={{ 
@@ -155,7 +174,9 @@ const ManageAdminsPage = () => {
                                     background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
                                     color: '#451513',
                                     borderRadius: 3,
-                                    minWidth: 200
+                                    minWidth: 0,
+                                    textAlign: 'center',
+                                    height: '100%'
                                 }}
                             >
                                 <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
@@ -173,7 +194,9 @@ const ManageAdminsPage = () => {
                                     background: 'linear-gradient(135deg, #36B8E4 0%, #4FACFE 100%)',
                                     color: 'white',
                                     borderRadius: 3,
-                                    minWidth: 200
+                                    minWidth: 0,
+                                    textAlign: 'center',
+                                    height: '100%'
                                 }}
                             >
                                 <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
@@ -183,6 +206,7 @@ const ManageAdminsPage = () => {
                                     Active Admins
                                 </Typography>
                             </Card>
+                            </Box>
                         </Box>
                     </Box>
 
@@ -217,15 +241,15 @@ const ManageAdminsPage = () => {
                                     border: '1px solid #e2e8f0'
                                 }}
                             >
-                                <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
-                                    <Table stickyHeader aria-label="manage admins table">
+                                <TableContainer sx={{ maxHeight: { xs: 'none', md: 'calc(100vh - 300px)' }, overflowX: 'auto' }}>
+                                    <Table stickyHeader aria-label="manage admins table" size="small" sx={{ minWidth: 650 }}>
                                         <TableHead>
                                             <TableRow sx={{ backgroundColor: '#fffbf5' }}>
-                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: '0.9rem' }}>Teacher</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: '0.9rem' }}>ID</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: '0.9rem' }}>Email</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: '0.9rem' }}>Roles</TableCell>
-                                                <TableCell align="center" sx={{ fontWeight: 700, color: '#451513', fontSize: '0.9rem' }}>Admin Access</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Teacher</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>ID</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Email</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#451513', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Roles</TableCell>
+                                                <TableCell align="center" sx={{ fontWeight: 700, color: '#451513', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Admin Access</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
