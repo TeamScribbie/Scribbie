@@ -233,14 +233,14 @@ const StudentCourseDetailPage = () => {
                                         sx={{ 
                                             p: 3, 
                                             background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
-                                            color: scribbieColors.text,
+                                            color: '#ffffff !important',
                                             borderRadius: 3
                                         }}
                                     >
-                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                                             {detailedProgress.length}
                                         </Typography>
-                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                                             Total Lessons
                                         </Typography>
                                     </Card>
@@ -252,14 +252,14 @@ const StudentCourseDetailPage = () => {
                                         sx={{ 
                                             p: 3, 
                                             background: 'linear-gradient(135deg, #36B8E4 0%, #4FACFE 100%)',
-                                            color: 'white',
+                                            color: '#ffffff !important',
                                             borderRadius: 3
                                         }}
                                     >
-                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                                             {detailedProgress.filter(lesson => lesson.status === 'COMPLETED').length}
                                         </Typography>
-                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                                             Completed
                                         </Typography>
                                     </Card>
@@ -270,15 +270,15 @@ const StudentCourseDetailPage = () => {
                                         elevation={0}
                                         sx={{ 
                                             p: 3, 
-                                            background: 'linear-gradient(135deg, #FFE8A3 0%, #FFEDB6 100%)',
-                                            color: scribbieColors.text,
+                                            background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                                            color: '#ffffff !important',
                                             borderRadius: 3
                                         }}
                                     >
-                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                                             {Math.round(detailedProgress.reduce((total, lesson) => total + (lesson.score || 0), 0) / Math.max(detailedProgress.length, 1))}
                                         </Typography>
-                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                                             Average Score
                                         </Typography>
                                     </Card>
@@ -290,14 +290,14 @@ const StudentCourseDetailPage = () => {
                                         sx={{ 
                                             p: 3, 
                                             background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                                            color: 'white',
+                                            color: '#ffffff !important',
                                             borderRadius: 3
                                         }}
                                     >
-                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                                        <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                                             {Math.round(detailedProgress.reduce((total, lesson) => total + (lesson.timeSpent || 0), 0) / 60)}m
                                         </Typography>
-                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                                        <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                                             Total Time
                                         </Typography>
                                     </Card>

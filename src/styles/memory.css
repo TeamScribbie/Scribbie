@@ -422,6 +422,7 @@
   background-color: #fff; /* White background for the card face */
   border-radius: 10px; /* Match the card's border-radius */
   user-select: none; /* Prevents text selection on click */
+  transform: rotateY(180deg); /* Counter-rotate text to prevent mirroring */
 }
 
 /* 3D flip effect for MemoryGame cards */
