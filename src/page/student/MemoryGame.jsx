@@ -298,7 +298,7 @@ export default function MemoryGame({
 
         // In Challenge mode, always show image
         if (isChallengeMode) {
-             return <img src={card.src} alt={card.word} className="card-image" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />;
+            return <img src={card.src} alt={card.word} className="card-image" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px' }} />;
         }
 
         // In Normal mode, use difficulty flag
@@ -322,19 +322,21 @@ export default function MemoryGame({
         <Box
             className="memory-container"
             sx={{
-                minHeight: "100vh",
+                height: '100vh',
+                minHeight: '100vh',
                 backgroundImage: `url(${memoryGameBg})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
-                padding: { xs: 2, md: 4 },
+                padding: { xs: 1.5, md: 2 },
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: 'flex-start',
-                gap: 2,
+                gap: 1.5,
                 position: 'relative',
-                overflow: 'auto'
+                overflow: 'hidden',
+                boxSizing: 'border-box'
             }}
         >
             {/* Floating particles (from Challenge) */}
@@ -895,7 +897,7 @@ export default function MemoryGame({
                                             // Merged grid logic
                                             gridTemplateColumns: `repeat(${isChallengeMode ? 4 : (totalPairs > 9 ? 4 : (totalPairs > 6 ? 4 : 3))}, 1fr)`,
                                             gap: { xs: 1, sm: 1.5, md: 2 }, 
-                                            maxWidth: { xs: "90%", sm: "520px", md: "600px" }, 
+                                            maxWidth: { xs: "90%", sm: "480px", md: "540px" }, 
                                             margin: "0 auto",
                                             px: { xs: 1, sm: 1.5 }
                                         }}
@@ -914,7 +916,7 @@ export default function MemoryGame({
                                                         width: '100%',
                                                         aspectRatio: '1',
                                                         // Limit card height relative to viewport so the full grid fits on screen
-                                                        maxHeight: { xs: '16vh', sm: '14vh', md: '13vh' },
+                                                        maxHeight: { xs: '14vh', sm: '12vh', md: '11vh' },
 
                                                         background: isFlipped 
                                                             ? 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
@@ -936,7 +938,7 @@ export default function MemoryGame({
                                                         '&:hover': !disabled && !isFlipped ? {
                                                             boxShadow: '0 12px 28px rgba(102, 126, 234, 0.5)',
                                                             background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)',
-                                                            transform: 'translateY(-4px) scale(1.03)'
+                                                            transform: 'translateY(-4px)'
                                                         } : {},
                                                         '&::before': !isFlipped && !glowType ? {
                                                             content: '""',
