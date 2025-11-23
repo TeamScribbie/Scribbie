@@ -400,10 +400,6 @@ const ActivitySummaryPage = () => {
                             {isSubmitting ? 'Saving...' : 'Submit'}
                         </Button>
                     </Box>
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
                 </Paper>
             </Box>
