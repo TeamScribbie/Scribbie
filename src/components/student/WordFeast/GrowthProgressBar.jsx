@@ -7,47 +7,30 @@ const GrowthProgressBar = ({ score, x, y }) => {
     const smallToMedium = 200;
     const mediumToLarge = 500;
     
-    // Determine current phase
-    let phase1Progress = 0; // Phase 1: Small → Medium (first half)
-    let phase2Progress = 0; // Phase 2: Medium → Medium+ (second half)
-    let phase3Progress = 0; // Phase 3: Medium+ → Large (first half)
-    let phase4Progress = 0; // Phase 4: Large → Large+ (second half)
+    // Determine current phase - only 2 segments for 3 sizes
+    let phase1Progress = 0; // Small → Medium
+    let phase2Progress = 0; // Medium → Large
     let currentStage = '';
     
-    if (score < smallToMedium / 2) {
-        // Phase 1: Small → Medium (first half)
-        phase1Progress = score / (smallToMedium / 2);
+    if (score < smallToMedium) {
+        // Phase 1: Small → Medium
+        phase1Progress = score / smallToMedium;
         currentStage = 'Small';
-    } else if (score < smallToMedium) {
-        // Phase 2: Medium → Medium+ (second half)
-        phase1Progress = 1;
-        phase2Progress = (score - smallToMedium / 2) / (smallToMedium / 2);
-        currentStage = 'Small+';
-    } else if (score < smallToMedium + (mediumToLarge - smallToMedium) / 2) {
-        // Phase 3: Medium → Large (first half)
-        phase1Progress = 1;
-        phase2Progress = 1;
-        phase3Progress = (score - smallToMedium) / ((mediumToLarge - smallToMedium) / 2);
-        currentStage = 'Medium';
     } else if (score < mediumToLarge) {
-        // Phase 4: Large → Large+ (second half)
+        // Phase 2: Medium → Large
         phase1Progress = 1;
-        phase2Progress = 1;
-        phase3Progress = 1;
-        phase4Progress = (score - smallToMedium - (mediumToLarge - smallToMedium) / 2) / ((mediumToLarge - smallToMedium) / 2);
-        currentStage = 'Medium+';
+        phase2Progress = (score - smallToMedium) / (mediumToLarge - smallToMedium);
+        currentStage = 'Medium';
     } else {
         // Max size reached
         phase1Progress = 1;
         phase2Progress = 1;
-        phase3Progress = 1;
-        phase4Progress = 1;
         currentStage = 'Large';
     }
     
     const barWidth = 300;
     const barHeight = 30;
-    const segmentWidth = barWidth / 4;
+    const segmentWidth = barWidth / 2; // Changed from 4 to 2 segments
     const padding = 2;
     
     const textStyle = new TextStyle({
@@ -69,7 +52,7 @@ const GrowthProgressBar = ({ score, x, y }) => {
                 }}
             />
             
-            {/* Phase 1 */}
+            {/* Phase 1: Small → Medium (Green) */}
             <Graphics
                 draw={g => {
                     g.clear();
@@ -85,11 +68,11 @@ const GrowthProgressBar = ({ score, x, y }) => {
                 }}
             />
             
-            {/* Phase 2 */}
+            {/* Phase 2: Medium → Large (Orange) */}
             <Graphics
                 draw={g => {
                     g.clear();
-                    g.beginFill(0x00dd00);
+                    g.beginFill(0xffaa00);
                     g.drawRoundedRect(
                         segmentWidth + padding,
                         padding,
@@ -101,47 +84,13 @@ const GrowthProgressBar = ({ score, x, y }) => {
                 }}
             />
             
-            {/* Phase 3 */}
-            <Graphics
-                draw={g => {
-                    g.clear();
-                    g.beginFill(0xffaa00);
-                    g.drawRoundedRect(
-                        segmentWidth * 2 + padding,
-                        padding,
-                        Math.max(0, (segmentWidth - padding * 2) * phase3Progress),
-                        barHeight - padding * 2,
-                        3
-                    );
-                    g.endFill();
-                }}
-            />
-            
-            {/* Phase 4 */}
-            <Graphics
-                draw={g => {
-                    g.clear();
-                    g.beginFill(0xff8800);
-                    g.drawRoundedRect(
-                        segmentWidth * 3 + padding,
-                        padding,
-                        Math.max(0, (segmentWidth - padding * 2) * phase4Progress),
-                        barHeight - padding * 2,
-                        3
-                    );
-                    g.endFill();
-                }}
-            />
-            
-            {/* Dividers */}
+            {/* Center Divider */}
             <Graphics
                 draw={g => {
                     g.clear();
                     g.lineStyle(2, 0xffffff, 0.5);
-                    for (let i = 1; i < 4; i++) {
-                        g.moveTo(segmentWidth * i, 0);
-                        g.lineTo(segmentWidth * i, barHeight);
-                    }
+                    g.moveTo(segmentWidth, 0);
+                    g.lineTo(segmentWidth, barHeight);
                 }}
             />
             

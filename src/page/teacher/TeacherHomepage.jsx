@@ -269,7 +269,7 @@ const TeacherHomepage = () => {
                     p: 3, 
                     textAlign: 'center',
                     background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
-                    color: '#451513',
+                    color: '#ffffff !important',
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
                     '&:hover': {
@@ -278,10 +278,10 @@ const TeacherHomepage = () => {
                     }
                   }}
                 >
-                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                     {classrooms.length}
                   </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                     Active Classes
                   </Typography>
                 </Card>
@@ -293,7 +293,7 @@ const TeacherHomepage = () => {
                     p: 3, 
                     textAlign: 'center',
                     background: 'linear-gradient(135deg, #FDB10D 0%, #f9b121 100%)',
-                    color: '#451513',
+                    color: '#ffffff !important',
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
                     '&:hover': {
@@ -302,10 +302,10 @@ const TeacherHomepage = () => {
                     }
                   }}
                 >
-                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                     {pendingRequests.length}
                   </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                     Pending Requests
                   </Typography>
                 </Card>
@@ -316,20 +316,20 @@ const TeacherHomepage = () => {
                   sx={{ 
                     p: 3, 
                     textAlign: 'center',
-                    background: 'linear-gradient(135deg, #FFE8A3 0%, #FFEDB6 100%)',
-                    color: '#451513',
+                    background: 'linear-gradient(135deg, #f9b121 0%, #FFD966 100%)',
+                    color: '#ffffff !important',
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       transform: 'translateY(-4px)',
-                      boxShadow: '0 12px 40px rgba(255, 232, 163, 0.4)'
+                      boxShadow: '0 12px 40px rgba(249, 177, 33, 0.4)'
                     }
                   }}
                 >
-                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                     {classrooms.reduce((total, classroom) => total + (classroom.studentCount || 0), 0)}
                   </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                     Total Students
                   </Typography>
                 </Card>
@@ -341,7 +341,7 @@ const TeacherHomepage = () => {
                     p: 3, 
                     textAlign: 'center',
                     background: 'linear-gradient(135deg, #36B8E4 0%, #4FACFE 100%)',
-                    color: 'white',
+                    color: '#ffffff !important',
                     borderRadius: 3,
                     transition: 'all 0.3s ease',
                     '&:hover': {
@@ -350,10 +350,10 @@ const TeacherHomepage = () => {
                     }
                   }}
                 >
-                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem' }}>
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 1, fontSize: '2.5rem', color: '#ffffff !important' }}>
                     98%
                   </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500 }}>
+                  <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, color: '#ffffff !important' }}>
                     Engagement
                   </Typography>
                 </Card>
