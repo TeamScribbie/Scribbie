@@ -862,7 +862,6 @@ export default function MemoryGame({
                                 <>
                                     {/* Word Popup (from Challenge) */}
                                     {popupWord && (
-<<<<<<< Updated upstream
                                         <Paper
                                             elevation={12}
                                             className="popup-word-modern"
@@ -890,32 +889,6 @@ export default function MemoryGame({
                                             {popupWord}
                                         </Paper>
                                     )}
-=======
-                                <Paper
-                                    elevation={12}
-                                    className="popup-word-modern"
-                                    sx={{
-                                        position: 'fixed',
-                                        top: '50%',
-                                        right: '30px',
-                                        transform: 'translateY(-50%)',
-                                        background: 'linear-gradient(135deg, #FFD966 0%, #FDB10D 100%)',
-                                        color: '#451513',
-                                        fontSize: { xs: '2.5rem', md: '3.5rem' },
-                                        fontWeight: '900',
-                                        padding: { xs: '20px 30px', md: '28px 42px' },
-                                        borderRadius: '25px',
-                                        zIndex: 999,
-                                        border: '4px solid rgba(255, 255, 255, 0.5)',
-                                        boxShadow: '0 12px 40px rgba(253, 177, 13, 0.5)',
-                                        fontFamily: 'Luckiest Guy, cursive',
-                                        animation: 'popIn 0.4s ease-out'
-                                    }}
-                                >
-                                    {popupWord}
-                                </Paper>
-                            )}
-
 
                                     {/* Card Grid (from Challenge, but using MERGED grid logic) */}
                                     <Box 
