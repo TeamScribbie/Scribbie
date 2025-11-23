@@ -397,9 +397,9 @@ const ActivitySummaryPage = () => {
                                 }
                             }}
                         >
-                        {isSubmitting ? 'Saving...' : 'Submit'}
-                    </Button>
-                </Box>
+                            {isSubmitting ? 'Saving...' : 'Submit'}
+                        </Button>
+                    </Box>
 
                 </Paper>
             </Box>
