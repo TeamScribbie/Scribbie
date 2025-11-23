@@ -62,13 +62,33 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     return children ? children : <Outlet />;
 };
 
+// Smart landing page component - shows landing to new users, redirects logged-in users
+const LandingOrRedirect = () => {
+  const { authState } = useAuth();
+  
+  if (authState.loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  if (authState.isAuthenticated) {
+    // Redirect based on role
+    const isStudent = authState.user?.roles?.includes("ROLE_STUDENT");
+    return <Navigate to={isStudent ? "/student-homepage" : "/teacher-homepage"} replace />;
+  }
+  
+  return <LandingPage />;
+};
 
 const App = () => {
   return (
     <AuthProvider>
       <Routes>
 
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingOrRedirect />} />
         <Route path="/student-login" element={<StudentLogin />} />
         <Route path="/student-register" element={<StudentRegistration />} />
         <Route path="/teacher-login" element={<TeacherLogin />} />
@@ -104,7 +124,6 @@ const App = () => {
         <Route path="/teacher/classroom/:classroomId/progress" element={<ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}><ClassroomStudentProgressOverviewPage /></ProtectedRoute>} />
         <Route path="/teacher/classroom/:classroomId/student/:studentId/progress" element={<ProtectedRoute allowedRoles={["ROLE_TEACHER", "ROLE_ADMIN", "ROLE_SUPERADMIN"]}><StudentCourseDetailPage /></ProtectedRoute>} />
 
-        <Route path="/" element={<Navigate to="/student-login" replace />} />
         <Route path="*" element={
             <div style={{ textAlign: 'center', marginTop: '50px' }}>
                 <h2>404 - Page Not Found</h2>

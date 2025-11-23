@@ -1203,17 +1203,15 @@ footer {
 
 /* Text Gradients */
 .text-gradient-warm {
-  background: var(--gradient-warm);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #374151 !important;
+  background: none !important;
+  -webkit-text-fill-color: #374151 !important;
 }
 
 .text-gradient-primary {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #374151 !important;
+  background: none !important;
+  -webkit-text-fill-color: #374151 !important;
 }
 
 /* Modern Navbar */
@@ -1427,12 +1425,13 @@ footer {
   line-height: 1.05;
   margin-bottom: 1.75rem;
   letter-spacing: -0.02em;
+  color: #1F2937 !important;
 }
 
 .hero-subtitle-modern {
   font-size: 1.3rem;
   font-family: var(--font-subtext);
-  color: rgba(255, 255, 255, 0.95);
+  color: #4B5563 !important;
   max-width: 34rem;
   line-height: 1.65;
   margin-bottom: 2.5rem;
@@ -1446,8 +1445,8 @@ footer {
 }
 
 .btn-hero {
-  background: var(--clean-white);
-  color: var(--primary);
+  background: #ffffff !important;
+  color: #FDB10D !important;
   border: none;
   padding: 1.25rem 2.5rem;
   border-radius: 0.75rem;
