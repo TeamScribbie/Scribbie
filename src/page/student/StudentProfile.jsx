@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import Navbar from "../../components/layout/navbar";
+import StudentNavbar from "../../components/layout/StudentNavbar";
 import StudentSidebar from "../../components/layout/StudentSidebar";
-import "../../styles/StudentProfile.css";
+import "../../styles/StudentProfile_new.css";
 
 const StudentProfile = () => {
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ const StudentProfile = () => {
 
       <div className="profile-content-area">
         {/* Navbar */}
-        <Navbar onMobileMenuToggle={handleMobileMenuToggle} />
+        <StudentNavbar onMobileMenuToggle={handleMobileMenuToggle} />
 
         {/* Back Button */}
         <button className="back-button animated-button" onClick={() => navigate(-1)}>
