@@ -8,6 +8,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TimerIcon from '@mui/icons-material/Timer';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import memoryGameBg from '../../assets/memorygame-bg.png';
+import owlMascot from '../../assets/owl-mascot.png';
 
 // --- MERGED SIGNATURE ---
 // Accepts props from FlipMatchingGame (which passes both)
@@ -36,9 +37,12 @@ export default function MemoryGame({
     const [timeLeft, setTimeLeft] = useState(30);
     const [maxTime, setMaxTime] = useState(30);
     const [combo, setCombo] = useState(0);
+    const [highestCombo, setHighestCombo] = useState(0);
     const [particles, setParticles] = useState([]);
     const [glowCards, setGlowCards] = useState({}); // Track glow effect for cards
+    
     const wordBank = useRef([...gameData]);
+    const mascotTimerRef = useRef(null);
 
     // --- MERGED AUDIO ---
     const backgroundMusic = useMemo(() => new Audio('/sounds/bgmusic.mp3'), []);
@@ -106,6 +110,7 @@ export default function MemoryGame({
         setMatchedPairs(0);
         setScore(0);
         setCombo(0);
+        setHighestCombo(0);
         setParticles([]);
         if (isChallengeMode) {
             setMaxTime(30);
@@ -122,13 +127,23 @@ export default function MemoryGame({
         }, 1000);
     };
 
+    const showMascotMessage = (message, duration = 1200) => {
+        if (mascotTimerRef.current) {
+            clearTimeout(mascotTimerRef.current);
+        }
+        setPopupWord(message);
+        mascotTimerRef.current = setTimeout(() => {
+            setPopupWord(null);
+            mascotTimerRef.current = null;
+        }, duration);
+    };
+
     // --- handleChoice (from Challenge) ---
     const handleChoice = (card) => {
         if (!disabled) {
             if (card === choiceOne) return;
             labelSounds[card.src]?.play().catch(e => console.error("Sound error:", e));
-            setPopupWord(card.word);
-            setTimeout(() => setPopupWord(null), 1200);
+            showMascotMessage(card.word);
             choiceOne ? setChoiceTwo(card) : setChoiceOne(card);
         }
     };
@@ -161,7 +176,8 @@ export default function MemoryGame({
                     onGameComplete({
                         score: score,
                         status: 'COMPLETED',
-                        questionsAnswered: matchedPairs
+                        questionsAnswered: matchedPairs,
+                        highestCombo: highestCombo
                     });
                     return 0;
                 }
@@ -170,7 +186,7 @@ export default function MemoryGame({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isChallengeMode, gameStarted, gameWon, score, matchedPairs, onGameComplete, loseSound]);
+    }, [isChallengeMode, gameStarted, gameWon, score, matchedPairs, onGameComplete, loseSound, highestCombo]);
 
     // --- Main Game Logic (MERGED) ---
     useEffect(() => {
@@ -184,7 +200,13 @@ export default function MemoryGame({
                 });
                 
                 setMatchedPairs(prev => prev + 1);
-                setCombo(prev => prev + 1);
+                setCombo(prev => {
+                    const newCombo = prev + 1;
+                    setHighestCombo(prevBest => Math.max(prevBest, newCombo));
+                    return newCombo;
+                });
+
+                showMascotMessage("You're doing great!");
 
                 if (isChallengeMode) {
                     // --- Challenge Mode match logic ---
@@ -274,10 +296,11 @@ export default function MemoryGame({
                 matchedCount: matchedPairs,
                 attempts: turns,
                 accuracy: accuracy,
+                highestCombo: highestCombo,
                 status: 'COMPLETED',
             });
         }
-    }, [cards, isChallengeMode, gameData.length, gameWon, matchedPairs, turns, onGameComplete, winSound]);
+    }, [cards, isChallengeMode, gameData.length, gameWon, matchedPairs, turns, onGameComplete, winSound, highestCombo]);
     
     // --- Music (from both) ---
     useEffect(() => {
@@ -524,84 +547,131 @@ export default function MemoryGame({
                             }}
                         >
                         {/* Score/Matches Card */}
-                        <Paper 
-                            elevation={12}
+                        <Box
                             sx={{
-                                background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
-                                padding: { xs: '10px 14px', md: '12px 18px' },
-                                borderRadius: '16px',
-                                minWidth: '120px',
-                                textAlign: 'center',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
                                 flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 140px', lg: '0 0 auto' },
-                                border: '3px solid rgba(255, 255, 255, 0.6)',
-                                boxShadow: '0 8px 24px rgba(34, 197, 94, 0.5)',
-                                position: 'relative',
-                                overflow: 'hidden',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                px: { xs: 0.5, md: 0.75 },
+                                py: { xs: 0.5, md: 0.75 },
+                                transition: 'transform 0.2s ease',
                                 '&:hover': {
-                                    transform: 'translateY(-4px) scale(1.05)',
-                                    boxShadow: '0 12px 32px rgba(34, 197, 94, 0.6)',
+                                    transform: 'translateY(-2px) scale(1.02)',
                                 },
-                                '&::before': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: '-100%',
-                                    width: '100%',
-                                    height: '100%',
-                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                                    animation: 'shimmer 3s infinite'
-                                }
                             }}
                         >
-                            <StarIcon sx={{ fontSize: 26, color: '#fff', mb: 0.3, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
-                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: { xs: '1.1rem', md: '1.2rem' }, textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                                {isChallengeMode ? score : `${matchedPairs}/${gameData.length}`}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: 'bold', fontSize: '0.75rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                                {isChallengeMode ? 'Score' : 'Matches'}
-                            </Typography>
-                        </Paper>
+                            <Box
+                                sx={{
+                                    width: { xs: 38, md: 42 },
+                                    height: { xs: 38, md: 42 },
+                                    borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #fde68a 0%, #facc15 40%, #fb923c 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 0 14px rgba(251, 191, 36, 0.9)',
+                                }}
+                            >
+                                <StarIcon sx={{ fontSize: 22, color: '#fefce8' }} />
+                            </Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        color: 'rgba(248, 250, 252, 0.9)',
+                                        fontWeight: 700,
+                                        fontSize: '0.7rem',
+                                        letterSpacing: '0.16em',
+                                        textTransform: 'uppercase',
+                                    }}
+                                >
+                                    {isChallengeMode ? 'Score' : 'Matches'}
+                                </Typography>
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        color: '#f9fafb',
+                                        fontWeight: 900,
+                                        fontFamily: 'Comic Neue, cursive',
+                                        fontSize: { xs: '1.2rem', md: '1.35rem' },
+                                        textShadow: '0 2px 6px rgba(15, 23, 42, 0.85)',
+                                    }}
+                                >
+                                    {isChallengeMode ? score : `${matchedPairs}/${gameData.length}`}
+                                </Typography>
+                            </Box>
+                        </Box>
 
                         {/* Turns Card */}
-                        <Paper 
-                            elevation={12}
+                        <Box
                             sx={{
-                                background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-                                padding: { xs: '10px 14px', md: '12px 18px' },
-                                borderRadius: '16px',
-                                minWidth: '120px',
-                                textAlign: 'center',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
                                 flex: { xs: '1 1 calc(50% - 8px)', sm: '1 1 140px', lg: '0 0 auto' },
-                                border: '3px solid rgba(255, 255, 255, 0.6)',
-                                boxShadow: '0 8px 24px rgba(59, 130, 246, 0.5)',
-                                position: 'relative',
-                                overflow: 'hidden',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                px: { xs: 0.5, md: 0.75 },
+                                py: { xs: 0.5, md: 0.75 },
+                                transition: 'transform 0.2s ease',
                                 '&:hover': {
-                                    transform: 'translateY(-4px) scale(1.05)',
-                                    boxShadow: '0 12px 32px rgba(59, 130, 246, 0.6)',
+                                    transform: 'translateY(-2px) scale(1.02)',
                                 },
-                                '&::before': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: '-100%',
-                                    width: '100%',
-                                    height: '100%',
-                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-                                    animation: 'shimmer 3s infinite 1s'
-                                }
                             }}
                         >
-                            <FavoriteIcon sx={{ fontSize: 26, color: '#fff', mb: 0.3, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} />
-                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: '900', fontFamily: 'Comic Neue, cursive', fontSize: { xs: '1.1rem', md: '1.2rem' }, textShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                                {turns}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: 'bold', fontSize: '0.75rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                                Turns
-                            </Typography>
-                        </Paper>
+                            <Box
+                                sx={{
+                                    width: { xs: 38, md: 42 },
+                                    height: { xs: 38, md: 42 },
+                                    borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #bfdbfe 0%, #60a5fa 40%, #3b82f6 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 0 14px rgba(59, 130, 246, 0.9)',
+                                }}
+                            >
+                                <FavoriteIcon sx={{ fontSize: 22, color: '#eff6ff' }} />
+                            </Box>
+                            <Box sx={{ textAlign: 'left' }}>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        color: 'rgba(239, 246, 255, 0.9)',
+                                        fontWeight: 700,
+                                        fontSize: '0.7rem',
+                                        letterSpacing: '0.16em',
+                                        textTransform: 'uppercase',
+                                    }}
+                                >
+                                    Turns
+                                </Typography>
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        color: '#f9fafb',
+                                        fontWeight: 900,
+                                        fontFamily: 'Comic Neue, cursive',
+                                        fontSize: { xs: '1.2rem', md: '1.35rem' },
+                                        textShadow: '0 2px 6px rgba(15, 23, 42, 0.85)',
+                                    }}
+                                >
+                                    {turns}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    sx={{
+                                        color: 'rgba(239, 246, 255, 0.9)',
+                                        fontWeight: 700,
+                                        fontSize: '0.65rem',
+                                        letterSpacing: '0.12em',
+                                        textTransform: 'uppercase',
+                                        opacity: 0.9,
+                                    }}
+                                >
+                                    Best Streak: {highestCombo}x
+                                </Typography>
+                            </Box>
+                        </Box>
 
                         {/* Combo Card */}
                         {combo > 1 && (
@@ -862,33 +932,6 @@ export default function MemoryGame({
                                 </Paper>
                             ) : (
                                 <>
-                                    {/* Word Popup */}
-                                    {popupWord && (
-                                        <Paper
-                                            elevation={12}
-                                            className="popup-word-modern"
-                                            sx={{
-                                                position: 'fixed',
-                                                top: '50%',
-                                                right: '30px',
-                                                transform: 'translateY(-50%)',
-                                                background: 'linear-gradient(135deg, #FFD966 0%, #FDB10D 100%)',
-                                                color: '#451513',
-                                                fontSize: { xs: '2.5rem', md: '3.5rem' },
-                                                fontWeight: '900',
-                                                padding: { xs: '20px 30px', md: '28px 42px' },
-                                                borderRadius: '25px',
-                                                zIndex: 999,
-                                                border: '4px solid rgba(255, 255, 255, 0.5)',
-                                                boxShadow: '0 12px 40px rgba(253, 177, 13, 0.5)',
-                                                fontFamily: 'Luckiest Guy, cursive',
-                                                animation: 'popIn 0.4s ease-out'
-                                            }}
-                                        >
-                                            {popupWord}
-                                        </Paper>
-                                    )}
-
                                     {/* Card Grid (from Challenge, but using MERGED grid logic) */}
                                     <Box 
                                         className="card-grid-modern" 
@@ -897,8 +940,11 @@ export default function MemoryGame({
                                             // Merged grid logic
                                             gridTemplateColumns: `repeat(${isChallengeMode ? 4 : (totalPairs > 9 ? 4 : (totalPairs > 6 ? 4 : 3))}, 1fr)`,
                                             gap: { xs: 1, sm: 1.5, md: 2 }, 
-                                            maxWidth: { xs: "90%", sm: "480px", md: "540px" }, 
-                                            margin: "0 auto",
+                                            maxWidth: 500,
+                                            width: '100%',
+                                            justifyContent: 'center',
+                                            justifyItems: 'center',
+                                            margin: '1rem auto',
                                             px: { xs: 1, sm: 1.5 }
                                         }}
                                     >
@@ -914,9 +960,9 @@ export default function MemoryGame({
                                                     onClick={() => { if (!disabled && !isFlipped) handleChoice(card); }}
                                                     sx={{
                                                         width: '100%',
-                                                        aspectRatio: '1',
-                                                        // Limit card height relative to viewport so the full grid fits on screen
-                                                        maxHeight: { xs: '14vh', sm: '12vh', md: '11vh' },
+                                                        // Fixed card height (similar to original regular memory game)
+                                                        height: { xs: 80, sm: 90, md: 100 },
+                                                        maxHeight: { xs: 80, sm: 90, md: 100 },
 
                                                         background: isFlipped 
                                                             ? 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)'
@@ -937,8 +983,7 @@ export default function MemoryGame({
                                                             : isFlipped ? '0 8px 20px rgba(0, 0, 0, 0.2)' : '0 6px 16px rgba(0, 0, 0, 0.15)',
                                                         '&:hover': !disabled && !isFlipped ? {
                                                             boxShadow: '0 12px 28px rgba(102, 126, 234, 0.5)',
-                                                            background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)',
-                                                            transform: 'translateY(-4px)'
+                                                            background: 'linear-gradient(135deg, #764ba2 0%, #f093fb 100%)'
                                                         } : {},
                                                         '&::before': !isFlipped && !glowType ? {
                                                             content: '""',
@@ -968,8 +1013,19 @@ export default function MemoryGame({
                                             );
                                         })}
                                     </Box>
-                                    {/* Mascot (from SkibidiRIzz, now conditional) */}
-                                    {!isChallengeMode && <div className="floating-mascot">🌙 You're doing great!</div>}
+                                    {/* Mascot (from SkibidiRIzz) */}
+                                    <div className="memory-mascot-wrapper">
+                                        {popupWord && (
+                                            <div className="memory-mascot-speech">
+                                                {popupWord}
+                                            </div>
+                                        )}
+                                        <img
+                                            src={owlMascot}
+                                            alt="Owl Mascot cheering you on"
+                                            className="memory-mascot-img"
+                                        />
+                                    </div>
                                 </>
                             )}
                         </Box>
