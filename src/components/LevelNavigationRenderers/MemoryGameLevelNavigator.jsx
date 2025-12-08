@@ -131,7 +131,7 @@ const MemoryGameLevelNavigator = ({ lesson, activityNodes, activityNodeProgress 
                                 backgroundColor: 'transparent',
                                 border: 'none',
                                 boxShadow: 'none',
-                                color: level.isLocked ? '#999' : '#4a2c5a',
+                                color: level.isLocked ? '#999' : '#ffffff',
                                 cursor: level.isLocked ? 'not-allowed' : 'pointer',
                                 opacity: level.isLocked ? 0.5 : 1,
                                 filter: level.isLocked ? 'grayscale(1)' : 'none',

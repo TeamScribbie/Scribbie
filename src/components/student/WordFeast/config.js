@@ -1,8 +1,8 @@
 export const gameConfig = {
-    width: 1280,  
-    height: 720, 
-    worldWidth: 2560,  
-    worldHeight: 1440,
+    width: 1600,  
+    height: 900, 
+    worldWidth: 3200,  
+    worldHeight: 1800,
     player: {
         initialSize: 'small',
         accel: 0.5,
