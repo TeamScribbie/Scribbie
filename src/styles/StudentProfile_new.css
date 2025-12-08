@@ -16,8 +16,8 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(253, 177, 13, 0.06) 0%, transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(54, 184, 228, 0.05) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
@@ -76,8 +76,8 @@
 .back-button.animated-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #FDB10D;
+  color: #FDB10D;
 }
 
 .back-icon {
@@ -113,7 +113,7 @@
 .profile-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #451513;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -137,7 +137,7 @@
 
 .title-underline {
   height: 3px;
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #36B8E4 100%);
   border-radius: 2px;
   width: 0;
   animation: expandWidth 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
@@ -149,7 +149,7 @@
 
 .profile-subtitle {
   font-size: 1.1rem;
-  color: #64748b;
+  color: rgba(69, 21, 19, 0.7);
   margin: 0;
   font-weight: 400;
 }
@@ -201,7 +201,7 @@
 }
 
 .sidebar-header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #f9b121 100%);
   color: white;
   padding: 24px;
   font-weight: 600;
@@ -262,7 +262,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.05), transparent);
+  background: linear-gradient(90deg, transparent, rgba(253, 177, 13, 0.12), transparent);
   transition: left 0.6s ease;
 }
 
@@ -271,15 +271,15 @@
 }
 
 .sidebar-item:hover, .sidebar-item.hovered {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(253, 177, 13, 0.12) 0%, rgba(255, 217, 102, 0.18) 100%);
   transform: translateX(4px);
-  color: #6366f1;
+  color: #FDB10D;
 }
 
 .sidebar-item.active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-  color: #6366f1;
-  border-left: 3px solid #6366f1;
+  background: linear-gradient(135deg, rgba(253, 177, 13, 0.16) 0%, rgba(255, 217, 102, 0.24) 100%);
+  color: #FDB10D;
+  border-left: 3px solid #FDB10D;
   transform: translateX(4px);
 }
 
@@ -339,7 +339,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #36B8E4 50%, #FFE8A3 100%);
 }
 
 .profile-card-content {
@@ -370,11 +370,11 @@
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #f9b121 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 25px rgba(253, 177, 13, 0.3);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
 }
@@ -387,7 +387,7 @@
   bottom: -6px;
   border: 2px solid transparent;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7) border-box;
+  background: linear-gradient(135deg, #FDB10D, #36B8E4, #FFE8A3) border-box;
   -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: subtract;
   animation: gentleRotate 6s linear infinite;
@@ -395,7 +395,7 @@
 
 .avatar-container:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 12px 35px rgba(253, 177, 13, 0.35);
 }
 
 .avatar-placeholder {
@@ -481,7 +481,7 @@
 }
 
 .change-photo-btn.animated-button {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #f9b121 100%);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -497,7 +497,7 @@
 
 .change-photo-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 25px rgba(253, 177, 13, 0.35);
 }
 
 /* Section Content */
@@ -600,8 +600,8 @@
 
 .detail-value.editable:hover {
   background: white;
-  border-color: #6366f1;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+  border-color: #FDB10D;
+  box-shadow: 0 2px 8px rgba(253, 177, 13, 0.18);
 }
 
 .edit-hint {
@@ -620,9 +620,9 @@
 .academic-placeholder {
   text-align: center;
   padding: 48px 32px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(168, 85, 247, 0.03) 100%);
+  background: linear-gradient(135deg, rgba(253, 177, 13, 0.06) 0%, rgba(54, 184, 228, 0.06) 100%);
   border-radius: 16px;
-  border: 2px dashed rgba(99, 102, 241, 0.2);
+  border: 2px dashed rgba(253, 177, 13, 0.4);
 }
 
 .placeholder-icon {
@@ -648,13 +648,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #f9b121 100%);
   color: white;
   padding: 10px 20px;
   border-radius: 20px;
   font-weight: 500;
   font-size: 0.9rem;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(253, 177, 13, 0.35);
 }
 
 .badge-sparkle {
@@ -735,9 +735,9 @@
 }
 
 .action-btn-primary.pulse {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #FDB10D 0%, #f9b121 50%, #36B8E4 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(253, 177, 13, 0.3);
 }
 
 .action-btn-primary:hover {

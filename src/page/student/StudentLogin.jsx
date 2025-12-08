@@ -6,6 +6,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useNavigate } from 'react-router-dom';
 import scribbieLogo from '../../assets/ScribbieLogoV2.png';
 import studentLoginBg from '../../assets/studentlogin-bg.png';
+import mascot from '../../assets/mascot.png';
+import owlMascot from '../../assets/owl-mascot.png';
+
 import UserTypeToggle from '../../components/auth/UserTypeToggle';
 import LoginForm from '../../components/auth/LoginForm';
 import '../../styles/StudentLogin.css';
@@ -72,9 +75,11 @@ const StudentLogin = () => {
       className="student-login-container"
       style={{
         backgroundColor: 'white',
+        backgroundImage: `url(${studentLoginBg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundRepeat: 'no-repeat',
+        opacity: 0.9
       }}
     >
       <div className="scribbie-logo-container">
