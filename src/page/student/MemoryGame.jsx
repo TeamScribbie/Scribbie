@@ -945,6 +945,7 @@ export default function MemoryGame({
                                             justifyContent: 'center',
                                             justifyItems: 'center',
                                             margin: '1rem auto',
+                                            ml: { lg: 25 }, // slight left nudge on large screens
                                             px: { xs: 1, sm: 1.5 }
                                         }}
                                     >

@@ -57,7 +57,7 @@ const StudentProfile = () => {
 
       <div className="profile-content-area">
         {/* Navbar */}
-        <StudentNavbar onMobileMenuToggle={handleMobileMenuToggle} />
+        <StudentNavbar onMobileMenuToggle={handleMobileMenuToggle} hideHomeButton />
 
         {/* Back Button */}
         <button className="back-button animated-button" onClick={() => navigate(-1)}>
