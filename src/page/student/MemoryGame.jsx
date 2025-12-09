@@ -945,6 +945,10 @@ export default function MemoryGame({
                                             justifyContent: 'center',
                                             justifyItems: 'center',
                                             margin: '1rem auto',
+<<<<<<< Updated upstream
+=======
+                                            ml: { lg: 25 }, // slight left nudge on large screens
+>>>>>>> Stashed changes
                                             px: { xs: 1, sm: 1.5 }
                                         }}
                                     >

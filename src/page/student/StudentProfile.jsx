@@ -57,7 +57,11 @@ const StudentProfile = () => {
 
       <div className="profile-content-area">
         {/* Navbar */}
+<<<<<<< Updated upstream
         <StudentNavbar onMobileMenuToggle={handleMobileMenuToggle} />
+=======
+        <StudentNavbar onMobileMenuToggle={handleMobileMenuToggle} hideHomeButton />
+>>>>>>> Stashed changes
 
         {/* Back Button */}
         <button className="back-button animated-button" onClick={() => navigate(-1)}>

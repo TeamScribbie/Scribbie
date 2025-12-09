@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ScribbieLogo from '../../assets/ScribbieLogoV2.png';
 
-const StudentNavbar = ({ transparent, onMobileMenuToggle, className }) => {
+const StudentNavbar = ({ transparent, onMobileMenuToggle, className, hideHomeButton }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const { authState, logout } = useAuth();
@@ -150,8 +150,8 @@ const StudentNavbar = ({ transparent, onMobileMenuToggle, className }) => {
           />
         </Box>
 
-        {/* Home Button - Desktop only */}
-        {!isMobile && (
+        {/* Home Button - Desktop only (can be hidden via prop) */}
+        {!isMobile && !hideHomeButton && (
           <Tooltip title="Home">
             <IconButton
               onClick={handleHomeClick}
@@ -375,10 +375,12 @@ StudentNavbar.propTypes = {
   transparent: PropTypes.bool,
   onMobileMenuToggle: PropTypes.func,
   className: PropTypes.string,
+  hideHomeButton: PropTypes.bool,
 };
 
 StudentNavbar.defaultProps = {
   transparent: false,
+  hideHomeButton: false,
 };
 
 export default StudentNavbar;
